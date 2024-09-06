@@ -35,6 +35,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     # default apps
+    "jazzmin",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
     # "django_browser_reload"
     # Our created apps
     "theme",
+    "base",
 ]
 
 MIDDLEWARE = [
@@ -75,6 +77,9 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
+            "libraries": {
+                "staticfiles": "django.templatetags.static",
+            },
         },
     },
 ]
@@ -132,6 +137,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 TAILWIND_APP_NAME = "theme"
@@ -143,3 +149,36 @@ NPM_BIN_PATH = os.getenv("NPM_BIN_PATH")
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+AUTH_USER_MODEL = "base.User"
+
+JAZZMIN_SETTINGS = {
+    "site_title": "TCET syst",
+    "site_header": "Your Admin Panel",
+    "welcome_sign": "Welcome to Your Admin Panel",
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "copyright": "Thakur college of Engineering and Technology",
+    # Links to be displayed on the sidebar menu
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+    },
+    # Change related links in the side menu
+    "related_modal_active": True,
+    "custom_links": {
+        "auth": [
+            {
+                "name": "Manage Users",
+                "url": "admin:auth_user_changelist",
+                "icon": "fas fa-users",
+            },
+        ],
+    },
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "theme": "united",
+    "show_ui_builder": False,  # Hides the "UI Builder" from the footer
+    "hide_version": True,
+}
