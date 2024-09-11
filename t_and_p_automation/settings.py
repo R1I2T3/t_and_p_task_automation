@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     # Our created apps
     "theme",
     "base",
+    "student",
 ]
 
 MIDDLEWARE = [
@@ -135,8 +136,13 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
-
-
+# email
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.getenv("EMAIL_USERNAME")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASSWORD")
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
@@ -178,6 +184,28 @@ UNFOLD = {
         "show_search": True,
         "show_all_applications": True,
         "show_home_link": True,
-        "collapsible": False,  # This makes the sidebar non-collapsible
+        "collapsible": False,
+        "navigation": [
+            {
+                "title": _("Navigation"),
+                "separator": True,  # Top border
+                "collapsible": True,  # Collapsible group of links
+                "items": [
+                    {
+                        "title": _("Dashboard"),
+                        "link": reverse_lazy("admin:index"),
+                        "permission": lambda request: request.user.is_superuser,
+                    },
+                    {
+                        "title": _("Users"),
+                        "link": reverse_lazy("admin:base_user_changelist"),
+                    },
+                    {
+                        "title": _("Student"),
+                        "link": reverse_lazy("admin:student_student_changelist"),
+                    },
+                ],
+            },
+        ],
     },
 }
