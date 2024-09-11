@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -35,7 +37,8 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     # default apps
-    "jazzmin",
+    "unfold",
+    "unfold.contrib.forms",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -76,6 +79,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.request",
             ],
             "libraries": {
                 "staticfiles": "django.templatetags.static",
@@ -137,7 +141,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = "static/"
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 TAILWIND_APP_NAME = "theme"
@@ -150,35 +157,27 @@ NPM_BIN_PATH = os.getenv("NPM_BIN_PATH")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "base.User"
-
-JAZZMIN_SETTINGS = {
-    "site_title": "TCET syst",
-    "site_header": "Your Admin Panel",
-    "welcome_sign": "Welcome to Your Admin Panel",
-    "show_sidebar": True,
-    "navigation_expanded": True,
-    "copyright": "Thakur college of Engineering and Technology",
-    # Links to be displayed on the sidebar menu
-    "icons": {
-        "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
-        "auth.Group": "fas fa-users",
+UNFOLD = {
+    "SITE_TITLE": "Admin site",
+    "SITE_HEADER": "Thakur college of engineering and technology",
+    "COLORS": {
+        "primary": {
+            "50": "#fff7ed",
+            "100": "#ffedd5",
+            "200": "#fed7aa",
+            "300": "#fdba74",
+            "400": "#fb923c",
+            "500": "#f97316",
+            "600": "#ea580c",
+            "700": "#c2410c",
+            "800": "#9a3412",
+            "900": "#7c2d12",
+        },
     },
-    # Change related links in the side menu
-    "related_modal_active": True,
-    "custom_links": {
-        "auth": [
-            {
-                "name": "Manage Users",
-                "url": "admin:auth_user_changelist",
-                "icon": "fas fa-users",
-            },
-        ],
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "show_home_link": True,
+        "collapsible": False,  # This makes the sidebar non-collapsible
     },
-}
-
-JAZZMIN_UI_TWEAKS = {
-    "theme": "united",
-    "show_ui_builder": False,  # Hides the "UI Builder" from the footer
-    "hide_version": True,
 }
