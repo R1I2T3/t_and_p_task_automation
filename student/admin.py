@@ -1,17 +1,23 @@
 from django.contrib.admin import register
 from unfold.admin import ModelAdmin
 from .models import Student
+from import_export.admin import ImportExportModelAdmin
+from unfold.contrib.import_export.forms import (
+    ExportForm,
+    ImportForm,
+)
+from .resources import StudentResource
 # Register your models here.
 
 
 @register(Student)
-class StudentAdmin(ModelAdmin):
-    model = Student
+class StudentAdmin(ImportExportModelAdmin, ModelAdmin):
+    import_form_class = ImportForm
+    export_form_class = ExportForm
+
     list_display = [
         "uid",
         "department",
-        "academic_year",
-        "academic_performance",
     ]
     add_fieldsets = (
         (
@@ -27,3 +33,4 @@ class StudentAdmin(ModelAdmin):
             },
         ),
     )
+    resource_class = StudentResource

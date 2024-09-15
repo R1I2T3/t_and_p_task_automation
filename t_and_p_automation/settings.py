@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     # default apps
     "unfold",
     "unfold.contrib.forms",
+    "unfold.contrib.import_export",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Third party apps
     "tailwind",
+    "import_export",
     # "django_browser_reload"
     # Our created apps
     "theme",

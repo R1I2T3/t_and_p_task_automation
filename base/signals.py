@@ -7,7 +7,6 @@ from .models import User
 
 @receiver(post_save, sender=User)
 def send_welcome_email(sender, instance, created, **kwargs):
-    print("Hello")
     if created and not instance.is_superuser:
         subject = "T&P attendance"
         message = f"Your account is created. Your username is {instance.email} and your password is tcet@1234. Please change your password after login."
