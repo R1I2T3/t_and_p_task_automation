@@ -49,11 +49,11 @@ INSTALLED_APPS = [
     # Third party apps
     "tailwind",
     "import_export",
-    # "django_browser_reload"
     # Our created apps
     "theme",
     "base",
     "student",
+    "principal",
 ]
 
 MIDDLEWARE = [

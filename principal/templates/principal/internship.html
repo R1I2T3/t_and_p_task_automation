@@ -1,0 +1,493 @@
+
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Internship statistics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+        display: flex;
+        overflow-x: hidden;
+      }
+      .main {
+        height: 100%;
+        width: 100%;
+        display: flex;
+      }
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        width: 20%;
+        height: 85%;
+        background-color: white;
+        color: #153f74;
+        padding: 20px;
+        border-radius: 20px;
+        margin: 20px;
+        -webkit-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+        -moz-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+        box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+      }
+      a {
+        text-decoration: none;
+        color: #153f74;
+      }
+      .sidebar .logo {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .logo img {
+        height: 80px;
+        margin-right: 10px;
+      }
+      .sidebar ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+      .sidebar ul li {
+        margin: 20px 0;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+      }
+      .sidebar ul li img {
+        margin-right: 10px;
+        height: 30px;
+      }
+      .spacer {
+        flex-grow: 1;
+      }
+      .sidebar .bottom-image {
+        text-align: center;
+      }
+      .sidebar .bottom-image img {
+        width: 80%;
+        border-radius: 10px;
+      }
+      .background {
+        z-index: -1;
+        position: absolute;
+        background-color: #d48525;
+        height: 25%;
+        width: 100vw;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        color: #fbf4eb;
+        width: 80%;
+        padding: 20px;
+      }
+      .container h1 {
+        margin: 0px;
+      }
+      table {
+        border-spacing: 30px;
+        width: 100%;
+        height: 100%;
+      }
+      td {
+        border: 1px solid black;
+        border-radius: 20px;
+        padding: 20px;
+        background-color: #153f74;
+      }
+      .companies_Offering_Internship,
+      .Students_securing_internship {
+        width: 70%;
+        padding: 0%;
+        height: 200px;
+      }
+      #companies_Offering_Internship {
+        width: 70%;
+        height: 100%;
+      }
+      .companies_Offering_Internship_div {
+        height: 200px;
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        padding: 10px;
+      }
+      .Students_securing_internship_div {
+        height: 200px;
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        padding: 10px;
+      }
+      .Students_securing_internship canvas {
+        width: 100% !important;
+        max-width: 400px;
+        height: 100% !important;
+        max-height: 200px;
+      }
+      .Internship_Opportunities {
+        padding: 0px;
+      }
+      .Internship_Opportunities_div {
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        padding: 10px;
+      }
+      .Internship_Opportunities canvas {
+        width: 100% !important;
+        max-width: 300px;
+        height: 100% !important;
+        max-height: 300px;
+      }
+      .Internship_Opportunities {
+        width: 30%;
+      }
+      .graph {
+        display: flex;
+        height: 120px;
+        padding: 10px;
+      }
+      .graph canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+      #branch,
+      #stipend {
+        max-width: 50%;
+        max-height: 100%;
+      }
+      #stipend {
+        border-left: 5px solid white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="background"></div>
+    <div class="main">
+      <div class="sidebar">
+        <div class="logo">
+          <img src="{% static 'img/logo.png' %}" alt="TCET Logo" />
+          <h1>TCET - TNP</h1>
+        </div>
+        <ul>
+          <li>
+            <img
+              src="{% static 'img/Training_Programme_Statistics.png' %}"
+              alt="Icon"
+            />
+            <a href="/principal">Training Programme Statistics</a>
+          </li>
+          <li>
+            <img src="{% static 'img/Placement_statics.png' %}" alt="Icon" />
+            <a href="/principal">Placement Statistics</a>
+          </li>
+          <li>
+            <img src="{% static 'img/Internship_statics.png' %}" alt="Icon" />
+            <a href="/principal/internship">Internship Statistics</a>
+          </li>
+        </ul>
+        <div class="spacer"></div>
+        <div class="bottom-image">
+          <img
+            src="{% static 'img/image-of-person-with-laptop.png' %}"
+            alt="Students working"
+            class="student-img"
+          />
+        </div>
+      </div>
+      <div class="container">
+        <u><h1>Internship statistics</h1></u>
+        <table>
+          <tr>
+            <td colspan="3" rowspan="1" style="padding: 0px;">
+              <div class="graph">
+                <canvas id="branch"></canvas>
+                <canvas id="stipend"></canvas>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" class="companies_Offering_Internship">
+              <div class="companies_Offering_Internship_div">
+                <u><h2>companies Offering Internship</h2></u>
+                <canvas id="companies_Offering_Internship"></canvas>
+              </div>
+            </td>
+            <td rowspan="2" class="Internship_Opportunities">
+              <div class="Internship_Opportunities_div">
+                <u><h2>Internship Opportunities</h2></u>
+                <canvas id="Internship_Opportunities"></canvas>
+                <h3>"Be the change you want to be"</h3>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" class="Students_securing_internship">
+              <div class="Students_securing_internship_div">
+                <u><h2>companies Offering Internship</h2></u>
+                <canvas id="Students_securing_internship"></canvas>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const branchData = JSON.parse('{{ branch_data|safe }}');
+      const stipendData = JSON.parse('{{ stipend_data|safe }}');
+      const Students_securing_internship_Data = JSON.parse('{{ students_securing_internship_data|safe }}');
+      const Internship_Opportunities_Data = JSON.parse('{{ internship_opportunities_data|safe }}');
+      const internship_bar_labels = JSON.parse('{{ internship_bar_labels|safe }}');
+
+      const branch_labels = branchData.fields.map((field) => field.label);
+      const values = branchData.fields.map((field) => field.value);
+
+      const branch = document.getElementById("branch").getContext("2d");
+      const data = {
+        labels: branch_labels,
+        datasets: [
+          {
+            label: "Field Distribution",
+            data: values,
+            borderWidth: 0,
+            backgroundColor: ["#084fd7", "#64bbc8", "#6975ff"],
+            hoverOffset: 4,
+          },
+        ],
+      };
+
+      const branchGraph = {
+        type: "pie",
+        data: data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "right",
+              align: "start",
+              labels: {
+                color: "#ffffff",
+                boxWidth: 10,
+                padding: 20,
+              },
+            },
+            tooltip: {
+              enabled: true,
+            },
+          },
+        },
+      };
+
+      const stipend_labels = stipendData.fields.map((field) => field.label);
+      const stipend_values = stipendData.fields.map((field) => field.value);
+
+      const stipend = document.getElementById("stipend").getContext("2d");
+      const stipend_data = {
+        labels: stipend_labels,
+        datasets: [
+          {
+            label: "Field Distribution",
+            data: stipend_values,
+            borderWidth: 0,
+            backgroundColor: ["#084fd7", "#64bbc8", "#6975ff"],
+            hoverOffset: 4,
+          },
+        ],
+      };
+
+      const stipendGraph = {
+        type: "doughnut",
+        data: stipend_data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "right",
+              align: "start",
+              labels: {
+                color: "#ffffff",
+                boxWidth: 10,
+                padding: 20,
+              },
+            },
+            tooltip: {
+              enabled: true,
+            },
+          },
+        },
+      };
+
+      const internship_bar_data = {
+        labels: internship_bar_labels,
+        datasets: [
+          {
+            label: "Companies",
+            data: [65, 59, 80, 81],
+            backgroundColor: "#5687f2",
+            borderColor: ["rgb(255, 255, 255)"],
+            borderWidth: 0,
+          },
+        ],
+      };
+
+      const companies_Offering_Internship = document
+        .getElementById("companies_Offering_Internship")
+        .getContext("2d");
+      const InternshipBar = {
+        type: "bar",
+        data: internship_bar_data,
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                color: "#ffffff",
+              },
+              grid: {
+                color: "#444444",
+              },
+            },
+            x: {
+              ticks: {
+                color: "#ffffff",
+              },
+              grid: {
+                color: "#444444",
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: "#ffffff",
+                boxWidth: 10,
+                padding: 20,
+              },
+            },
+            tooltip: {
+              enabled: true,
+            },
+          },
+        },
+      };
+
+      const Students_securing_internship_labels = Students_securing_internship_Data.fields.map(
+        (field) => field.label
+      );
+      const Students_securing_internship_values = Students_securing_internship_Data.fields.map(
+        (field) => field.value
+      );
+
+      const Students_securing_internship = document
+        .getElementById("Students_securing_internship")
+        .getContext("2d");
+      const Students_securing_internship_data = {
+        labels: Students_securing_internship_labels,
+        datasets: [
+          {
+            label: "Field Distribution",
+            data: Students_securing_internship_values,
+            borderWidth: 0,
+            backgroundColor: ["#084fd7", "#64bbc8", "#6975ff"],
+            hoverOffset: 4,
+          },
+        ],
+      };
+
+      const Students_securing_internship_Graph = {
+        type: "pie",
+        data: Students_securing_internship_data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "right",
+              align: "start",
+              labels: {
+                color: "#ffffff",
+                boxWidth: 10,
+                padding: 20,
+              },
+            },
+            tooltip: {
+              enabled: true,
+            },
+          },
+        },
+      };
+
+      const Internship_Opportunities_labels = Internship_Opportunities_Data.fields.map(
+        (field) => field.label
+      );
+      const Internship_Opportunities_values = Internship_Opportunities_Data.fields.map(
+        (field) => field.value
+      );
+
+      const Internship_Opportunities = document
+        .getElementById("Internship_Opportunities")
+        .getContext("2d");
+      const Internship_Opportunities_data = {
+        labels: Internship_Opportunities_labels,
+        datasets: [
+          {
+            label: "Field Distribution",
+            data: Internship_Opportunities_values,
+            borderWidth: 0,
+            backgroundColor: ["#6975ff", "#64bbc8", "#084fd7"],
+            hoverOffset: 4,
+          },
+        ],
+      };
+
+      const Internship_Opportunities_Graph = {
+        type: "pie",
+        data: Internship_Opportunities_data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              align: "start",
+              labels: {
+                color: "#ffffff",
+                boxWidth: 10,
+                padding: 20,
+              },
+            },
+            tooltip: {
+              enabled: true,
+            },
+          },
+        },
+      };
+
+      const stipendWiseGraph = new Chart(stipend, stipendGraph);
+      const branchWiseGraph = new Chart(branch, branchGraph);
+      const InternshipBarGraph = new Chart(
+        companies_Offering_Internship,
+        InternshipBar
+      );
+      const StudentsSecuringInternshipGraph = new Chart(
+        Students_securing_internship,
+        Students_securing_internship_Graph
+      );
+      const InternshipOpportunitiesGraph = new Chart(
+        Internship_Opportunities,
+        Internship_Opportunities_Graph
+      );
+    </script>
+  </body>
+</html>

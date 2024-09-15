@@ -30,3 +30,5 @@ pip install -r requirements.txt
     - DATABASE_PASSWORD =
     - DATABASE_HOST = 
     - DATABASE_PORT = 
+    - EMAIL_USERNAME = 
+    - EMAIL_PASSWORD = 
