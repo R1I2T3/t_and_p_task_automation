@@ -187,11 +187,11 @@
           </li>
           <li>
             <img src="{% static 'img/Placement_statics.png' %}" alt="Icon" />
-            <a href="/principal">Placement Statistics</a>
+            <a href="{% url "principal_index" %}l">Placement Statistics</a>
           </li>
           <li>
             <img src="{% static 'img/Internship_statics.png' %}" alt="Icon" />
-            <a href="/principal/internship">Internship Statistics</a>
+            <a href="{% url "principal_internship" %}">Internship Statistics</a>
           </li>
         </ul>
         <div class="spacer"></div>

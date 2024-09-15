@@ -1,17 +1,21 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import json
+from django.contrib.auth.decorators import login_required
 
 
 # Create your views here.
+@login_required
 def TnPStats(request):
+    if request.user.role != "principal":
+        return redirect("/")
     return render(request, "principal/index.html")
 
 
-def login(request):
-    return render(request, "principal/login.html")
-
-
+@login_required
 def internship(request):
+    # print(request.user.role)
+    if request.user.role != "principal":
+        return redirect("/")
     branch_data = {
         "fields": [
             {"label": "Computer Science", "value": 45},
@@ -56,8 +60,3 @@ def internship(request):
         "internship_bar_labels": json.dumps(internship_bar_labels),
     }
     return render(request, "principal/internship.html", context)
-
-
-# def login(request):
-#     template = loader.get_template("login.html")
-#     return HttpResponse(template.render())

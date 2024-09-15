@@ -138,7 +138,8 @@
       <div class="login-down">
         <h1>LOGIN</h1>
         <div class="login-underline"></div>
-        <form class="login-form">
+        <form class="login-form" method="post">
+          {% csrf_token %}
           <div class="inputs">
             <input
               type="email"
@@ -167,6 +168,13 @@
 
           <button type="submit">Login</button>
         </form>
+        {% if messages %}
+        <ul>
+          {% for message in messages %}
+          <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
       </div>
     </div>
   </body>

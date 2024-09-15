@@ -175,8 +175,6 @@
   left: 0;
   position: absolute;
   top: 0;
-  display: flex;
-  align-items: center;
   width: 342px;
 }
 
@@ -198,7 +196,7 @@
 
 .training-programme .text-wrapper-8 {
   /* -webkit-background-clip: text !important;
-    -webkit-text-fill-color: #153f74; */
+  -webkit-text-fill-color: #153f74; */
   /* background: linear-gradient(180deg, rgb(38, 118, 216) 100%); */
   /* background-clip: text; */
   color: #153f74;

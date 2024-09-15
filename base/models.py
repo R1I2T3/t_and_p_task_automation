@@ -40,7 +40,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     USER_ROLE_TYPE = [
         ("student", "student"),
         ("system_admin", "system_admin"),
-        ("principle", "principle"),
+        ("principal", "principal"),
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)

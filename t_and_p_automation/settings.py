@@ -211,3 +211,5 @@ UNFOLD = {
         ],
     },
 }
+
+LOGIN_URL = "/auth/login/"
