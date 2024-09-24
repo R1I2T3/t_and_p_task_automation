@@ -49,11 +49,13 @@ INSTALLED_APPS = [
     # Third party apps
     "tailwind",
     "import_export",
+    'django_cotton',
     # Our created apps
     "theme",
     "base",
     "student",
     "principal",
+    "department_coordinator"
 ]
 
 MIDDLEWARE = [
@@ -75,7 +77,6 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": ["templates"],
-        "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -87,6 +88,17 @@ TEMPLATES = [
             "libraries": {
                 "staticfiles": "django.templatetags.static",
             },
+            "loaders": [(
+                "django.template.loaders.cached.Loader",
+                [
+                    "django_cotton.cotton_loader.Loader",
+                    "django.template.loaders.filesystem.Loader",
+                    "django.template.loaders.app_directories.Loader",
+                ],
+            )],
+            "builtins": [
+                "django_cotton.templatetags.cotton"
+            ],
         },
     },
 ]

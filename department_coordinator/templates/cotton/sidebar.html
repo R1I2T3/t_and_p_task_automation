@@ -1,0 +1,30 @@
+{% load static %}
+<div class="flex flex-col w-1/5 h-4/5 bg-white text-[#153f74] p-5 rounded-3xl m-5 shadow-lg">
+    <div  class="flex items-center mb-5">
+      <img src="{% static 'img/logo.png' %}" alt="TCET Logo" class="h-20 mr-2.5"  />
+      <h1 class="text-xl font-bold">TCET - TNP</h1>
+    </div>
+    <ul class="list-none p-0 m-0">
+      <li class="my-5 text-lg flex items-center">
+        <img
+          src="{% static 'img/Training_Programme_Statistics.png' %}"
+          alt="Icon"
+          class="mr-2.5 h-7.5"
+        />
+        <a href="{% url "department_coordinator_index" %}">Student Data</a>
+      </li>
+      <li class="my-5 text-lg flex items-center">
+        <img src="{% static 'img/Placement_statics.png' %}" alt="Icon" class="mr-2.5 h-7.5"/>
+        <a href="{% url "department_coordinator_attendance" %}">Attendance and marks</a>
+      </li>
+      <li class="my-5 text-lg flex items-center">
+        <img src="{% static 'img/Internship_statics.png' %}" alt="Icon" class="mr-2.5 h-7.5" />
+        <a href="{% url "department_coordinator_stats" %}">Statistics</a>
+      </li>
+    </ul>
+    <div class="flex-grow"></div>
+      <div class="bottom-image text-center">
+        <img src="{% static 'img/image-of-person-with-laptop.png' %}" alt="Students working" class="w-4/5 rounded-lg mx-auto" />
+      </div>
+    </div>
+  </div>
