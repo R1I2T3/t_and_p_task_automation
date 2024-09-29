@@ -29,6 +29,7 @@ class StudentResource(resources.ModelResource):
                 "email": row["email"],
                 "full_name": row.get("full_name", ""),
                 "password": make_password(row.get("password")),
+                "role":"student"
             },
         )
         row["user"] = user.id

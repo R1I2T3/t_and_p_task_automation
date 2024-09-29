@@ -17,6 +17,8 @@ def login(request):
             print(user.role)
             if user.role == "principal":
                 return redirect("/principal/")
+            if user.role == "department_coordinator":
+                return redirect("/department_coordinator/")
             return redirect("/")
         else:
             # Invalid credentials

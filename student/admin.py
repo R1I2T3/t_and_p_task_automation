@@ -9,7 +9,6 @@ from unfold.contrib.import_export.forms import (
 from .resources import StudentResource
 # Register your models here.
 
-
 @register(Student)
 class StudentAdmin(ImportExportModelAdmin, ModelAdmin):
     import_form_class = ImportForm
