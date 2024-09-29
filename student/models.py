@@ -21,7 +21,7 @@ class Student(models.Model):
     current_category = models.TextField(choices=category_Type, default="No category")
     is_student_coordinator = models.BooleanField(default=False)
     consent = models.TextField(choices=consent_Type, default="placement")
-
+    
     def __str__(self) -> str:
         return f"{self.uid}"
 

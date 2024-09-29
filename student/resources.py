@@ -23,15 +23,17 @@ class StudentResource(resources.ModelResource):
         import_id_fields = ("uid",)
 
     def import_row(self, row, instance_loader, **kwargs):
-        user, user_created = User.objects.update_or_create(
-            email=row["email"],
-            defaults={
-                "email": row["email"],
-                "full_name": row.get("full_name", ""),
-                "password": make_password(row.get("password")),
-                "role":"student"
-            },
-        )
+        user = User.objects.filter(email=row["email"]).first()
+        if not user:
+            user, user_created = User.objects.update_or_create(
+                email=row["email"],
+                defaults={
+                    "email": row["email"],
+                    "full_name": row.get("full_name", ""),
+                    "password": make_password(row.get("password")),
+                    "role":"student"
+                },
+            )
         row["user"] = user.id
         return super().import_row(row, instance_loader, **kwargs)
 

@@ -1,5 +1,3 @@
-import csv
-# from openpyxl import load_workbook
 import pandas as pd
 
 ALLOWED_EXTENSIONS = {"csv","pdf"}
@@ -21,5 +19,3 @@ def importExcelAndReturnJSON(file):
         require_data.append(df.iloc[i].to_dict())
     return require_data
 
-def importPDFAndReturnJSON(file):
-    pass
