@@ -6,5 +6,179 @@
 
 {% block content %}
    <div class="z-[-1] absolute bg-[#d48525] h-[25%] w-[100%]"></div>
-    <c-sidebar></c-sidebar>
-{% endblock content %}
+    <c-sidebar>
+        <div class="bg-[#153F74] rounded-lg shadow-lg p-4 mb-4 flex justify-between w-full">
+            <div>
+                <canvas id="branchDistribution"></canvas>
+            </div>
+            <div>
+                <canvas id="packageDistribution"></canvas>
+            </div>
+        </div>
+        <div class="bg-[#153F74] rounded-lg shadow-lg p-4 mb-4 flex justify-between w-full">
+          <div>
+              <canvas id="internshipSecured"></canvas>
+          </div>
+          <div>
+              <canvas id="internshipOpportunities"></canvas>
+          </div>
+        </div>
+        <div class="bg-[#153F74] rounded-lg shadow-lg p-4 mb-4 flex justify-between w-full">
+          <canvas id="studentPlaced"></canvas>
+        </div>
+    </c-sidebar>
+    <script>
+      new Chart(document.getElementById('branchDistribution'), {
+          type: 'pie',
+          data: {
+              labels: ['Computer Science', 'IT', 'AI/ML'],
+              datasets: [{
+                  data: [45, 10, 45],
+                  backgroundColor: ['#1e40af', '#818cf8', '#67e8f9'],
+                  borderWidth:0,
+              }]
+          },
+          options: {
+              responsive: true,
+              plugins: {
+                  legend: {
+                      position: 'right',
+                      labels: { color: 'white' }
+                  },
+                  title: {
+                      display: true,
+                      text: 'Branch Distribution',
+                      color: 'white',
+                      font:{
+                        size:24
+                      }
+                  }
+              }
+          }
+      });
+      new Chart(document.getElementById('packageDistribution'), {
+          type: 'doughnut',
+          data: {
+              labels: ['>Rs 5 LPA', '>Rs 3.5 LPA', '>Rs 8 LPA'],
+              datasets: [{
+                  borderWidth:0,
+                  data: [30, 50, 20],
+                  backgroundColor: ['#1e40af', '#818cf8', '#67e8f9']
+              }]
+          },
+          options: {
+              responsive: true,
+              plugins: {
+                  legend: {
+                      position: 'right',
+                      labels: { color: 'white' }
+                  },
+                  title: {
+                      display: true,
+                      text: 'Package',
+                      color: 'white',
+                      font:{
+                        size:24
+                      }
+                  }
+              }
+          }
+      });
+      new Chart(document.getElementById('internshipSecured'), {
+          type: 'pie',
+          data: {
+              labels: ['2022', '2023', '2024'],
+              datasets: [{
+                  data: [45, 5, 50],
+                  backgroundColor: ['#1e40af', '#818cf8', '#67e8f9'],
+                  borderWidth:0,
+              }]
+          },
+          options: {
+              responsive: true,
+              plugins: {
+                  legend: {
+                      position: 'right',
+                      labels: { color: 'white' }
+                  },
+                  title:{
+                    display: true,
+                    text: 'Internship Secured BatchWise',
+                    color: 'white',
+                    font:{
+                      size:24
+                    }
+                  }
+              }
+          }
+      });
+      new Chart(document.getElementById('internshipOpportunities'), {
+          type: 'pie',
+          data: {
+              labels: ['2022 Batch', '2023 Batch', '2024 Batch'],
+              datasets: [{
+                  data: [25, 15, 60],
+                  backgroundColor: ['#1e40af', '#818cf8', '#67e8f9'],
+                  borderWidth:0
+              }]
+          },
+          options: {
+              responsive: true,
+              plugins: {
+                  legend: {
+                      position: 'right',
+                      labels: { color: 'white' }
+                  },
+                  title:{
+                    display: true,
+                    text: 'Internship Opportunities',
+                    color: 'white',
+                    font:{
+                      size:24
+                    }
+                  }
+              }
+          }
+      });
+
+      new Chart(document.getElementById('studentPlaced'), {
+          type: 'bar',
+          data: {
+              labels: ['2020-21', '2021-22', '2022-23'],
+              datasets: [
+                  {
+                      label: 'Batch Wise',
+                      data: [300, 250, 600],
+                      backgroundColor: '#1e40af'
+                  },
+                  {
+                      label: 'Branch Wise',
+                      data: [350, 400, 600],
+                      backgroundColor: '#f97316'
+                  },
+                  {
+                      label: 'PLI Wise',
+                      data: [400, 400, 400],
+                      backgroundColor: '#ef4444'
+                  }
+              ]
+          },
+          options: {
+              responsive: true,
+              scales: {
+                  x: { stacked: true, grid: { color: '#475569' } },
+                  y: {
+                      stacked: true,
+                      grid: { color: '#475569' },
+                      ticks: { color: 'white' }
+                  }
+              },
+              plugins: {
+                  legend: {
+                      labels: { color: 'white' }
+                  }
+              }
+          }
+      });
+  </script>
+{% endblock %}

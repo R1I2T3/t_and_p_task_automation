@@ -18,7 +18,15 @@ class StudentAdmin(ImportExportModelAdmin, ModelAdmin):
     list_display = [
         "uid",
         "department",
+        "get_student_name",
+        "get_student_email",
     ]
+    def get_student_name(self, obj):
+        return obj.user.full_name if obj.user else ''
+    def get_student_email(self, obj):
+        return obj.user.email if obj.user else ''
+    get_student_name.short_description = 'Name'
+    get_student_email.short_description = 'Email'
     add_fieldsets = (
         (
             None,
