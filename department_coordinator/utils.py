@@ -1,5 +1,5 @@
 import pandas as pd
-
+import numpy as np
 ALLOWED_EXTENSIONS = {"csv","pdf"}
 
 def allowed_file(filename):
@@ -13,9 +13,12 @@ def validate_file(file):
 
 def importExcelAndReturnJSON(file):
     df = pd.read_csv(file)
+    df = df.replace({np.nan: None})
     ld = len(df)
     require_data = []
     for i in range(ld):
-        require_data.append(df.iloc[i].to_dict())
+        row_dict = df.iloc[i].to_dict()
+        clean_dict = {k.strip(): v for k, v in row_dict.items()}
+        require_data.append(clean_dict)
     return require_data
 

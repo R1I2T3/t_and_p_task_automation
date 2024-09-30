@@ -12,7 +12,7 @@
                 <h3 class="text-center text-lg">Total Student</h3>
                 <p class="text-2xl font-bold text-center">{{total_students}}</p>
             </div>
-            <div class=" grid grid-cols-4 gap-6 mb-10">
+            <div class="grid grid-cols-4 gap-6 mb-10">
                 <div class="bg-white text-[#153F74] p-2 rounded-lg shadow-lg">
                     <h3 class="text-center text-lg">FE/FT</h3>
                     <p class="text-2xl font-bold text-center">{{fe_count}}</p>
@@ -32,11 +32,12 @@
             </div>
         </div>
         <div class="flex justify-end items-center my-4">
-            <div>
-                <a class="px-4 py-2 mr-2 bg-gray-200 text-blue-900 rounded-full">FE</a>
-                <a class="px-4 py-2 mr-2 bg-gray-200 text-blue-900 rounded-full">SE</a>
-                <a class="px-4 py-2 mr-2 bg-blue-900 text-white rounded-full">TE</a>
-                <a class="px-4 py-2 bg-gray-200 text-blue-900 rounded-full">BE</a>
+            <div>   
+                <a class="px-4 py-2 mr-2 bg-gray-200 text-blue-900 rounded-full" href="{% url "department_coordinator_index"%}">All</a>
+                <a class="px-4 py-2 mr-2 bg-gray-200 text-blue-900 rounded-full" href="{% url "department_coordinator_index"%}?year=FE">FE</a>
+                <a class="px-4 py-2 mr-2 bg-gray-200 text-blue-900 rounded-full" href="{% url "department_coordinator_index" %}?year=SE">SE</a>
+                <a class="px-4 py-2 mr-2  bg-gray-200 text-blue-900 rounded-full" href="{% url "department_coordinator_index" %}?year=TE">TE</a>
+                <a class="px-4 py-2 bg-gray-200 text-blue-900 rounded-full" href="{% url "department_coordinator_index" %}?year=BE">BE</a>
             </div>
         </div>
         <div class="overflow-x-auto">
