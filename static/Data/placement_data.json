@@ -1,0 +1,42 @@
+{
+    "Total_placements_comparison": {
+        "Total_placements_2023": 638,
+        "Total_placements_2024": 460
+    },
+    "branch_comparison": {
+        "2023": {
+            "AI&DS": 0,
+            "AI&ML": 0,
+            "CIVIL-A": 37,
+            "CIVIL-B": 37,
+            "COMP-A": 61,
+            "COMP-B": 61,
+            "COMP-C": 55,
+            "E&TC-A": 54,
+            "E&TC-B": 58,
+            "ELEX": 52,
+            "IOT": 0,
+            "IT-A": 60,
+            "IT-B": 51,
+            "MECH-A": 57,
+            "MECH-B": 52
+        },
+        "2024": {
+            "AI&DS": 39,
+            "AI&ML": 40,
+            "CIVIL-A": 20,
+            "CIVIL-B": 17,
+            "COMP-A": 44,
+            "COMP-B": 44,
+            "COMP-C": 42,
+            "E&TC-A": 33,
+            "E&TC-B": 25,
+            "ELEX": 21,
+            "IOT": 18,
+            "IT-A": 32,
+            "IT-B": 37,
+            "MECH-A": 19,
+            "MECH-B": 26
+        }
+    }
+}

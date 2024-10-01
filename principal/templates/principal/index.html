@@ -1,149 +1,352 @@
 <!DOCTYPE html>
 {% load static %}
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href='{% static "css/style.css" %}'/>
-  <title>Training Programme</title>
-</head>
-<body>
-  <div class="training-programme">
-    <div class="div">
-      <div class="overlap">
-        <div class="overlap">
-          <div class="frame">
-            <div class="text-wrapper">Training Programme Statistics</div>
-          </div>
-          <div class="frame-2">
-            <div class="text-wrapper-2">TCET- TNP</div>
-            <img class="tcet-logo" alt="Tcet logo" src='{% static "img/tcet-logo-1.png" %}' />
-          </div>
-          <div class="frame-3">
-            <div class="text-wrapper-3">ACT/CDT</div>
-            <div class="text-wrapper-4">SDP</div>
-            <div class="text-wrapper-5">ESD/IP</div>
-            <div class="text-wrapper-6">DSA Contest..</div>
-            <div class="text-wrapper-7">Programmes offered</div>
-          </div>
-          <div class="group">
-            <div class="group-2">
-              <a class="text-wrapper-8" href="/principal">Training Program Statistics</a>
-              <img class="workstation" alt="Workstation" src='{% static "img/workstation.png" %}' />
-            </div>
-            <div class="group-3">
-              <a class="text-wrapper-9" href="/principal">Placement Statistics</a>
-              <img class="img" alt="Mail statistics" src='{% static "img/mail-statistics.png" %}' />
-            </div>
-            <div class="group-4">
-              <a class="text-wrapper-10" href="{% url "principal_internship" %}">Internship Statistics</a>
-              <img class="img" alt="Head with brain" src='{% static "img/head-with-brain.png" %}'/>
-            </div>
-          </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Internship statistics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+        display: flex;
+        overflow-x: hidden;
+      }
+      .main {
+        height: 100%;
+        width: 100%;
+        display: flex;
+      }
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        width: 20%;
+        height: 85%;
+        background-color: white;
+        color: #153f74;
+        padding: 20px;
+        border-radius: 20px;
+        margin: 20px;
+        -webkit-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+        -moz-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+        box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+      }
+      a {
+        text-decoration: none;
+        color: #153f74;
+      }
+      .sidebar .logo {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .logo img {
+        height: 80px;
+        margin-right: 10px;
+      }
+      .sidebar ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+      .sidebar ul li {
+        margin: 20px 0;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+      }
+      .sidebar ul li img {
+        margin-right: 10px;
+        height: 30px;
+      }
+      .spacer {
+        flex-grow: 1;
+      }
+      .sidebar .bottom-image {
+        text-align: center;
+      }
+      .sidebar .bottom-image img {
+        width: 80%;
+        border-radius: 10px;
+      }
+      .background {
+        z-index: -1;
+        position: absolute;
+        background-color: #d48525;
+        height: 25%;
+        width: 100vw;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        color: #fbf4eb;
+        width: 80%;
+        padding: 20px;
+      }
+      .container h1 {
+        margin: 0px;
+      }
+      table {
+        border-spacing: 30px;
+        width: 100%;
+        height: 100%;
+      }
+      td {
+        border: 1px solid black;
+        border-radius: 20px;
+        padding: 20px;
+        background-color: #153f74;
+      }
+      .companies_Offering_Internship,
+      .Students_securing_internship {
+        width: 70%;
+        padding: 0%;
+        height: 200px;
+      }
+      #companies_Offering_Internship {
+        width: 70%;
+        height: 100%;
+      }
+      .companies_Offering_Internship_div {
+        height: 200px;
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        padding: 10px;
+      }
+      .Students_securing_internship_div {
+        height: 200px;
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        padding: 10px;
+      }
+      .Students_securing_internship canvas {
+        width: 100% !important;
+        max-width: 400px;
+        height: 100% !important;
+        max-height: 200px;
+      }
+      .Internship_Opportunities {
+        padding: 0px;
+      }
+      .Internship_Opportunities_div {
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        padding: 10px;
+      }
+      .Internship_Opportunities canvas {
+        width: 100% !important;
+        max-width: 300px;
+        height: 100% !important;
+        max-height: 300px;
+      }
+      .Internship_Opportunities {
+        width: 30%;
+      }
+      .graph {
+        display: flex;
+        height: 120px;
+        padding: 10px;
+      }
+      .graph canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+      #branch,
+      #stipend {
+        max-width: 50%;
+        max-height: 100%;
+      }
+      #stipend {
+        border-left: 5px solid white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="background"></div>
+    <div class="main">
+      <div class="sidebar">
+        <div class="logo">
+          <img src="{% static 'img/logo.png' %}" alt="TCET Logo" />
+          <h1>TCET - TNP</h1>
         </div>
-        <div class="frame-4">
-          <div class="overlap-wrapper">
-            <div class="overlap-group">
-              <div class="overlap-group-wrapper">
-                <div class="overlap-group-2">
-                  <img class="vector" alt="Vector" src='{%static "svg/vector-4.svg" %}'/>
-                  <img class="vector-2" alt="Vector" src='{%static "svg/image.svg" %}' />
-                  <div class="text-wrapper-11">25%</div>
-                </div>
-              </div>
-              <div class="text-wrapper-12">75%</div>
-            </div>
-          </div>
-          <div class="group-5">
-            <div class="group-6">
-              <div class="frame-5"></div>
-              <div class="frame-6"></div>
-            </div>
-            <div class="text-wrapper-13">CDT</div>
-            <div class="text-wrapper-14">SDP</div>
-          </div>
-          <div class="text-wrapper-15">Students appearing <br>for</div>
-        </div>
-        <div class="div-wrapper">
-          <div class="overlap-2">
-            <div class="overlap-3">
-              <div class="frame-7">
-                <div class="overlap-group-3">
-                  <img class="vector-3" alt="Vector" src='{% static "svg/vector-5.svg" %}' />
-                  <img class="vector-5" alt="Vector" src='{% static "svg/vector-5.svg" %}' />
-                  <img class="vector-6" alt="Vector" src='{% static "svg/vector-5.svg" %}' />
-                  <img class="vector-7" alt="Vector" src='{% static "svg/vector-5.svg" %}' />
-                  <img class="vector-4" alt="Vector" src='{% static "svg/vector-5.svg" %}' />
-                  <img class="vector-8" alt="Vector" src='{%static "svg/vector-2.2.svg" %}' />
-                  <img class="vector-9" alt="Vector" src='{%static "svg/vector-2.2.svg" %}' />
-                  <img class="vector-10" alt="Vector" src='{%static "svg/vector-2.2.svg" %}' />
-                  <img class="vector-11" alt="Vector" src='{%static "svg/vector-2.2.svg" %}' />
-                  <img class="vector-12" alt="Vector" src='{%static "svg/vector-2.svg" %}' />
-                  <img class="vector-13" alt="Vector" src='{%static "svg/vector-2.svg" %}' />
-                  <img class="vector-14" alt="Vector" src='{%static "svg/vector-2.svg" %}' />
-                  <img class="vector-15" alt="Vector" src='{%static "svg/vector-2.svg" %}' />
-                  <img class="vector-16" alt="Vector" src='{%static "svg/vector.svg" %}' />
-                  <img class="vector-17" alt="Vector" src='{%static "svg/vector-3.svg" %}' />
-                </div>
-                <div class="text-wrapper-16">2019-2020</div>
-                <div class="text-wrapper-17">2020-2021</div>
-                <div class="text-wrapper-18">2021-2022</div>
-                <div class="text-wrapper-19">2022-2024</div>
-                <div class="text-wrapper-20">0</div>
-                <div class="text-wrapper-21">7</div>
-                <div class="text-wrapper-22">15</div>
-                <div class="text-wrapper-23">22</div>
-                <div class="text-wrapper-24">29</div>
-                <div class="text-wrapper-25">37</div>
-                <div class="text-wrapper-26">44</div>
-                <div class="text-wrapper-27">51</div>
-                <div class="text-wrapper-28">58</div>
-                <div class="text-wrapper-29">66</div>
-                <div class="text-wrapper-30">73</div>
-              </div>
-              <div class="text-wrapper-31">Students opted for</div>
-            </div>
-            <div class="group-7">
-              <div class="group-6">
-                <div class="frame-8"></div>
-                <div class="frame-9"></div>
-              </div>
-              <div class="text-wrapper-32">IP</div>
-              <div class="text-wrapper-33">ESD</div>
-            </div>
-          </div>
-        </div>
-        <div class="frame-10">
-          <div class="TCET-s-shastra">
-            TCET’s Shastra <br />
-            Platform
-          </div>
-          <div class="group-8">
-            <div class="overlap-group-4">
-              <div class="text-wrapper-34">15%</div>
-              <div class="text-wrapper-35">25%</div>
-              <div class="text-wrapper-36">60%</div>
-            </div>
-          </div>
-          <div class="group-9">
-            <div class="group-10">
-              <div class="frame-11"></div>
-              <div class="frame-12"></div>
-              <div class="frame-13"></div>
-            </div>
-            <div class="text-wrapper-37">TCET-GFG</div>
-            <div class="text-wrapper-38">TCET-GDSC</div>
-            <div class="text-wrapper-39">Shastra Coding Club</div>
-          </div>
-          <p class="p">“Learn to kindle your own heart”</p>
+        <ul>
+          <li>
+            <img
+              src="{% static 'img/Training_Programme_Statistics.png' %}"
+              alt="Icon"
+            />
+            <a href="{% url "principal_index" %}">Training Programme Statistics</a>
+          </li>
+          <li>
+            <img src="{% static 'img/Placement_statics.png' %}" alt="Icon" />
+            <a href="{% url "principal_placement" %}">Placement Statistics</a>
+          </li>
+          <li>
+            <img src="{% static 'img/Internship_statics.png' %}" alt="Icon" />
+            <a href="{% url "principal_internship" %}">Internship Statistics</a>
+          </li>
+        </ul>
+        <div class="spacer"></div>
+        <div class="bottom-image">
+          <img
+            src="{% static 'img/image-of-person-with-laptop.png' %}"
+            alt="Students working"
+            class="student-img"
+          />
         </div>
       </div>
-      <img
-        class="boy-and-girl-sitting"
-        alt="Boy and girl sitting"
-        src='{%static "img/boy-and-girl-sitting-in-front-of-laptop.png" %}'
-      />
+      <div class="container">
+        <u><h1>Training Programme Statistics</h1></u>
+        <table>
+          <tr>
+            <td colspan="3" style="padding: 0px" align="center">
+              <div style="font-size: 30px; margin-bottom: 20px">
+                Programms Offered
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-evenly;
+                "
+              >
+                <h2>SDP</h2>
+                <h2>ACT/CDT</h2>
+                <h2>ESD/IP</h2>
+                <h2>DSA CONTEST</h2>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" class="companies_Offering_Internship">
+              <div class="companies_Offering_Internship_div">
+                <u><h2>companies Offering Internship</h2></u>
+                <canvas id="companies_Offering_Internship"></canvas>
+              </div>
+            </td>
+            <td rowspan="2" class="Internship_Opportunities">
+              <div class="Internship_Opportunities_div">
+                <u><h2>Students Training Consent</h2></u>
+                <canvas id="Internship_Opportunities"></canvas>
+                <h3>"Be the change you want to be"</h3>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" class="Students_securing_internship">
+              <div class="Students_securing_internship_div">
+                <u><h2>Test Score</h2></u>
+                <canvas id="Students_securing_internship"></canvas>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
     </div>
-  </div>
-</body>
+
+    <script>
+      const Training_Data = JSON.parse(
+        "{{ Student_consent_for_Trainning_Institute|escapejs }}"
+      );
+
+      const trainigScore_Data = JSON.parse("{{ Test_score| escapejs}}");
+
+      const trainingScore_label = Object.keys(trainigScore_Data);
+      const trainigScore_values = Object.values(trainigScore_Data);
+
+      const trainigScore = document
+        .getElementById("Students_securing_internship")
+        .getContext("2d");
+      const trainingScore_dataset = {
+        labels: trainingScore_label,
+        datasets: [
+          {
+            label: "Field Distribution",
+            data: trainigScore_values,
+            borderWidth: 0,
+            backgroundColor: ["#084fd7", "#64bbc8", "#6975ff"],
+            hoverOffset: 4,
+          },
+        ],
+      };
+
+      const trainingScore_Graph = {
+        type: "pie",
+        data: trainingScore_dataset,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "right",
+              align: "start",
+              labels: {
+                color: "#ffffff",
+                boxWidth: 10,
+                padding: 20,
+              },
+            },
+            tooltip: {
+              enabled: true,
+            },
+          },
+        },
+      };
+
+      const Training_labels = Object.keys(Training_Data);
+      const Training_values = Object.values(Training_Data);
+
+      const Training = document
+        .getElementById("Internship_Opportunities")
+        .getContext("2d");
+      const taining_dataset = {
+        labels: Training_labels,
+        datasets: [
+          {
+            label: "Field Distribution",
+            data: Training_values,
+            borderWidth: 0,
+            backgroundColor: ["#6975ff", "#64bbc8", "#084fd7"],
+            hoverOffset: 4,
+          },
+        ],
+      };
+
+      const training_graph = {
+        type: "pie",
+        data: taining_dataset,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              align: "start",
+              labels: {
+                color: "#ffffff",
+                boxWidth: 10,
+                padding: 20,
+              },
+            },
+            tooltip: {
+              enabled: true,
+            },
+          },
+        },
+      };
+
+      const StudentsSecuringInternshipGraph = new Chart(
+        trainigScore,
+        trainingScore_Graph
+      );
+      const InternshipOpportunitiesGraph = new Chart(Training, training_graph);
+    </script>
+  </body>
 </html>
