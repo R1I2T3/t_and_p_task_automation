@@ -33,6 +33,7 @@ class CustomUserManager(UserManager):
     def create_superuser(self, email=None, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("role", "system_admin")
         return self._create_user(email, password, **extra_fields)
 
 
@@ -42,6 +43,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         ("system_admin", "system_admin"),
         ("principal", "principal"),
         ("department_coordinator", "department_coordinator"),
+        ("program_coordinator", "program_coordinator"),
+        ("training_officer","placement_officer"),
+        ("internship_officer","internship_officer"),
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)

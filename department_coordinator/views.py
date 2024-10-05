@@ -19,11 +19,11 @@ def index(request):
     department_coordinator = DepartmentCoordinator.objects.get(user=request.user)
     students = Student.objects.select_related("user").all()
     context = {}
-    context["total_students"] = len(students)
-    context["fe_count"] = len(students.filter(academic_year="FE"))
-    context["te_count"] = len(students.filter(academic_year="TE"))
-    context["be_count"] = len(students.filter(academic_year="BE"))
-    context["se_count"] = len(students.filter(academic_year="SE"))
+    context["total_students"] = len(students.filter(department=department_coordinator.department))
+    context["fe_count"] = len(students.filter(academic_year="FE",department=department_coordinator.department))
+    context["te_count"] = len(students.filter(academic_year="TE",department=department_coordinator.department))
+    context["be_count"] = len(students.filter(academic_year="BE",department=department_coordinator.department))
+    context["se_count"] = len(students.filter(academic_year="SE",department=department_coordinator.department))
     context["department_students"] = students.filter(
         department=department_coordinator.department
     )
@@ -37,6 +37,7 @@ def index(request):
 @login_required
 def stats(request):
     df = importExcelAndReturnJSON(os.path.join(settings.BASE_DIR, "alumni2023.csv"))
+    department_coordinator = DepartmentCoordinator.objects.get(user=request.user)
     cleaned_df = list(filter(lambda x: x.get("salary") is not None, df))
     departments = list(set(
         filter(
@@ -55,19 +56,21 @@ def stats(request):
     salaries_range = {'>Rs 5 LPA':0, '>Rs 3.5 LPA':0, '>Rs 8 LPA':0}
     for entry in cleaned_df:
         branch_div = entry.get("BRANCH /DIV", "")
-        salary = entry.get("salary", 0)
 
+        salary = entry.get("salary", 0)
         if branch_div:
             department = branch_div.split("-")[0]
             if department in departments:
-                student_salary = float(salary.split("/")[0])
-                department_salaries[department] += student_salary
-                if student_salary>5 and student_salary<8:
-                    salaries_range['>Rs 5 LPA']+=1
-                elif student_salary>=3.5 and student_salary<5:
-                    salaries_range['>Rs 3.5 LPA']+=1
-                else:
-                    salaries_range['>Rs 8 LPA']+=1
+                student_salaries = salary.split("/")
+                for i in student_salaries:
+                    department_salaries[department] += 1
+                    if department==department_coordinator.department:
+                        if float(i)>5 and float(i)<8:
+                            salaries_range['>Rs 5 LPA']+=1
+                        elif float(i)>=3.5 and float(i)<5:
+                            salaries_range['>Rs 3.5 LPA']+=1
+                        else:
+                            salaries_range['>Rs 8 LPA']+=1
     context = {
         "department_salaries":json.dumps(department_salaries),
         "salaries_range":json.dumps(salaries_range),
@@ -87,10 +90,9 @@ def attendance(request):
                 df = importExcelAndReturnJSON(request.FILES.get("file_attendance"))
                 for i in df:
                     student = Student.objects.get(uid=i["uid"])
-                    AcademicAttendanceSemester.objects.create(
+                    AcademicAttendanceSemester.objects.update_or_create(
+                        defaults={"attendance": i["attendance"],"semester":i["semester"]},
                         student=student,
-                        attendance=i["attendance"],
-                        semester=i["semester"],
                     )
                 messages.success(request, "Data imported successfully")
             else:
@@ -100,9 +102,9 @@ def attendance(request):
                 df = importExcelAndReturnJSON(request.FILES.get("file_performance"))
                 for i in df:
                     student = Student.objects.get(uid=i["uid"])
-                    AcademicPerformanceSemester.objects.create(
+                    AcademicPerformanceSemester.objects.update_or_create(
                         student=student,
-                        performance=i["performance"],
+                        defaults={"performance": i["performance"],"semester":i["semester"]},
                         semester=i["semester"],
                     )
                 messages.success(request, "Data imported successfully")

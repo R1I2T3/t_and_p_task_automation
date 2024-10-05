@@ -17,8 +17,14 @@ def login(request):
             print(user.role)
             if user.role == "principal":
                 return redirect("/principal/")
-            if user.role == "department_coordinator":
+            elif user.role == "department_coordinator":
                 return redirect("/department_coordinator/")
+            elif user.role == "program_coordinator":
+                return redirect("/program_coordinator/")
+            elif user.role == "student":
+                return redirect("/student/")
+            elif user.role == "training_officer":
+                return redirect("/training_officer/")
             return redirect("/")
         else:
             # Invalid credentials

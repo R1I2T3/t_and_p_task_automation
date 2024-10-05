@@ -7,19 +7,22 @@
 {% block content %}
    <div class="z-[-1] absolute bg-[#d48525] h-[25%] w-[100%]"></div>
     <c-sidebar>
-        <div class="bg-[#153F74] rounded-lg shadow-lg p-4 mb-4 flex justify-between w-full mx-auto">
-            <div class="w-[60%]">
-                <canvas id="branchDistribution" class="w-[50%]"></canvas>
-            </div>
-            <div class="w-[60%]">
-                <canvas id="packageDistribution" class="w-[50%]"></canvas>
+        <div class="bg-[#153F74] rounded-lg shadow-lg p-4 mb-4 flex flex-col">
+            <h1 class="text-3xl font-bold">Placement Analysis</h1>
+            <div class="flex justify-between items-center w-full mx-auto">
+                <div class="w-[35%] border-white">
+                    <canvas id="branchDistribution" class="w-[50%]"></canvas>
+                </div>
+                <div class="w-[35%]">
+                    <canvas id="packageDistribution" class="w-[50%]"></canvas>
+                </div>
             </div>
         </div>
         <div class="bg-[#153F74] rounded-lg shadow-lg p-4 mb-4 flex justify-between w-full">
-          <div class="w-[60%]">
+          <div class="w-[40%]">
               <canvas id="internshipSecured"></canvas>
           </div>
-          <div class="w-[60%]">
+          <div class="w-[40%]">
               <canvas id="internshipOpportunities"></canvas>
           </div>
         </div>
@@ -52,7 +55,7 @@
                     text: 'Branch Distribution',
                     color: 'white',
                     font:{
-                      size:24
+                      size:16
                     }
                 }
             }
@@ -79,7 +82,7 @@
                     text: 'Package',
                     color: 'white',
                     font:{
-                      size:24
+                      size:16
                     }
                 }
             }
