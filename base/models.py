@@ -44,13 +44,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         ("principal", "principal"),
         ("department_coordinator", "department_coordinator"),
         ("program_coordinator", "program_coordinator"),
-        ("training_officer","placement_officer"),
-        ("internship_officer","internship_officer"),
+        ("training_officer", "placement_officer"),
+        ("internship_officer", "internship_officer"),
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=100)
-    role = models.TextField(choices=USER_ROLE_TYPE)
+    role = models.CharField(choices=USER_ROLE_TYPE, max_length=200, default="student")
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     USERNAME_FIELD = "email"
@@ -65,3 +65,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_full(self):
         return self.full_name
+
+
+class UserDevice(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    device_id = models.CharField(max_length=255, unique=True)
+    is_verified = models.BooleanField(default=False)
+    last_login = models.DateTimeField(auto_now=True)
