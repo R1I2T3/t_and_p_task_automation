@@ -3,6 +3,9 @@ from django.db import models
 import uuid
 from django.core.mail import send_mail
 from django.conf import settings
+from datetime import timedelta
+from django.utils import timezone
+import pyotp
 
 
 class CustomUserManager(UserManager):
@@ -72,3 +75,20 @@ class UserDevice(models.Model):
     device_id = models.CharField(max_length=255, unique=True)
     is_verified = models.BooleanField(default=False)
     last_login = models.DateTimeField(auto_now=True)
+
+
+class PasswordResetOTP(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    otp_secret = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @classmethod
+    def generate_otp_secret(cls, user):
+        otp_secret = pyotp.random_base32()
+        return cls.objects.create(user=user, otp_secret=otp_secret)
+
+    def verify_otp(self, otp):
+        totp = pyotp.TOTP(self.otp_secret, interval=600)  # 10 minutes validity
+        return totp.verify(otp) and self.created_at >= timezone.now() - timedelta(
+            minutes=10
+        )
