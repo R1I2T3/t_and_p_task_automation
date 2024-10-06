@@ -17,4 +17,5 @@ urlpatterns = [
         views.password_reset_confirm,
         name="password_reset_confirm",
     ),
+    path("logout/", views.logout_view, name="logout"),
 ]

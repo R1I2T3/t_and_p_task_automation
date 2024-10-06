@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login as login_user
+from django.contrib.auth import authenticate, login as login_user, logout
 from django.contrib import messages
 from base.models import User, UserDevice, PasswordResetOTP
 import uuid
@@ -8,7 +8,6 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.core.mail import send_mail
 from django.conf import settings
-from django.contrib.auth.hashers import make_password
 
 
 def send_otp(email, otp, subject="OTP Verification"):
@@ -58,11 +57,16 @@ def login(request):
             device_id = request.COOKIES.get("device_id")
             if not device_id:
                 device_id = str(uuid.uuid4())
-            device, created = UserDevice.objects.get_or_create(
-                user=user, device_id=device_id
-            )
+            device = UserDevice.objects.filter(device_id=device_id).first()
+            if device:
+                if device.user != user:
+                    # If device exists but belongs to a different user, update the user field
+                    device.user = User.objects.get(id=user.pk)
+                    device.is_verified = False
+                    device.save()
+            else:
+                device = UserDevice.objects.create(user=user, device_id=device_id)
             if not device.is_verified:
-                print("I am here")
                 totp = pyotp.TOTP(pyotp.random_base32())
                 otp = totp.now()
                 send_otp(user.email, otp)
@@ -154,3 +158,8 @@ def password_reset_confirm(request):
         else:
             messages.error(request, "Passwords do not match.")
     return render(request, "base/password_reset_confirm.html")
+
+
+def logout_view(request):
+    logout(request)
+    return redirect("/auth/login/")

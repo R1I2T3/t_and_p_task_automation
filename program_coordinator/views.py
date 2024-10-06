@@ -8,6 +8,8 @@ from student.models import (
     TrainingPerformanceSemester,
 )
 from .models import ProgramCoordinator
+from django.db.models import Count, Avg
+import json
 
 
 # Create your views here.
@@ -15,7 +17,41 @@ from .models import ProgramCoordinator
 def index(request):
     if request.user.role != "program_coordinator":
         return redirect("/")
-    return render(request, "program_coordinator/index.html")
+    program_coordinator = ProgramCoordinator.objects.get(user=request.user)
+    result = (
+        TrainingAttendanceSemester.objects.filter(program=program_coordinator)
+        .values("student__department", "student__academic_year")
+        .annotate(
+            total_by_department=Count("student__department"),
+            total_by_year=Count("student__academic_year"),
+            avg_attendance_by_department=Avg("training_attendance"),
+        )
+    )
+    branch_avg_performance = (
+        TrainingPerformanceSemester.objects.filter(program=program_coordinator)
+        .values("student__department")
+        .annotate(avg_performance=Avg("training_performance"))
+    )
+    students_by_department = {}
+    students_by_year = {}
+    branch_avg_attendance = {}
+    for entry in result:
+        department = entry["student__department"]
+        year = entry["student__academic_year"]
+        students_by_department[department] = entry["total_by_department"]
+        students_by_year[year] = entry["total_by_year"]
+        branch_avg_attendance[department] = entry["avg_attendance_by_department"]
+    branch_performance_dict = {
+        entry["student__department"]: entry["avg_performance"]
+        for entry in branch_avg_performance
+    }
+    context = {
+        "department_count": json.dumps(students_by_department),
+        "year_count": json.dumps(students_by_year),
+        "department_avg_attendance": json.dumps(branch_avg_attendance),
+        "department_avg_performance": json.dumps(branch_performance_dict),
+    }
+    return render(request, "program_coordinator/index.html", context)
 
 
 @login_required
