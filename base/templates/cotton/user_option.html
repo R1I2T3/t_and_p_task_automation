@@ -1,0 +1,11 @@
+{% load static %}
+{% load static tailwind_tags %}
+{% tailwind_css %}
+<div class="flex flex-col lg:flex-row justify-between items-center gap-3">
+    <a href="{% url "user_profile" %}">
+      <img src="{% static 'img/user_profile.png' %}" alt="Students working" class="w-[50px] rounded-lg" />
+    </a>
+    <a  href="{% url 'logout' %}">
+      <img src="{% static 'img/logout.png' %}" alt="Logout" class="w-[50px] rounded-lg" />
+    </a>
+</div>

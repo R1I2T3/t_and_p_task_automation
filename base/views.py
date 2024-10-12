@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as login_user, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from base.models import User, UserDevice, PasswordResetOTP
 import uuid
@@ -60,19 +61,18 @@ def login(request):
             device = UserDevice.objects.filter(device_id=device_id).first()
             if device:
                 if device.user != user:
-                    # If device exists but belongs to a different user, update the user field
                     device.user = User.objects.get(id=user.pk)
-                    device.is_verified = False
                     device.save()
             else:
                 device = UserDevice.objects.create(user=user, device_id=device_id)
             if not device.is_verified:
-                totp = pyotp.TOTP(pyotp.random_base32())
+                otp_secret = pyotp.random_base32()
+                totp = pyotp.TOTP(otp_secret)
                 otp = totp.now()
-                send_otp(user.email, otp)
-                request.session["otp_secret"] = totp.secret
+                send_otp(user.email, otp, "OTP for device verification")
+                print(totp.secret)
+                request.session["otp_secret"] = otp_secret
                 request.session["user_id"] = str(user.pk)
-                print(type(device.device_id))
                 request.session["device_id"] = str(device.device_id)
                 return redirect("verify_otp")
             else:
@@ -163,3 +163,25 @@ def password_reset_confirm(request):
 def logout_view(request):
     logout(request)
     return redirect("/auth/login/")
+
+
+@login_required
+def user_profile(request):
+    user = User.objects.get(id=request.user.id)
+    return render(request, "base/user_profile.html", {"user": user})
+
+
+@login_required
+def password_update(request):
+    user = User.objects.get(id=request.user.id)
+    if request.method == "POST":
+        password = request.POST.get("new_password")
+        confirm_password = request.POST.get("confirm_password")
+        if password == confirm_password:
+            print(password)
+            user.set_password(password)
+            user.save()
+            messages.success(request, "password update successfully")
+        else:
+            messages.error(request, "Passwords do not match.")
+    return render(request, "base/password_update.html")
