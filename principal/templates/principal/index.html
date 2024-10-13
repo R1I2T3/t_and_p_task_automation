@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Internship statistics</title>
+    <title>Traning stats</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       body {
@@ -182,7 +182,7 @@
               src="{% static 'img/Training_Programme_Statistics.png' %}"
               alt="Icon"
             />
-            <a href="{% url "principal_index" %}">Training Programme Statistics</a>
+            <a href="{% url "principal_index" %}">Training  Statistics</a>
           </li>
           <li>
             <img src="{% static 'img/Placement_statics.png' %}" alt="Icon" />
@@ -194,18 +194,12 @@
           </li>
         </ul>
         <div class="spacer"></div>
-        <div class="bottom-image">
-          <img
-            src="{% static 'img/image-of-person-with-laptop.png' %}"
-            alt="Students working"
-            class="student-img"
-          />
-        </div>
+        <c-user_option></c-user_option>
       </div>
       <div class="container">
-        <u><h1>Training Programme Statistics</h1></u>
-        <table>
-          <tr>
+        <u><h1 class="text-xl lg:text-2xl font-bold">Training Programme Statistics</h1></u>        
+        <table class="gap-3">
+          <tr class="p-3">
             <td colspan="3" style="padding: 0px" align="center">
               <div style="font-size: 30px; margin-bottom: 20px">
                 Programms Offered
@@ -217,23 +211,23 @@
                   justify-content: space-evenly;
                 "
               >
-                <h2>SDP</h2>
-                <h2>ACT/CDT</h2>
-                <h2>ESD/IP</h2>
-                <h2>DSA CONTEST</h2>
+                <h2 class="text-xl">SDP</h2>
+                <h2 class="text-xl">ACT/CDT</h2>
+                <h2 class="text-xl">ESD/IP</h2>
+                <h2 class="text-xl">DSA CONTEST</h2>
               </div>
             </td>
           </tr>
           <tr>
             <td colspan="2" class="companies_Offering_Internship">
               <div class="companies_Offering_Internship_div">
-                <u><h2>companies Offering Internship</h2></u>
+                <u><h2>Mock test Marks</h2></u>
                 <canvas id="companies_Offering_Internship"></canvas>
               </div>
             </td>
             <td rowspan="2" class="Internship_Opportunities">
               <div class="Internship_Opportunities_div">
-                <u><h2>Students Training Consent</h2></u>
+                <u><h2>ACT Techinical Marks</h2></u>
                 <canvas id="Internship_Opportunities"></canvas>
                 <h3>"Be the change you want to be"</h3>
               </div>
@@ -242,7 +236,7 @@
           <tr>
             <td colspan="2" class="Students_securing_internship">
               <div class="Students_securing_internship_div">
-                <u><h2>Test Score</h2></u>
+                <u><h2>Attendance</h2></u>
                 <canvas id="Students_securing_internship"></canvas>
               </div>
             </td>
@@ -252,101 +246,158 @@
     </div>
 
     <script>
-      const Training_Data = JSON.parse(
-        "{{ Student_consent_for_Trainning_Institute|escapejs }}"
-      );
-
-      const trainigScore_Data = JSON.parse("{{ Test_score| escapejs}}");
-
-      const trainingScore_label = Object.keys(trainigScore_Data);
-      const trainigScore_values = Object.values(trainigScore_Data);
-
-      const trainigScore = document
-        .getElementById("Students_securing_internship")
-        .getContext("2d");
-      const trainingScore_dataset = {
-        labels: trainingScore_label,
-        datasets: [
-          {
-            label: "Field Distribution",
-            data: trainigScore_values,
-            borderWidth: 0,
-            backgroundColor: ["#084fd7", "#64bbc8", "#6975ff"],
-            hoverOffset: 4,
-          },
-        ],
-      };
-
-      const trainingScore_Graph = {
-        type: "pie",
-        data: trainingScore_dataset,
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: "right",
-              align: "start",
-              labels: {
-                color: "#ffffff",
-                boxWidth: 10,
-                padding: 20,
-              },
+      const avg_attendance_phase_1_2 = JSON.parse(
+      `{{ avg_attendance_phase_1_2|safe }}`
+    );
+      const cleaned_scores_technical = JSON.parse(
+      `{{ cleaned_scores_technical|safe }}`
+    );
+      const mock_test_marks = JSON.parse(
+      `{{ mock_test_marks|safe }}`
+    );
+    
+    // Extract keys and values from the parsed JSON data
+    const labels = Object.keys(avg_attendance_phase_1_2);  // Labels for the x-axis (Phases)
+    const dataValues = Object.values(avg_attendance_phase_1_2);  // Values for the y-axis
+    
+    // Get the canvas element
+    const ctx = document.getElementById('Students_securing_internship').getContext('2d');
+    
+    // Prepare the chart data
+    const attendanceData = {
+      labels: labels,  // Use keys from JSON as labels for the bars (Phase-1, Phase-2)
+      datasets: [{
+        label: 'Average Attendance',  // Dataset label
+        data: dataValues,  // Use values from JSON as data
+        borderWidth: 1,
+        backgroundColor: 'rgb(255, 99, 132)'  // Set bar color        
+      }]
+    };
+    
+    // Create the bar chart
+    new Chart(ctx, {
+      type: 'bar',
+      data: attendanceData,
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Average Attendance',
+              color: 'white'  // Set text color to white
             },
-            tooltip: {
-              enabled: true,
-            },
+            ticks: {
+              color: 'white'  // Set y-axis label color to white
+            }
           },
+          x: {
+            title: {
+              display: true,
+              text: 'Phases',
+              color: 'white'  // Set text color to white
+            },
+            ticks: {
+              color: 'white'  // Set x-axis label color to white
+            }
+          }
         },
-      };
-
-      const Training_labels = Object.keys(Training_Data);
-      const Training_values = Object.values(Training_Data);
-
-      const Training = document
-        .getElementById("Internship_Opportunities")
-        .getContext("2d");
-      const taining_dataset = {
-        labels: Training_labels,
-        datasets: [
-          {
-            label: "Field Distribution",
-            data: Training_values,
-            borderWidth: 0,
-            backgroundColor: ["#6975ff", "#64bbc8", "#084fd7"],
-            hoverOffset: 4,
+        plugins: {
+          legend: {
+            labels: {
+              color: 'white'  // Set legend label text color to white
+            }
           },
-        ],
-      };
+          title: {
+            display: true,
+            text: 'Training Data Attendance',
+            color: 'white'  // Set title text color to white
+          }
+        }
+      }
+    });
+      
+    
 
-      const training_graph = {
-        type: "pie",
-        data: taining_dataset,
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: "bottom",
-              align: "start",
-              labels: {
-                color: "#ffffff",
-                boxWidth: 10,
-                padding: 20,
-              },
-            },
-            tooltip: {
-              enabled: true,
-            },
-          },
+    const bins = Array(7).fill(0); // 0-10, 10-20, ..., 50-60
+
+    cleaned_scores_technical.forEach(value => {
+        const binIndex = Math.floor(value / 10);
+        if (binIndex < bins.length) {
+          bins[binIndex]++;
+        }
+      });
+
+      // Create the histogram
+      const ctx1 = document.getElementById('Internship_Opportunities').getContext('2d');
+      new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: ['0-10', '10-20', '20-30', '30-40', '40-50', '50-60'], // Bin labels
+          datasets: [{
+            label: 'No of students',
+            data: bins,
+            borderWidth: 1,
+            backgroundColor: 'rgb(237, 142, 79)'
+          }]
         },
-      };
+        options: {
+          scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: 'white'  // Set y-axis label color to white
+            }
+          },
+          x: {
+            
+            ticks: {
+              color: 'white'  // Set x-axis label color to white
+            }
+          }
+        },
+        }
+      });
 
-      const StudentsSecuringInternshipGraph = new Chart(
-        trainigScore,
-        trainingScore_Graph
-      );
-      const InternshipOpportunitiesGraph = new Chart(Training, training_graph);
-    </script>
+    const bins1 = Array(12).fill(0); // 0-10, 10-20, ..., 50-60
+
+    mock_test_marks.forEach(value => {
+        const binIndex = Math.floor(value / 10);
+        if (binIndex < bins1.length) {
+          bins1[binIndex]++;
+        }
+      });
+
+      // Create the histogram
+      const ctx2 = document.getElementById('companies_Offering_Internship').getContext('2d');
+      new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: ['0-10', '10-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70-80', '80-90', '90-100', '100-110', '110-120'], // Bin labels
+          datasets: [{
+            label: 'No of students',
+            data: bins1,
+            borderWidth: 1,
+            backgroundColor: 'rgb(255, 159, 44)',
+          }]
+        },
+        options: {
+          scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: 'white'  // Set y-axis label color to white
+            }
+          },
+          x: {
+            
+            ticks: {
+              color: 'white'  // Set x-axis label color to white
+            }
+          }
+        },
+        }
+      });
+  </script>
   </body>
 </html>

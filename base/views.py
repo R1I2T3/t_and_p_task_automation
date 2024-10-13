@@ -46,6 +46,8 @@ def redirect_user(request, user):
         response = redirect("/training_officer/")
     elif user.role == "internship_officer":
         response = redirect("/internship_officer/")
+    elif user.role == "placement_officer":
+        response = redirect("/placement_officer/")
     else:
         response = redirect("/")
     return response

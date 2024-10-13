@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Internship statistics</title>
+    <title>Placement statistics</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       body {
@@ -117,7 +117,7 @@
         align-items: center;
         padding: 10px;
       }
-      .stipend_per_branch_div {
+      .Students_securing_internship_div {
         height: 200px;
         display: flex;
         justify-content: space-evenly;
@@ -174,30 +174,19 @@
       <div class="sidebar">
         <div class="logo">
           <img src="{% static 'img/logo.png' %}" alt="TCET Logo" />
-          <h1>TCET - TNP</h1>
+          <h1>TCET-TNP</h1>
         </div>
         <ul>
           <li>
-            <img
-              src="{% static 'img/Training_Programme_Statistics.png' %}"
-              alt="Icon"
-            />
-            <a href="{% url "principal_index" %}">Training Statistics</a>
-          </li>
-          <li>
             <img src="{% static 'img/Placement_statics.png' %}" alt="Icon" />
             <a href="{% url "principal_placement" %}">Placement Statistics</a>
-          </li>
-          <li>
-            <img src="{% static 'img/Internship_statics.png' %}" alt="Icon" />
-            <a href="{% url "principal_internship" %}">Internship Statistics</a>
           </li>
         </ul>
         <div class="spacer"></div>
         <c-user_option></c-user_option>
       </div>
       <div class="container">
-        <u><h1>Internship statistics</h1></u>
+        <u><h1>Placement statistics</h1></u>
         <table>
           <tr>
             <td colspan="3" rowspan="1" style="padding: 0px">
@@ -210,23 +199,33 @@
           <tr>
             <td colspan="2" class="companies_Offering_Internship">
               <div class="companies_Offering_Internship_div">
-                <u><h2>companies Offering Internship</h2></u>
+                <u><h2>Placement Statistics</h2></u>
                 <canvas id="companies_Offering_Internship"></canvas>
               </div>
             </td>
             <td rowspan="2" class="Internship_Opportunities">
               <div class="Internship_Opportunities_div">
-                <u><h2>Internship Opportunities</h2></u>
+                <u><h2>Top 10 companies</h2></u>
                 <canvas id="Internship_Opportunities"></canvas>
-                <h3>"Be the change you want to be"</h3>
+                <h3>"Be brave and follow your passion"</h3>
               </div>
             </td>
           </tr>
           <tr>
             <td colspan="2" class="Students_securing_internship">
-              <div class="stipend_per_branch_div">
-                <u><h2>stipend per branch</h2></u>
+              <div class="Students_securing_internship_div">
+                <u><h2>Student's Consent</h2></u>
                 <canvas id="Students_securing_internship"></canvas>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="3" rowspan="1" style="padding: 20px;">
+              <div style="display:flex;flex-direction:column">
+                <h1 >Student Consent 2022</h1>
+                <div style="height:60dvh;width: full">
+                  <canvas id="branch_wise_consent_2022" ></canvas>
+                </div>
               </div>
             </td>
           </tr>
@@ -235,30 +234,31 @@
     </div>
 
     <script>
-      const branchData = JSON.parse(`{{ branch_data|safe }}`);
-      const stipendData = JSON.parse(`{{ stipend_data|safe }}`);
-      const stipend_per_branch_Data = JSON.parse(
-        `{{ stipend_per_branch|safe }}`
+      // Parsing the passed JSON safely
+      const consentGraph = JSON.parse(`{{ consent_graph|safe }}`);
+      const consent_counts_by_branch = JSON.parse(
+        `{{ consent_counts_by_branch|safe }}`
       );
-      const Internship_Opportunities_Data = JSON.parse(
-        `{{ internship_opportunities_data|safe }}`
+      const top_10_employers = JSON.parse(`{{ top_10_employers|safe }}`);
+      const placement_distribution_by_branch = JSON.parse(
+        `{{ placement_distribution_by_branch|safe }}`
       );
-      const internship_bar_labels = JSON.parse(
-        `{{ internship_bar_labels|safe }}`
+      const average_salary_by_branch = JSON.parse(
+        `{{ average_salary_by_branch|safe }}`
       );
-      const internship_bar_data_load = JSON.parse(
-        `{{ internship_bar_data|safe }}`
-      );
+      const consent_2022 = JSON.parse(`{{ consent_2022|safe }}`);
+      // Extracting the labels (branches) and values (placements)
+      const branch_labels = Object.keys(placement_distribution_by_branch);
+      const values = Object.values(placement_distribution_by_branch);
 
-      const branch_labels = branchData.fields.map((field) => field.label);
-      const values = branchData.fields.map((field) => field.value);
-
+      // Initialize the chart for Placement Distribution by Branch
       const branch = document.getElementById("branch").getContext("2d");
+
       const data = {
         labels: branch_labels,
         datasets: [
           {
-            label: "Field Distribution",
+            label: "Placement Distribution",
             data: values,
             borderWidth: 0,
             hoverOffset: 4,
@@ -289,26 +289,30 @@
         },
       };
 
-      const stipend_labels = stipendData.fields.map((field) => field.label);
-      const stipend_values = stipendData.fields.map((field) => field.value);
+      // Creating the chart
+      const branchWiseGraph = new Chart(branch, branchGraph);
 
-      const stipend = document.getElementById("stipend").getContext("2d");
-      const stipend_data = {
-        labels: stipend_labels,
+      // Salary Distribution chart (Doughnut)
+      const averageSalary_labels = Object.keys(average_salary_by_branch);
+      const averageSalary_values = Object.values(average_salary_by_branch);
+
+      const averageSalary = document.getElementById("stipend").getContext("2d");
+
+      const averageSalary_data = {
+        labels: averageSalary_labels,
         datasets: [
           {
-            label: "Field Distribution",
-            data: stipend_values,
+            label: "Average Salary   Distribution",
+            data: averageSalary_values,
             borderWidth: 0,
-            
             hoverOffset: 4,
           },
         ],
       };
 
-      const stipendGraph = {
+      const averageSalary_graph = {
         type: "doughnut",
-        data: stipend_data,
+        data: averageSalary_data,
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -329,129 +333,30 @@
         },
       };
 
-      const internship_bar_data = {
-        labels: internship_bar_labels,
-        datasets: [
-          {
-            label: "Companies",
-            data: internship_bar_data_load,
-            backgroundColor: "#5687f2",
-            borderColor: ["rgb(255, 255, 255)"],
-            borderWidth: 0,
-          },
-        ],
-      };
+      // Creating the salary distribution chart
+      const averageSalaryGraph = new Chart(averageSalary, averageSalary_graph);
 
-      const companies_Offering_Internship = document
-        .getElementById("companies_Offering_Internship")
-        .getContext("2d");
-      const InternshipBar = {
-        type: "bar",
-        data: internship_bar_data,
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                color: "#ffffff",
-              },
-              grid: {
-                color: "#444444",
-              },
-            },
-            x: {
-              ticks: {
-                color: "#ffffff",
-                autoSkip: false, 
-              },
-              grid: {
-                color: "#444444",
-              },
-            },
-          },
-          plugins: {
-            legend: {
-              labels: {
-                color: "#ffffff",
-                boxWidth: 10,
-                padding: 20,
-              },
-            },
-            tooltip: {
-              enabled: true,
-            },
-          },
-        },
-      };
+      const placement_Opportunities_labels = Object.keys(top_10_employers);
+      const placement_Opportunities_values = Object.values(top_10_employers);
 
-      const stipend_per_branch_labels =
-        stipend_per_branch_Data.fields.map((field) => field.label);
-      const stipend_per_branch_values =
-        stipend_per_branch_Data.fields.map((field) => field.value);
-
-      const Students_securing_internship = document
-        .getElementById("Students_securing_internship")
-        .getContext("2d");
-      const stipend_per_branch_data = {
-        labels: stipend_per_branch_labels,
-        datasets: [
-          {
-            label: "Field Distribution",
-            data: stipend_per_branch_values,
-            borderWidth: 0,
-            
-            hoverOffset: 4,
-          },
-        ],
-      };
-
-      const stipend_per_branch_Graph = {
-        type: "pie",
-        data: stipend_per_branch_data,
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: "right",
-              align: "start",
-              labels: {
-                color: "#ffffff",
-                boxWidth: 10,
-                padding: 20,
-              },
-            },
-            tooltip: {
-              enabled: true,
-            },
-          },
-        },
-      };
-
-      const Internship_Opportunities_labels =
-        Internship_Opportunities_Data.fields.map((field) => field.label);
-      const Internship_Opportunities_values =
-        Internship_Opportunities_Data.fields.map((field) => field.value);
-
-      const Internship_Opportunities = document
+      const placement_Opportunities = document
         .getElementById("Internship_Opportunities")
         .getContext("2d");
-      const Internship_Opportunities_data = {
-        labels: Internship_Opportunities_labels,
+      const placement_Opportunities_data = {
+        labels: placement_Opportunities_labels,
         datasets: [
           {
             label: "Field Distribution",
-            data: Internship_Opportunities_values,
+            data: placement_Opportunities_values,
             borderWidth: 0,
-            
             hoverOffset: 4,
           },
         ],
       };
 
-      const Internship_Opportunities_Graph = {
+      const placement_Opportunities_graph = {
         type: "pie",
-        data: Internship_Opportunities_data,
+        data: placement_Opportunities_data,
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -472,20 +377,169 @@
         },
       };
 
-      const stipendWiseGraph = new Chart(stipend, stipendGraph);
-      const branchWiseGraph = new Chart(branch, branchGraph);
-      const InternshipBarGraph = new Chart(
-        companies_Offering_Internship,
-        InternshipBar
+      const placementOpportunitiesGraph = new Chart(
+        placement_Opportunities,
+        placement_Opportunities_graph
       );
-      const StudentsSecuringInternshipGraph = new Chart(
-        Students_securing_internship,
-        stipend_per_branch_Graph
+
+      const consent_labels = Object.keys(consentGraph);
+      const consent_values = Object.values(consentGraph).map((value) =>
+        parseFloat(value).toFixed(2)
+      ); // Round to 2 decimal places
+
+      const consent = document
+        .getElementById("Students_securing_internship")
+        .getContext("2d");
+
+      const consent_data = {
+        labels: consent_labels,
+        datasets: [
+          {
+            label: "Field Distribution",
+            data: consent_values,
+            borderWidth: 0,
+            hoverOffset: 4,
+          },
+        ],
+      };
+
+      const consent_Graph = {
+        type: "pie",
+        data: consent_data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "right",
+              align: "start",
+              labels: {
+                color: "#ffffff",
+                boxWidth: 10,
+                padding: 20,
+              },
+            },
+          },
+        },
+      };
+
+      // Creating the consent graph
+      const consent_graph = new Chart(consent, consent_Graph);
+
+      const Total_placements_comparison = JSON.parse(
+        `{{Total_placements_comparison|safe}}`
       );
-      const InternshipOpportunitiesGraph = new Chart(
-        Internship_Opportunities,
-        Internship_Opportunities_Graph
+
+      const placementComparison_label = Object.keys(
+        Total_placements_comparison
       );
+      const placementComparison_values = Object.values(
+        Total_placements_comparison
+      );
+
+      const placementComparisons = document
+        .getElementById("companies_Offering_Internship")
+        .getContext("2d");
+
+      const placement_data = {
+        labels: placementComparison_label,
+        datasets: [
+          {
+            label: "Field Distribution",
+            data: placementComparison_values,
+            backgroundColor: "#36A2EB",
+            borderWidth: 0,
+            hoverOffset: 4,
+          },
+        ],
+      };
+
+      const Placement_graph = {
+        type: "bar",
+        data: placement_data,
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                color: "#ffffff",
+              },
+              grid: {
+                color: "#444444",
+              },
+            },
+            x: {
+              ticks: {
+                color: "#ffffff",
+              },
+              grid: {
+                color: "#444444",
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: "#ffffff",
+                boxWidth: 10,
+                padding: 20,
+              },
+            },
+            tooltip: {
+              enabled: true,
+            },
+          },
+        },
+      };
+
+      // Creating the consent graph
+      const placement_graph = new Chart(placementComparisons, Placement_graph);
+
+      const labels_consent_2022 = Object.keys(consent_2022.consent_counts_by_branch_2022);
+      const datasets_consent_2022 = [
+            { label: 'Higher Studies', data: [], backgroundColor: '#ef4444' },
+            { label: 'Placement', data: [], backgroundColor: '#f59e0b' },
+            { label: 'Entrepreneur', data: [], backgroundColor: '#3b82f6' },
+            { label: 'Core', data: [], backgroundColor: '#10b981' }
+      ];
+      labels_consent_2022.forEach(label => {
+        datasets_consent_2022.forEach(dataset => {
+          dataset.data.push(consent_2022.consent_counts_by_branch_2022[label][dataset.label] || 0);
+        });
+      });
+
+      new Chart(document.getElementById('branch_wise_consent_2022'), {
+        type: 'bar',
+        data: {
+            labels: labels_consent_2022,
+            datasets: datasets_consent_2022
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: {
+                      color: 'white'  
+                    }
+                },
+                y: {
+                    stacked: true,
+                    ticks: {
+                      color: 'white',  
+                      beginAtZero: true  
+                    }
+                }
+            },
+            plugins: {
+              legend: {
+                  labels: {
+                      color: 'white'  
+                  }
+              }
+          }
+        }
+      });
     </script>
   </body>
 </html>

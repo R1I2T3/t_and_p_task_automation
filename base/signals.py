@@ -9,7 +9,7 @@ from .models import User
 def send_welcome_email(sender, instance, created, **kwargs):
     if created and not instance.is_superuser:
         subject = "T&P attendance"
-        message = f"Your account is created. Your username is {instance.email} and your password is {instance.password}. Please change your password after login."
+        message = f"Your account is created. Your username is {instance.email}  Please change your password by using forget password option."
         from_email = settings.DEFAULT_FROM_EMAIL
         recipient_list = [instance.email]
         send_mail(subject, message, from_email, recipient_list)
