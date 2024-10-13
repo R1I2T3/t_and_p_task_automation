@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+{% load static%}
+{% load static tailwind_tags %}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Profile</title>
+    {% tailwind_css %}
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+      }
+      .main {
+        height: 100%;
+        width: 100%;
+        display: flex;
+      }
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        width: 20%;
+        height: 85%;
+        background-color: white;
+        color: #153f74;
+        padding: 20px;
+        border-radius: 20px;
+        margin: 20px;
+        -webkit-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+        -moz-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+        box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+      }
+      a {
+        text-decoration: none;
+        color: #153f74;
+      }
+      .sidebar .logo {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .logo img {
+        height: 80px;
+        margin-right: 10px;
+      }
+      .sidebar-icon {
+        width: 40px;
+        height: 40px;
+        margin-right: 10px;
+      }
+      .sidebar-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        cursor: pointer;
+      }
+      .sidebar-item:hover {
+        background-color: #2563eb;
+      }
+      .spacer {
+        flex-grow: 1;
+      }
+      .bottom-image {
+        display: flex;
+        align-items: center;
+        text-align: center;
+      }
+      .bottom-image img {
+        width: 40%;
+        border-radius: 10px;
+        margin-right: 10px;
+      }
+      .background {
+        z-index: -1;
+        position: absolute;
+        background-color: #d48525;
+        height: 25%;
+        width: 100vw;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        color: #fbf4eb;
+        width: 80%;
+        padding: 20px;
+      }
+      table {
+        border-spacing: 30px;
+        width: 100%;
+        height: 100%;
+      }
+      td {
+        border-radius: 20px;
+        padding: 20px;
+        background-color: #153f74;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="w-full bg-[#d17a00] p-4 text-white flex justify-between items-center">
+      <h1 class="text-2xl md:text-4xl font-bold">Student Dashboard</h1>
+    </div>
+    <div class="flex flex-col md:flex-row">
+      <div class="w-full md:w-1/4 lg:h-[90vh] lg:w-1/5 bg-white shadow-lg h-auto md:h-screen sticky top-0 rounded-xl">
+        <div class="p-6">
+          <a class="sidebar-item" href="{% url 'student_home' %}">
+            <img
+              alt="Academic Performance Icon"
+              class="sidebar-icon"
+              src="https://storage.googleapis.com/a1aa/image/9hQ6v1iyAfQoNqWBRIlcrpEOppnOH6ZOzvSDHWvIAK6hfyiTA.jpg"
+            />
+            <span>Stats</span>
+          </a>
+          <a class="sidebar-item" href="{% url 'student_profile' %}">
+            <img
+              alt="Student Grievances Form Icon"
+              class="sidebar-icon"
+              height="20"
+              src="https://storage.googleapis.com/a1aa/image/9hQ6v1iyAfQoNqWBRIlcrpEOppnOH6ZOzvSDHWvIAK6hfyiTA.jpg"
+              width="20"
+            />
+            <span> Student Profile </span>
+          </a>
+          <div class="flex-grow"></div>
+        </div>
+        <div class="flex flex-col lg:flex-row justify-between items-center gap-3 p-3">
+          <a href="/">
+            <img src="{% static 'img/user_profile.png' %}" alt="Students working" class="w-[50px] rounded-lg" />
+          </a>
+          <a href="{% url 'logout' %}">
+            <img src="{% static 'img/logout.png' %}" alt="Logout" class="w-[50px] rounded-lg" />
+          </a>
+        </div>
+      </div>
+      <div class="w-full md:w-3/4 p-6 space-y-4">
+        <!-- Student Name Card -->
+        <div class="p-4 bg-white shadow rounded-lg">
+            <h3 class="text-lg font-semibold mb-2">1. Student Name</h3>
+            <p class="text-gray-600">{{full_name}}</p>
+        </div>
+    
+        <!-- Year Card -->
+        <div class="p-4 bg-white shadow rounded-lg">
+            <h3 class="text-lg font-semibold mb-2">2. Year</h3>
+            <p class="text-gray-600">{{academic_year}}</p>
+        </div>
+    
+        <!-- Branch & Div Card -->
+        <div class="p-4 bg-white shadow rounded-lg">
+            <h3 class="text-lg font-semibold mb-2">3. Branch </h3>
+            <p class="text-gray-600">{{department}}</p>
+        </div>
+    
+        <!-- Roll No & UID Card -->
+        <div class="p-4 bg-white shadow rounded-lg">
+            <h3 class="text-lg font-semibold mb-2">4.UID</h3>
+            <p class="text-gray-600">{{uid}}</p>
+        </div>
+
+         <!-- Roll No & UID Card -->
+         <div class="p-4 bg-white shadow rounded-lg">
+          <h3 class="text-lg font-semibold mb-2">4.Cateogry</h3>
+          <p class="text-gray-600">{{category}}</p>
+      </div>
+    </div>
+    </div>
+  </body>
+</html>

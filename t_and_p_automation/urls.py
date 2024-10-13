@@ -25,6 +25,11 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", views.index),
     path("principal/", include("principal.urls")),
-    path("department_coordinator/",include("department_coordinator.urls")),
-    path("auth/", include("base.urls")),
+    path("department_coordinator/", include("department_coordinator.urls")),
+    path("", include("base.urls")),
+    path("placement_officer/", include("placement_officer.urls")),
+    path("student/", include("student.urls")),
+    path("program_coordinator/", include("program_coordinator.urls")),
+    path("internship_officer/", include("internship_officer.urls")),
+    path("training_officer/", include("training_officer.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

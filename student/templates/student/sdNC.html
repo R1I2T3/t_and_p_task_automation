@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+{% load static%}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+        display: flex;
+        overflow-x: hidden;
+      }
+      .main {
+        height: 100%;
+        width: 100%;
+        display: flex;
+      }
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        width: 20%;
+        height: 85%;
+        background-color: white;
+        color: #153f74;
+        padding: 20px;
+        border-radius: 20px;
+        margin: 20px;
+        -webkit-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+        -moz-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+        box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.75);
+      }
+      a {
+        text-decoration: none;
+        color: #153f74;
+      }
+      .sidebar .logo {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .logo img {
+        height: 80px;
+        margin-right: 10px;
+      }
+      .sidebar ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+      .sidebar ul li {
+        margin: 20px 0;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+      }
+      .sidebar ul li img {
+        margin-right: 10px;
+        height: 30px;
+      }
+      .spacer {
+        flex-grow:1;
+      }
+      .sidebar .bottom-image {
+        display: flex;         /* Use flexbox to align image and text horizontally */
+        justify-content: flex; /* Aligns content to the right */
+        align-items: center;    /* Vertically center the image and text */
+        text-align: center;      /* Align text to the right */
+      }
+      
+      .sidebar .bottom-image img {
+        width: 40%;            /* Set the image size */
+        border-radius: 10px;    /* Border radius for the image */
+        margin-right: 10px;     /* Add some space between image and text */
+      }
+      
+      .background {
+        z-index: -1;
+        position: absolute;
+        background-color: #d48525;
+        height: 25%;
+        width: 100vw;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        color: #fbf4eb;
+        width: 80%;
+        padding: 20px;
+      }
+      .container h1 {
+        margin: 0px;
+      }
+      table {
+        border-spacing: 30px;
+        width: 100%;
+        height: 100%;
+      }
+      td {
+        border: 1px solid black;
+        border-radius: 20px;
+        padding: 20px;
+        background-color: #153f74;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="background"></div>
+    <div class="main">
+      <div class="sidebar">
+        <div class="logo">
+          <img src="{% static 'studentdashboard/img/tcet_logo.jpg' %}" alt="TCET Logo" />
+          <h1>TCET - TNP</h1>
+        </div>
+        <ul>
+          <li>
+            <img
+              src="{% static 'studentdashboard/img/Training_Programme_Statistics.png' %}"
+              alt="Icon"
+            />
+            <a href="#">Attendance</a>
+          </li>
+          <li>
+            <img src="{% static 'img/Placement_statics.png' %}" alt="Icon" />
+            <a href="#">Notification</a>
+          </li>
+          <li>
+            <img src="{% static 'img/Internship_statics.png' %}" alt="Icon" />
+            <a href="#">Required Documents</a>
+          </li>
+          <li>
+            <img src="{% static 'img/workstation.png' %}" alt="Icon" />
+            <a href="#">Company Engagement</a>
+          </li>
+          <li>
+            <img src="{% static 'studentdashboard/img/workstation.png' %}" alt="Icon" />
+            <a href="#">Grievances and Offers</a>
+          </li>
+        </ul>
+        <div class="spacer"></div>
+        <div class="bottom-image">
+          <img
+            src="{% static 'studentdashboard/img/profile.jpg' %}"
+            alt="Students working"
+            class="student-img"
+          />
+          <h2>Username</h2>
+        </div>
+      </div>
+      <div class="container">
+          <div class="w-3/4 p-8">
+            <h2 class="text-3xl font-bold text-white mb-6">
+                Notifications &amp; Communication
+            </h2>
+            <div class="bg-blue-900 text-white p-6 rounded-xl">
+                <h3 class="text-xl font-bold mb-4">
+                    You have new notifications!!
+                </h3>
+          <ul class="space-y-2">
+              <li class="flex justify-between hover:bg-blue-800 p-2 rounded">
+                  <span>
+                      <i class="fas fa-bullhorn mr-2">
+                      </i>
+                      Exam schedule.
+                  </span>
+                  <a class="text-blue-300 hover:underline" href="#">
+                      Link
+                  </a>
+              </li>
+              <li class="flex justify-between hover:bg-blue-800 p-2 rounded">
+                  <span>
+                      <i class="fas fa-bullhorn mr-2">
+                      </i>
+                      TnP Schedule.
+                  </span>
+                  <a class="text-blue-300 hover:underline" href="#">
+                      Link
+                  </a>
+              </li>
+              <li class="flex justify-between hover:bg-blue-800 p-2 rounded">
+                  <span>
+                      <i class="fas fa-bullhorn mr-2">
+                      </i>
+                      Goldman Sachs just posted an opportunity.
+                  </span>
+                  <a class="text-blue-300 hover:underline" href="#">
+                      Link
+                  </a>
+              </li>
+              <li class="flex justify-between hover:bg-blue-800 p-2 rounded">
+                  <span>
+                      <i class="fas fa-bullhorn mr-2">
+                      </i>
+                      Goldman Sachs just posted an opportunity.
+                  </span>
+                  <a class="text-blue-300 hover:underline" href="#">
+                      Link
+                  </a>
+              </li>
+              <li class="flex justify-between hover:bg-blue-800 p-2 rounded">
+                  <span>
+                      <i class="fas fa-bullhorn mr-2">
+                      </i>
+                      Goldman Sachs just posted an opportunity.
+                  </span>
+                  <a class="text-blue-300 hover:underline" href="#">
+                      Link
+                  </a>
+              </li>
+              <li class="flex justify-between hover:bg-blue-800 p-2 rounded">
+                  <span>
+                      <i class="fas fa-bullhorn mr-2">
+                      </i>
+                      Goldman Sachs just posted an opportunity.
+                  </span>
+                  <a class="text-blue-300 hover:underline" href="#">
+                      Link
+                  </a>
+              </li>
+              <li class="flex justify-between hover:bg-blue-800 p-2 rounded">
+                  <span>
+                      <i class="fas fa-bullhorn mr-2">
+                      </i>
+                      Goldman Sachs just posted an opportunity.
+                  </span>
+                  <a class="text-blue-300 hover:underline" href="#">
+                      Link
+                  </a>
+              </li>
+              <li class="flex justify-between hover:bg-blue-800 p-2 rounded">
+                  <span>
+                      <i class="fas fa-bullhorn mr-2">
+                      </i>
+                      Goldman Sachs just posted an opportunity.
+                  </span>
+                  <a class="text-blue-300 hover:underline" href="#">
+                      Link
+                  </a>
+              </li>
+              <li class="flex justify-between hover:bg-blue-800 p-2 rounded">
+                  <span>
+                      <i class="fas fa-bullhorn mr-2">
+                      </i>
+                      Goldman Sachs just posted an opportunity.
+                  </span>
+                  <a class="text-blue-300 hover:underline" href="#">
+                      Link
+                  </a>
+              </li>
+              <li class="flex justify-between hover:bg-blue-800 p-2 rounded">
+                  <span>
+                      <i class="fas fa-bullhorn mr-2">
+                      </i>
+                      Goldman Sachs just posted an opportunity.
+                  </span>
+                  <a class="text-blue-300 hover:underline" href="#">
+                      Link
+                  </a>
+              </li>
+              <li class="flex justify-between hover:bg-blue-800 p-2 rounded">
+                  <span>
+                      <i class="fas fa-bullhorn mr-2">
+                      </i>
+                      Goldman Sachs just posted an opportunity.
+                  </span>
+                  <a class="text-blue-300 hover:underline" href="#">
+                      Link
+                  </a>
+              </li>
+          </ul>
+      </div>
+  </body>
+</html>

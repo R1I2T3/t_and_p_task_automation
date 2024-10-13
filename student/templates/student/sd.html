@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+{% load static %}
+{% load static tailwind_tags %}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Dashboard</title>
+    {% tailwind_css %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+      }
+      .sidebar-icon {
+        width: 40px;
+        height: 40px;
+        margin-right: 10px;
+      }
+      .sidebar-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+        cursor: pointer;
+      }
+      .sidebar-item:hover {
+        background-color: #2563eb;
+      }
+      .profile-button:hover {
+        background-color: #2563eb;
+      }
+      .dropdown {
+        display: none;
+        position: absolute;
+        background-color: white;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 1;
+      }
+      .dropdown a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+      }
+      .dropdown a:hover {
+        background-color: #f1f1f1;
+      }
+      .chart-container {
+        background-color: #1e3a8a;
+        padding: 20px;
+        border-radius: 10px;
+      }
+      .chart-container h2 {
+        margin-bottom: 10px;
+        font-size: 1.5rem;
+      }
+      .chart-canvas {
+        max-height: 300px;
+      }
+    </style>
+    <script>
+      function previewImage(event) {
+        var reader = new FileReader();
+        reader.onload = function () {
+          var output = document.getElementById("profile-picture");
+          output.src = reader.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+      }
+      const academic_attendance = JSON.parse('{{ academic_attendance|safe }}');
+      const training_attendance = JSON.parse('{{ training_attendance|safe }}');
+      const academic_performance = JSON.parse('{{ academic_performance|safe }}');
+      console.log(academic_performance);
+
+      window.onload = function () {
+        // Academic Attendance Chart
+        let ctx1 = document.getElementById("academicAttendanceChart").getContext("2d");
+        if (Object.keys(academic_attendance).length === 0) {
+          document.getElementById("academicAttendanceChart").parentNode.innerHTML = "<p class='text-white m-auto'>No data to show</p>";
+        } else {
+          new Chart(ctx1, {
+            type: "bar",
+            data: {
+              labels: Object.keys(academic_attendance),
+              datasets: [
+                {
+                  label: "Attendance %",
+                  data: Object.values(academic_attendance),
+                  backgroundColor: "#ff9800",
+                },
+              ],
+            },
+            options: {
+              scales: {
+                x: {
+                  ticks: {
+                    color: 'white',
+                  },
+                },
+                y: {
+                  ticks: {
+                    color: 'white',
+                    beginAtZero: true,
+                  },
+                },
+              },
+              plugins: {
+                legend: {
+                  labels: {
+                    color: 'white',
+                  },
+                },
+              },
+            },
+          });
+        }
+
+        // Training Attendance Chart
+        let ctx2 = document.getElementById("trainingAttendanceChart").getContext("2d");
+        if (Object.keys(training_attendance).length === 0) {
+          document.getElementById("trainingAttendanceChart").parentNode.innerHTML = "<p class='text-white m-auto'>No data to show</p>";
+        } else {
+          new Chart(ctx2, {
+            type: "pie",
+            data: {
+              labels: Object.keys(training_attendance),
+              datasets: [
+                {
+                  data: Object.values(training_attendance),
+                  backgroundColor: ["#1e3a8a", "#3b82f6", "#14b8a6"],
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: "right",
+                  align: "start",
+                  labels: {
+                    color: "#ffffff",
+                    boxWidth: 10,
+                    padding: 20,
+                  },
+                },
+                tooltip: {
+                  enabled: true,
+                },
+              },
+            },
+          });
+        }
+
+        // Academic Performance Chart
+        let ctx3 = document.getElementById("academicPerformanceChart").getContext("2d");
+        new Chart(ctx3, {
+          type: "bar",
+          data: {
+            labels: Object.keys(academic_performance),
+            datasets: [
+              {
+                label: "Performance",
+                data: Object.values(academic_performance),
+                backgroundColor: "#14b8a6",
+              },
+            ],
+          },
+          options: {
+            scales: {
+              x: {
+                ticks: {
+                  color: 'white',
+                },
+              },
+              y: {
+                ticks: {
+                  color: 'white',
+                  beginAtZero: true,
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: 'white',
+                },
+              },
+            },
+          },
+        });
+      };
+    </script>
+  </head>
+  <body class="bg-gray-100">
+    <div class="w-full bg-[#d17a00] p-4 text-white flex justify-between items-center">
+      <h1 class="text-2xl md:text-4xl font-bold">Student Dashboard</h1>
+    </div>
+
+    <div class="flex flex-col md:flex-row">
+      <!-- Sidebar -->
+      <div class="w-full md:w-1/4 lg:h-[90vh] lg:w-1/5 bg-white shadow-lg h-auto md:h-screen sticky top-0 rounded-xl">
+        <div class="p-6">
+          <a class="sidebar-item" href="{% url 'student_home' %}">
+            <img
+              alt="Academic Performance Icon"
+              class="sidebar-icon"
+              src="https://storage.googleapis.com/a1aa/image/9hQ6v1iyAfQoNqWBRIlcrpEOppnOH6ZOzvSDHWvIAK6hfyiTA.jpg"
+            />
+            <span>Stats</span>
+          </a>
+          <a class="sidebar-item" href="{% url 'student_profile' %}">
+            <img
+              alt="Student Grievances Form Icon"
+              class="sidebar-icon"
+              height="20"
+              src="https://storage.googleapis.com/a1aa/image/9hQ6v1iyAfQoNqWBRIlcrpEOppnOH6ZOzvSDHWvIAK6hfyiTA.jpg"
+              width="20"
+            />
+            <span> Student Profile </span>
+          </a>
+          <div class="flex-grow"></div>
+        </div>
+        <div class="flex flex-col lg:flex-row justify-between items-center gap-3 p-3">
+          <a href="/">
+            <img src="{% static 'img/user_profile.png' %}" alt="Students working" class="w-[50px] rounded-lg" />
+          </a>
+          <a href="{% url 'logout' %}">
+            <img src="{% static 'img/logout.png' %}" alt="Logout" class="w-[50px] rounded-lg" />
+          </a>
+        </div>
+      </div>
+
+      <div class="w-full md:w-3/4 p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Academic Attendance -->
+          <div class="chart-container">
+            <h2 class="text-white">ACADEMIC ATTENDANCE</h2>
+            <canvas id="academicAttendanceChart" class="chart-canvas"></canvas>
+          </div>
+
+          <!-- Training Attendance -->
+          <div class="chart-container">
+            <h2 class="text-white">TRAINING ATTENDANCE</h2>
+            <canvas id="trainingAttendanceChart" class="chart-canvas"></canvas>
+          </div>
+
+          <!-- Academic Performance -->
+          <div class="chart-container col-span-1 md:col-span-2">
+            <h2 class="text-white">ACADEMIC PERFORMANCE</h2>
+            <canvas id="academicPerformanceChart" class="chart-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
