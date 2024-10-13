@@ -1,33 +1,37 @@
 {% load static %}
 <div class="h-full w-full flex">
-  <aside class="flex flex-col w-1/5 sticky top-4 h-screen bg-white text-[#153f74] p-5 rounded-3xl m-5 shadow-lg">
+  <aside class="flex flex-col w-1/5 sticky top-4 h-screen bg-white text-[#153f74] p-5 rounded-3xl ml-2 my-5 mr-0 shadow-lg">
       <div  class="flex flex-col lg:flex-row items-center mb-5">
         <img src="{% static 'img/logo.png' %}" alt="TCET Logo" class="h-20 mr-2.5"  />
         <h1 class="text-xl font-bold">TCET - TNP</h1>
       </div>
       <ul class="list-none p-0 m-0">
-        <li class="my-5 text-lg flex items-center">
+        <a href="{% url "department_coordinator_index" %}" class="my-5 text-lg flex items-center">
           <img
             src="{% static 'img/Training_Programme_Statistics.png' %}"
             alt="Icon"
-            class="mr-2.5 h-6"
+            class="lg:mr-2.5 h-6 mx-auto lg:m-0"
           />
-          <a href="{% url "department_coordinator_index" %}" class="hidden lg:block">Student Data</a>
-        </li>
-        <li class="my-5 text-lg flex items-center">
-          <img src="{% static 'img/Placement_statics.png' %}" alt="Icon" class="mr-2.5 h-6"/>
-          <a href="{% url "department_coordinator_attendance" %}" class="hidden lg:block">Attendance and marks</a>
-        </li>
-        <li class="my-5 text-lg flex items-center m-auto">
-          <img src="{% static 'img/Internship_statics.png' %}" alt="Icon" class="mr-2.5 h-6" />
-          <a href="{% url "department_coordinator_stats" %}" class="hidden lg:block">Statistics</a>
-        </li>
+          <p class="hidden lg:block">Student Data</p>
+        </a>
+        <a href="{% url "department_coordinator_attendance" %}" class="my-5 text-lg flex items-center">
+          <img src="{% static 'img/Placement_statics.png' %}" alt="Icon" class="lg:mr-2.5 h-6 mx-auto lg:m-0"/>
+          <p class="hidden lg:block">Attendance and marks</p>
+        </a>
+        <a href="{% url "department_coordinator_stats" %}" class="my-5 text-lg flex items-center m-auto">
+          <img src="{% static 'img/Internship_statics.png' %}" alt="Icon" class="lg:mr-2.5 h-6 mx-auto lg:m-0" />
+          <p  class="hidden lg:block">Statistics</p>
+        </a>
       </ul>
       <div class="flex-grow"></div>
-      <a class="flex items-center justify-start gap-3 m-auto" href="/">
-        <img src="{% static 'img/user_profile.png' %}" alt="Students working" class="w-[50px] rounded-lg" />
-        <h3 class="font-bold text-xl hidden lg:block">Username</h3>
-      </a>
+      <div class="flex flex-col lg:flex-row justify-between items-center gap-3">
+        <a href="{% url "user_profile" %}">
+          <img src="{% static 'img/user_profile.png' %}" alt="Students working" class="w-[50px] rounded-lg" />
+        </a>
+        <a  href="{% url 'logout' %}">
+          <img src="{% static 'img/logout.png' %}" alt="Logout" class="w-[50px] rounded-lg" />
+        </a>
+      </div>
   </aside>
   <div class="flex flex-col text-[#fbf4eb] w-4/5 p-5">
     <h1 class="m-0 font-semibold text-[38px]" style="font-family:'poppins'">Department Coordinator</h1>

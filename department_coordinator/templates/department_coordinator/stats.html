@@ -1,185 +1,214 @@
-{% extends "base.html" %}
-
-{% block  title %}
-    TnP | Department Coordinator
-{% endblock title  %}
-
+{% extends "base.html" %} 
+{% block title %} TnP | Department Coordinator {%endblock title %} 
 {% block content %}
-   <div class="z-[-1] absolute bg-[#d48525] h-[25%] w-[100%]"></div>
-    <c-sidebar>
-        <div class="bg-[#153F74] rounded-lg shadow-lg p-4 mb-4 flex flex-col">
-            <h1 class="text-3xl font-bold">Placement Analysis</h1>
-            <div class="flex justify-between items-center w-full mx-auto">
-                <div class="w-[35%] border-white">
-                    <canvas id="branchDistribution" class="w-[50%]"></canvas>
-                </div>
-                <div class="w-[35%]">
-                    <canvas id="packageDistribution" class="w-[50%]"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="bg-[#153F74] rounded-lg shadow-lg p-4 mb-4 flex justify-between w-full">
-          <div class="w-[40%]">
-              <canvas id="internshipSecured"></canvas>
-          </div>
-          <div class="w-[40%]">
-              <canvas id="internshipOpportunities"></canvas>
-          </div>
-        </div>
-        <div class="bg-[#153F74] rounded-lg shadow-lg p-4 mb-4 flex justify-between w-full">
-          <canvas id="studentPlaced"></canvas>
-        </div>
-    </c-sidebar>
-    <script>
-    const department_salaries = JSON.parse('{{department_salaries|safe}}')
-    const salaries_range = JSON.parse('{{salaries_range|safe}}')
-    console.log(salaries_range)
-    new Chart(document.getElementById('branchDistribution'), {
-        type: 'pie',
-        data: {
-            labels: Object.keys(department_salaries),
-            datasets: [{
-                data: Object.values(department_salaries),
-                borderWidth:0,
-            }]
+<div class="z-[-1] absolute bg-[#d48525] h-[25%] w-full"></div>
+<c-sidebar>
+  <div class="bg-[#153F74] rounded-lg shadow-lg h-[50dvh] p-4 mb-4 flex flex-col">
+    <h1 class="text-xl lg:text-2xl font-bold">Academic Details</h1>
+    <div class="flex flex-col md:flex-row justify-between items-center w-full h-full mx-auto">
+      <div class="w-full md:w-[35%] h-full border-white mb-4 md:mb-0">
+        <canvas id="year_wise_academic_attendance" class="w-full h-full"></canvas>
+      </div>
+      <div class="w-full h-full md:w-[35%]">
+        <canvas id="year_wise_academic_performance" class="w-full h-full"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="bg-[#153F74] rounded-lg shadow-lg h-[50dvh] p-4 mb-4 flex flex-col">
+    <h1 class="text-xl lg:text-2xl font-bold">Training Details</h1>
+    <div class="flex flex-col md:flex-row justify-between items-center w-full h-full mx-auto">
+      <div class="w-full md:w-[35%] border-white h-full mb-4 md:mb-0">
+        <canvas id="year_wise_training_attendance" class="w-full h-full"></canvas>
+      </div>
+      <div class="w-full h-full md:w-[35%]">
+        <canvas id="year_wise_training_performance" class="w-full h-full"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="bg-[#153F74] rounded-lg shadow-lg p-4 h-[50dvh] mb-4 flex flex-col">
+    <h1 class="text-xl lg:text-2xl font-bold">Placement and Internship Detail</h1>
+    <div class="flex flex-col md:flex-row justify-between items-center w-full h-full mx-auto">
+      <div class="w-full md:w-[35%] border-white mb-4 md:mb-0 h-full">
+        <canvas id="it_internship_charts" class="w-full h-full"></canvas>
+      </div>
+      <div class="w-full md:w-[35%] h-full">
+        <canvas id="placement_charts" class="w-ful h-fulll"></canvas>
+      </div>
+    </div>
+  </div>
+
+</c-sidebar>
+<script>
+  const average_academic_attendance = JSON.parse(`{{ average_academic_attendance  | safe }}`);
+  const average_academic_performance = JSON.parse(`{{ average_academic_performance  | safe }}`);
+  const average_training_attendance = JSON.parse(`{{ average_training_attendance  | safe }}`);
+  const average_training_performance = JSON.parse(`{{ average_training_performance  | safe }}`);
+  const internship_data = JSON.parse(`{{ internship_data  | safe }}`);
+  const placement_data = JSON.parse(`{{ placement_data  | safe }}`);
+  const bar_options = {
+    scales: {
+        x: {
+            ticks: {
+                color: 'white'  
+            }
         },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: { color: 'white' }
-                },
-                title: {
-                    display: true,
-                    text: 'Branch Distribution',
-                    color: 'white',
-                    font:{
-                      size:16
-                    }
-                }
+        y: {
+            ticks: {
+                color: 'white',  
+                beginAtZero: true  
             }
         }
-    });
-    new Chart(document.getElementById('packageDistribution'), {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(salaries_range),
-            datasets: [{
-                borderWidth:0,
-                data: Object.values(salaries_range),
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: { color: 'white' }
-                },
-                title: {
-                    display: true,
-                    text: 'Package',
-                    color: 'white',
-                    font:{
-                      size:16
-                    }
-                }
+    },
+    plugins: {
+        legend: {
+            labels: {
+                color: 'white'  
             }
         }
-    });
-    new Chart(document.getElementById('internshipSecured'), {
-        type: 'pie',
-        data: {
-            labels: ['2022', '2023', '2024'],
-            datasets: [{
-                data: [45, 5, 50],
-                borderWidth:0,
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: { color: 'white' }
-                },
-                title:{
-                  display: true,
-                  text: 'Internship Secured BatchWise',
-                  color: 'white',
-                  font:{
-                    size:24
-                  }
-                }
+    }
+  }
+  const dual_bar_option =  {
+    responsive: true,
+    scales: {
+        x: {
+            ticks: {
+              color: 'white'  
             }
-        }
-    });
-    new Chart(document.getElementById('internshipOpportunities'), {
-        type: 'pie',
-        data: {
-            labels: ['2022 Batch', '2023 Batch', '2024 Batch'],
-            datasets: [{
-                data: [25, 15, 60],
-                borderWidth:0
-            }]
         },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: { color: 'white' }
-                },
-                title:{
-                  display: true,
-                  text: 'Internship Opportunities',
-                  color: 'white',
-                  font:{
-                    size:24
-                  }
-                }
-            }
-        }
-    });
-    new Chart(document.getElementById('studentPlaced'), {
-        type: 'bar',
-        data: {
-            labels: ['2020-21', '2021-22', '2022-23'],
-            datasets: [
-                {
-                    label: 'Batch Wise',
-                    data: [300, 250, 600],
-                    backgroundColor: '#1e40af'
-                },
-                {
-                    label: 'Branch Wise',
-                    data: [350, 400, 600],
-                    backgroundColor: '#f97316'
-                },
-                {
-                    label: 'PLI Wise',
-                    data: [400, 400, 400],
-                    backgroundColor: '#ef4444'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: { stacked: true, grid: { color: '#475569' } },
-                y: {
-                    stacked: true,
-                    grid: { color: '#475569' },
-                    ticks: { color: 'white' }
-                }
+        'y-axis-1': {
+            type: 'linear',
+            position: 'left',
+            ticks: {
+              color: 'white'  
             },
-            plugins: {
-                legend: {
-                    labels: { color: 'white' }
-                }
-            }
+        },
+        'y-axis-2': {
+            type: 'linear',
+            position: 'right',
+            ticks: {
+              color: 'white'  
+            },
         }
-    });
-  </script>
+    },
+    plugins: {
+      legend: {
+          labels: {
+              color: 'white'  
+          }
+      }
+    }
+  }
+  const academicAttendanceChart = new Chart(document.getElementById('year_wise_academic_attendance'), {
+    type: 'bar', 
+    data: {
+        labels: Object.keys(average_academic_attendance), 
+        datasets: [{
+            label: 'Average Academic Attendance (%)',
+            data: average_academic_attendance, 
+            backgroundColor: "#ef4444",
+            borderWidth: 1  
+        }]
+    },
+    options: {
+      ...bar_options,
+      responsive: true,
+      maintainAspectRatio: false
+  }
+  });
+  const academicPerformanceChart = new Chart(document.getElementById('year_wise_academic_performance'), {
+    type: 'bar', 
+    data: {
+        labels: Object.keys(average_academic_performance), 
+        datasets: [{
+            label: 'Average Academic Performance (%)',
+            data: average_academic_performance, 
+            backgroundColor: "#f59e0b",
+            borderWidth: 1  
+        }]
+    },
+    options: {
+        ...bar_options,
+        responsive: true,
+        maintainAspectRatio: false
+    }
+  });
+  const trainingAttendanceChart = new Chart(document.getElementById('year_wise_training_attendance'), {
+    type: 'bar', 
+    data: {
+        labels: Object.keys(average_training_attendance), 
+        datasets: [{
+            label: 'Average Training Attendance (%)',
+            data: average_training_attendance, 
+            backgroundColor: "#10b981",
+            borderWidth: 1  
+        }]
+    },
+    options: {
+      ...bar_options,
+      responsive: true,
+      maintainAspectRatio: false
+  }
+  });
+  const trainingPerformanceChart = new Chart(document.getElementById('year_wise_training_performance'), {
+    type: 'bar', 
+    data: {
+        labels: Object.keys(average_training_performance), 
+        datasets: [{
+            label: 'Average Training Performance (%)',
+            data: average_training_performance, 
+            backgroundColor: "#3b82f6",
+            borderWidth: 1  
+        }]
+    },
+    options: {
+      ...bar_options,
+      responsive: true,
+      maintainAspectRatio: false
+  }
+  });
+  const internshiChart=new Chart(document.getElementById('it_internship_charts'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(internship_data.it_branches),
+        datasets: [{
+            label: 'Class Data',
+            data: internship_data.it_branches,
+            backgroundColor:  "#ef4444",
+            yAxisID: 'y-axis-1',
+        }, {
+            label: 'Stipend (in INR)',
+            data: internship_data.it_stipends,
+            backgroundColor: "#f59e0b",
+            yAxisID: 'y-axis-2',
+        }]
+    },
+    options: {
+        ...dual_bar_option,
+        responsive: true,
+        maintainAspectRatio: false
+    }
+  });
+  const placementChart=new Chart(document.getElementById('placement_charts'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(placement_data['2023']),
+        datasets: [{
+            label: '2023',
+            data: placement_data['2023'],
+            backgroundColor:  "#ef4444",
+            yAxisID: 'y-axis-1',
+        }, {
+            label: '2024',
+            data: placement_data['2024'],
+            backgroundColor: "#f59e0b",
+            yAxisID: 'y-axis-2',
+        }]
+    },
+    options: {
+        ...dual_bar_option,
+        responsive: true,
+        maintainAspectRatio: false
+    }
+  });
+</script>
 {% endblock %}
