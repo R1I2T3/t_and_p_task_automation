@@ -47,7 +47,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         ("principal", "principal"),
         ("department_coordinator", "department_coordinator"),
         ("program_coordinator", "program_coordinator"),
-        ("training_officer", "placement_officer"),
+        ("training_officer", "training_officer"),
+        ("placement_officer", "placement_officer"),
         ("internship_officer", "internship_officer"),
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
