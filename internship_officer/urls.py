@@ -8,4 +8,9 @@ urlpatterns = [
         views.internship_2022,
         name="internship_officer_internship_2022",
     ),
+    path(
+        "internship_2023/",
+        views.internship_2023,
+        name="internship_officer_internship_2023",
+    ),
 ]

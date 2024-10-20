@@ -12,6 +12,7 @@ JSON_FILE_PATH_TRAINING = os.path.join("static", "Data", "training_data.json")
 ALUMNI2023 = os.path.join("uploads", "alumni2023.xlsx")
 JSON_FILE_PATH_CONSENT_2022 = os.path.join("static", "Data", "consent_graph_22.json")
 INTERNSHIP_JSON_PATH_2022 = os.path.join("static", "Data", "intern_data_22.json")
+INTERNSHIP_JSON_PATH_2023 = os.path.join("static", "Data", "intern_data_23.json")
 
 
 def process_trainig_data(file_path):
@@ -195,6 +196,69 @@ def internship(request):
 
 
 @login_required
+def internship_2023(request):
+    if request.user.role != "principal":
+        return redirect("/")
+    try:
+        with open(INTERNSHIP_JSON_PATH_2023, "r") as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        data = {
+            "branch_data": {},
+            "stipend_data": {},
+            "Compqnies_Offering_Internship": {},
+        }
+    branch_data = [
+        {"label": branch, "value": value}
+        for branch, value in data[0]["branch_data"].items()  # type: ignore
+    ]
+    stipend_amounts = list(data[0]["stipend_per_branch"].values())
+    total_stipend = sum(stipend_amounts)
+    # Calculate the percentage of each stipend
+    stipend_data = [
+        {"label": f"Rs {amount}", "value": (amount / total_stipend) * 100}
+        for value, amount in data[0]["stipend_per_branch"].items()
+    ]
+
+    # Students securing internship data - Placeholder
+    students_securing_internship_data = [
+        {
+            "label": "Internships Secured",
+            "value": sum(data[0]["Companies_Offering_Internship"].values()),
+        }
+    ]
+    stipend_per_branch_data = [
+        {"label": branch, "value": amount}
+        for branch, amount in data[0]["stipend_per_branch"].items()
+    ]
+    # Internship opportunities data
+    internship_opportunities_data = [
+        {"label": company, "value": count}
+        for company, count in data[0]["Companies_Offering_Internship"].items()
+    ]
+
+    # Prepare internship bar labels
+    internship_bar_labels = list(data[0]["Companies_Offering_Internship"].keys())
+    internship_bar_data = list(data[0]["Companies_Offering_Internship"].values())
+
+    # Create the context dictionary
+    context = {
+        "branch_data": json.dumps({"fields": branch_data}),
+        "stipend_data": json.dumps({"fields": stipend_data}),
+        "students_securing_internship_data": json.dumps(
+            {"fields": students_securing_internship_data}
+        ),
+        "stipend_per_branch": json.dumps({"fields": stipend_per_branch_data}),
+        "internship_opportunities_data": json.dumps(
+            {"fields": internship_opportunities_data}
+        ),
+        "internship_bar_labels": json.dumps(internship_bar_labels),
+        "internship_bar_data": json.dumps(internship_bar_data),
+    }
+    return render(request, "principal/internship_2023.html", context)
+
+
+@login_required
 def internship_2022(request):
     if request.user.role != "principal":
         return redirect("/")
@@ -207,7 +271,6 @@ def internship_2022(request):
             "stipend_data": {},
             "Compqnies_Offering_Internship": {},
         }
-    print(data)
     branch_data = [
         {"label": branch, "value": value}
         for branch, value in data[0]["branch_data"].items()  # type: ignore
@@ -286,7 +349,6 @@ def process_alumni_excel(file_path):
     # Save as JSON
     placement_data.to_json(JSON_FILE_PATH_PLACEMENT, orient="records", indent=4)
 
-    print("placement_data.json file genrated")
     res1 = res
     # return res
     # //////////////////////////////////////////////////////////////
@@ -328,7 +390,6 @@ def process_alumni_excel(file_path):
     # Save as JSON
     alumni_data_2024.to_json(JSON_FILE_PATH_ALUMNI, orient="records", indent=4)
 
-    print("alumni_data_2024.json file genrated")
     return [res1, res]
 
 
@@ -361,7 +422,6 @@ def placement(request):
             consent_2022["consent_counts_by_branch_2022"] = data.get(
                 "consent_counts_by_branch"
             )
-            print("consent_graph", consent_graph)
     except Exception as e:
         print(f"Error reading JSON file: {e}")
         consent_graph = {}
