@@ -187,19 +187,9 @@
       </div>
       <div class="container">
         <div style="display:flex;justify-content:space-between">
-          <u><h1 class="text-xl lg:text-2xl font-bold">Internship Statistics(2024 BATCH)</h1></u>
-          <a href="{% url "internship_officer_internship_2022" %}" style="color:white;font-size:20px;border:2px solid white;padding:4px;border-radius 3px;">View 2022 Data</a>
+          <u><h1 class="text-xl lg:text-2xl font-bold">Internship Statistics(2022 BATCH)</h1></u>
+          <a href="{% url "internship_index" %}" style="color:white;font-size:20px;border:2px solid white;padding:4px;border-radius 3px;">View 2024 Data</a>
         </div>  
-        <form method="post" enctype="multipart/form-data" action=".">
-          {% csrf_token %}
-          <div style="margin-bottom: 20px;">
-            <label for="file" style="font-size: 18px; color: #153f74;">Upload Excel File:</label>
-            <input type="file" name="file" id="file" style="margin-left: 10px; padding: 5px; border-radius: 5px; border: 1px solid #153f74;">
-          </div>
-          <button type="submit" style="background-color: #153f74; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
-          Upload Excel
-          </button>
-      </form>
         <table>
           <tr>
             <td colspan="3" rowspan="1" style="padding: 0px">
@@ -238,7 +228,6 @@
 
     <script>
       const branchData = JSON.parse(`{{ branch_data|safe }}`);
-      
       const stipendData = JSON.parse(`{{ stipend_data|safe }}`);
       const stipend_per_branch_Data = JSON.parse(
         `{{ stipend_per_branch|safe }}`

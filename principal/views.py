@@ -5,12 +5,13 @@ from .forms import UploadExcelForm
 import pandas as pd
 from django.contrib.auth.decorators import login_required
 
-INTERNSHIP_JSON_PATH = os.path.join("static", "Data", "intern_data.json")
+INTERNSHIP_JSON_PATH = os.path.join("static", "Data", "intern_data_24.json")
 JSON_FILE_PATH_ALUMNI = os.path.join("static", "Data", "alumni_data_2024.json")
 JSON_FILE_PATH_PLACEMENT = os.path.join("static", "Data", "placement_data.json")
 JSON_FILE_PATH_TRAINING = os.path.join("static", "Data", "training_data.json")
 ALUMNI2023 = os.path.join("uploads", "alumni2023.xlsx")
 JSON_FILE_PATH_CONSENT_2022 = os.path.join("static", "Data", "consent_graph_22.json")
+INTERNSHIP_JSON_PATH_2022 = os.path.join("static", "Data", "intern_data_22.json")
 
 
 def process_trainig_data(file_path):
@@ -193,6 +194,71 @@ def internship(request):
     return render(request, "principal/internship.html", context)
 
 
+@login_required
+def internship_2022(request):
+    if request.user.role != "principal":
+        return redirect("/")
+    try:
+        with open(INTERNSHIP_JSON_PATH_2022, "r") as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        data = {
+            "branch_data": {},
+            "stipend_data": {},
+            "Compqnies_Offering_Internship": {},
+        }
+    print(data)
+    branch_data = [
+        {"label": branch, "value": value}
+        for branch, value in data[0]["branch_data"].items()  # type: ignore
+    ]
+    stipend_amounts = list(data[0]["stipend_per_branch"].values())
+    total_stipend = sum(stipend_amounts)
+
+    # Calculate the percentage of each stipend
+    stipend_data = [
+        {"label": f"Rs {amount}", "value": (amount / total_stipend) * 100}
+        for value, amount in data[0]["stipend_per_branch"].items()
+    ]
+
+    # Students securing internship data - Placeholder
+    students_securing_internship_data = [
+        {
+            "label": "Internships Secured",
+            "value": sum(data[0]["Companies_Offering_Internship"].values()),
+        }
+    ]
+    stipend_per_branch_data = [
+        {"label": branch, "value": amount}
+        for branch, amount in data[0]["stipend_per_branch"].items()
+    ]
+    # Internship opportunities data
+    internship_opportunities_data = [
+        {"label": company, "value": count}
+        for company, count in data[0]["Companies_Offering_Internship"].items()
+    ]
+
+    # Prepare internship bar labels
+    internship_bar_labels = list(data[0]["Companies_Offering_Internship"].keys())
+    internship_bar_data = list(data[0]["Companies_Offering_Internship"].values())
+
+    # Create the context dictionary
+    context = {
+        "branch_data": json.dumps({"fields": branch_data}),
+        "stipend_data": json.dumps({"fields": stipend_data}),
+        "students_securing_internship_data": json.dumps(
+            {"fields": students_securing_internship_data}
+        ),
+        "stipend_per_branch": json.dumps({"fields": stipend_per_branch_data}),
+        "internship_opportunities_data": json.dumps(
+            {"fields": internship_opportunities_data}
+        ),
+        "internship_bar_labels": json.dumps(internship_bar_labels),
+        "internship_bar_data": json.dumps(internship_bar_data),
+    }
+    return render(request, "principal/internship_2022.html", context)
+
+
 def process_alumni_excel(file_path):
     df = pd.read_excel(file_path, sheet_name="Updated", header=[4, 5])
     df_2023 = pd.read_excel(ALUMNI2023)
@@ -314,3 +380,29 @@ def placement(request):
     }  # Pass only the "Consent_graph" data
 
     return render(request, "principal/placements.html", context)
+
+
+@login_required
+def training2023(request):
+    if request.user.role != "principal":
+        return redirect("/")
+    try:
+        with open(os.path.join("static", "Data", "data_2023.json"), "r") as file:
+            data = json.load(file)[0]
+            avg_attendance_phase1 = data.get("avg_attendance_phase1", 0)
+            avg_attendance_phase2 = data.get("avg_attendance_phase2", 0)
+            mock_test_marks = data.get("Mock Test Marks", [])
+            Technical_Score = data.get("Technical_Score", [])
+    except FileNotFoundError:
+        avg_attendance_phase1 = avg_attendance_phase2 = 0
+        mock_test_marks = []
+        Technical_Score = []
+
+    context = {
+        "avg_attendance_phase1": json.dumps(avg_attendance_phase1),
+        "avg_attendance_phase2": json.dumps(avg_attendance_phase2),
+        "mock_test_marks": json.dumps(mock_test_marks),
+        "Technical_Score": json.dumps(Technical_Score),
+    }
+
+    return render(request, "principal/training2023.html", context)

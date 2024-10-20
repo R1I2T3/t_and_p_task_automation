@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Traning stats</title>
+    <title>Training Statistics</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       body {
@@ -182,15 +182,7 @@
               src="{% static 'img/Training_Programme_Statistics.png' %}"
               alt="Icon"
             />
-            <a href="{% url "principal_index" %}">Training  Statistics</a>
-          </li>
-          <li>
-            <img src="{% static 'img/Placement_statics.png' %}" alt="Icon" />
-            <a href="{% url "principal_placement" %}">Placement Statistics</a>
-          </li>
-          <li>
-            <img src="{% static 'img/Internship_statics.png' %}" alt="Icon" />
-            <a href="{% url "principal_internship" %}">Internship Statistics</a>
+            <a href="{% url "training_officer_index" %}">Training Programme Statistics</a>
           </li>
         </ul>
         <div class="spacer"></div>
@@ -198,14 +190,14 @@
       </div>
       <div class="container">
         <div style="display:flex;justify-content:space-between">
-          <u><h1 class="text-xl lg:text-2xl font-bold">Training Programme Statistics(2024 BATCH)</h1></u>
-          <a href="{% url "principal_training_2023" %}" style="color:white;font-size:20px;border:2px solid white;padding:4px;border-radius 3px;">View 2023 Data</a>
-        </div>        
-        <table class="gap-3">
-          <tr class="p-3">
-            <td colspan="3" style="padding: 0px" align="center">
+          <u><h1 class="text-xl lg:text-2xl font-bold">Training Programme Statistics(Batch 2023)</h1></u>
+          <a href="{% url "training_officer_index" %}" style="color:white;font-size:20px;border:2px solid white;padding:4px;border-radius 3px;">View Data 2024</a>
+        </div>  
+        <table>
+          <tr>
+            <td colspan="3" align="center">
               <div style="font-size: 30px; margin-bottom: 20px">
-                Programms Offered
+                Programs Offered
               </div>
               <div
                 style="
@@ -214,23 +206,23 @@
                   justify-content: space-evenly;
                 "
               >
-                <h2 class="text-xl">SDP</h2>
-                <h2 class="text-xl">ACT/CDT</h2>
-                <h2 class="text-xl">ESD/IP</h2>
-                <h2 class="text-xl">DSA CONTEST</h2>
+                <h2>SDP</h2>
+                <h2>ACT/CDT</h2>
+                <h2>ESD/IP</h2>
+                <h2>DSA CONTEST</h2>
               </div>
             </td>
           </tr>
           <tr>
             <td colspan="2" class="companies_Offering_Internship">
               <div class="companies_Offering_Internship_div">
-                <u><h2>Mock test Marks</h2></u>
+                <u><h2>Mock Test Marks</h2></u>
                 <canvas id="companies_Offering_Internship"></canvas>
               </div>
             </td>
             <td rowspan="2" class="Internship_Opportunities">
               <div class="Internship_Opportunities_div">
-                <u><h2>ACT Techinical Marks</h2></u>
+                <u><h2>ACT Technical Marks</h2></u>
                 <canvas id="Internship_Opportunities"></canvas>
                 <h3>"Be the change you want to be"</h3>
               </div>
@@ -249,158 +241,110 @@
     </div>
 
     <script>
-      const avg_attendance_phase_1_2 = JSON.parse(
-      `{{ avg_attendance_phase_1_2|safe }}`
-    );
-      const cleaned_scores_technical = JSON.parse(
-      `{{ cleaned_scores_technical|safe }}`
-    );
-      const mock_test_marks = JSON.parse(
-      `{{ mock_test_marks|safe }}`
-    );
-    
-    // Extract keys and values from the parsed JSON data
-    const labels = Object.keys(avg_attendance_phase_1_2);  // Labels for the x-axis (Phases)
-    const dataValues = Object.values(avg_attendance_phase_1_2);  // Values for the y-axis
-    
-    // Get the canvas element
-    const ctx = document.getElementById('Students_securing_internship').getContext('2d');
-    
-    // Prepare the chart data
-    const attendanceData = {
-      labels: labels,  // Use keys from JSON as labels for the bars (Phase-1, Phase-2)
-      datasets: [{
-        label: 'Average Attendance',  // Dataset label
-        data: dataValues,  // Use values from JSON as data
-        borderWidth: 1,
-        backgroundColor: 'rgb(255, 99, 132)'  // Set bar color        
-      }]
-    };
-    
-    // Create the bar chart
-    new Chart(ctx, {
-      type: 'bar',
-      data: attendanceData,
-      options: {
-        scales: {
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: 'Average Attendance',
-              color: 'white'  // Set text color to white
-            },
-            ticks: {
-              color: 'white'  // Set y-axis label color to white
-            }
-          },
-          x: {
-            title: {
-              display: true,
-              text: 'Phases',
-              color: 'white'  // Set text color to white
-            },
-            ticks: {
-              color: 'white'  // Set x-axis label color to white
-            }
-          }
-        },
-        plugins: {
-          legend: {
-            labels: {
-              color: 'white'  // Set legend label text color to white
-            }
-          },
-          title: {
-            display: true,
-            text: 'Training Data Attendance',
-            color: 'white'  // Set title text color to white
-          }
-        }
-      }
-    });
-      
-    
+      // Parsing the data passed from Django
+      const avg_attendance_phase1 = JSON.parse(
+        `{{ avg_attendance_phase1|safe }}`
+      );
+      const avg_attendance_phase2 = JSON.parse(
+        `{{ avg_attendance_phase2|safe }}`
+      );
+      const mock_test_marks = JSON.parse(`{{ mock_test_marks|safe }}`);
+      const technical_score = JSON.parse(`{{ Technical_Score|safe }}`);
 
-    const bins = Array(7).fill(0); // 0-10, 10-20, ..., 50-60
-
-    cleaned_scores_technical.forEach(value => {
-        const binIndex = Math.floor(value / 10);
-        if (binIndex < bins.length) {
-          bins[binIndex]++;
-        }
-      });
-
-      // Create the histogram
-      const ctx1 = document.getElementById('Internship_Opportunities').getContext('2d');
-      new Chart(ctx1, {
-        type: 'bar',
+      // Average Attendance Data
+      const ctxAttendance = document
+        .getElementById("Students_securing_internship")
+        .getContext("2d");
+      new Chart(ctxAttendance, {
+        type: "bar",
         data: {
-          labels: ['0-10', '10-20', '20-30', '30-40', '40-50', '50-60'], // Bin labels
-          datasets: [{
-            label: 'No of students',
-            data: bins,
-            borderWidth: 1,
-            backgroundColor: 'rgb(237, 142, 79)'
-          }]
+          labels: ["Phase 1", "Phase 2"],
+          datasets: [
+            {
+              label: "Average Attendance",
+              data: [avg_attendance_phase1, avg_attendance_phase2],
+              backgroundColor: "rgb(255, 99, 132)",
+            },
+          ],
         },
         options: {
           scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              color: 'white'  // Set y-axis label color to white
-            }
+            y: { beginAtZero: true },
+            x: { title: { display: true, text: "Phases" } },
           },
-          x: {
-            
-            ticks: {
-              color: 'white'  // Set x-axis label color to white
-            }
-          }
         },
-        }
       });
 
-    const bins1 = Array(12).fill(0); // 0-10, 10-20, ..., 50-60
-
-    mock_test_marks.forEach(value => {
+      // Mock Test Marks Data
+      const mockBins = Array(12).fill(0);
+      mock_test_marks.forEach((value) => {
         const binIndex = Math.floor(value / 10);
-        if (binIndex < bins1.length) {
-          bins1[binIndex]++;
-        }
+        if (binIndex < mockBins.length) mockBins[binIndex]++;
       });
 
-      // Create the histogram
-      const ctx2 = document.getElementById('companies_Offering_Internship').getContext('2d');
-      new Chart(ctx2, {
-        type: 'bar',
+      const ctxMock = document
+        .getElementById("companies_Offering_Internship")
+        .getContext("2d");
+      new Chart(ctxMock, {
+        type: "bar",
         data: {
-          labels: ['0-10', '10-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70-80', '80-90', '90-100', '100-110', '110-120'], // Bin labels
-          datasets: [{
-            label: 'No of students',
-            data: bins1,
-            borderWidth: 1,
-            backgroundColor: 'rgb(255, 159, 44)',
-          }]
+          labels: [
+            "0-10",
+            "10-20",
+            "20-30",
+            "30-40",
+            "40-50",
+            "50-60",
+            "60-70",
+            "70-80",
+            "80-90",
+            "90-100",
+            "100-110",
+            "110-120",
+          ],
+          datasets: [
+            {
+              label: "No of students",
+              data: mockBins,
+              backgroundColor: "rgb(255, 159, 44)",
+            },
+          ],
         },
         options: {
           scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              color: 'white'  // Set y-axis label color to white
-            }
+            y: { beginAtZero: true },
           },
-          x: {
-            
-            ticks: {
-              color: 'white'  // Set x-axis label color to white
-            }
-          }
         },
-        }
       });
-  </script>
+
+      // Technical Score Data
+      const techBins = Array(7).fill(0);
+      technical_score.forEach((value) => {
+        const binIndex = Math.floor(value / 10);
+        if (binIndex < techBins.length) techBins[binIndex]++;
+      });
+
+      const ctxTechnical = document
+        .getElementById("Internship_Opportunities")
+        .getContext("2d");
+      new Chart(ctxTechnical, {
+        type: "bar",
+        data: {
+          labels: ["0-10", "10-20", "20-30", "30-40", "40-50", "50-60"],
+          datasets: [
+            {
+              label: "No of students",
+              data: techBins,
+              backgroundColor: "rgb(237, 142, 79)",
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true },
+          },
+        },
+      });
+    </script>
   </body>
 </html>

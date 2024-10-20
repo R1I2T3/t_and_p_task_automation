@@ -7,7 +7,9 @@ from unfold.contrib.import_export.forms import (
     ImportForm,
 )
 from .resources import StudentResource
+
 # Register your models here.
+
 
 @register(Student)
 class StudentAdmin(ImportExportModelAdmin, ModelAdmin):
@@ -20,23 +22,21 @@ class StudentAdmin(ImportExportModelAdmin, ModelAdmin):
         "get_student_name",
         "get_student_email",
     ]
+
     def get_student_name(self, obj):
-        return obj.user.full_name if obj.user else ''
+        return obj.user.full_name if obj.user else ""
+
     def get_student_email(self, obj):
-        return obj.user.email if obj.user else ''
-    get_student_name.short_description = 'Name'
-    get_student_email.short_description = 'Email'
+        return obj.user.email if obj.user else ""
+
+    get_student_name.short_description = "Name"
+    get_student_email.short_description = "Email"
     add_fieldsets = (
         (
             None,
             {
                 "classes": ("wide",),
-                "fields": (
-                    "user",
-                    "uid",
-                    "department",
-                    "academic_year",
-                ),
+                "fields": ("user", "uid", "department", "academic_year", "batch"),
             },
         ),
     )

@@ -15,7 +15,7 @@ def validate_file(file):
 
 
 def importExcelAndReturnJSON(file):
-    df = pd.read_excel(file)
+    df = pd.read_csv(file)
     df = df.replace({np.nan: None})
     ld = len(df)
     require_data = []

@@ -120,12 +120,17 @@ def stats(request):
         with open(INTERNSHIP_JSON_PATH, "r") as f:
             internship_data_from_json = json.load(f)
             branch_data = internship_data_from_json[0]["branch_data"]
+
             internship_data["it_branches"] = {
-                k: v for k, v in branch_data.items() if k.startswith("IT")
+                k: v
+                for k, v in branch_data.items()
+                if (k.lower()).startswith(department_coordinator.department.lower())
             }
             stipend_data = internship_data_from_json[0]["stipend_per_branch"]
             internship_data["it_stipends"] = {
-                k: v for k, v in stipend_data.items() if k.startswith("IT")
+                k: v
+                for k, v in stipend_data.items()
+                if (k.lower().startswith(department_coordinator.department.lower()))
             }
         with open(JSON_FILE_PATH_PLACEMENT, "r") as f:
             placement_data_from_json = json.load(f)
@@ -133,13 +138,17 @@ def stats(request):
                 "2023"
             ]
             placement_data["2023"] = {
-                k: v for k, v in branch_data_placement.items() if k.startswith("IT")
+                k: v
+                for k, v in branch_data_placement.items()
+                if (k.lower().startswith(department_coordinator.department.lower()))
             }
             branch_data_placement = placement_data_from_json[0]["branch_comparison"][
                 "2024"
             ]
             placement_data["2024"] = {
-                k: v for k, v in branch_data_placement.items() if k.startswith("IT")
+                k: v
+                for k, v in branch_data_placement.items()
+                if (k.lower().startswith(department_coordinator.department.lower()))
             }
     except Exception as e:
         internship_data = {}
@@ -174,12 +183,13 @@ def attendance(request):
                     messages.error(request, "Invalid file type")
                 df = importExcelAndReturnJSON(request.FILES.get("file_attendance"))
                 for i in df:
+                    print(i)
                     student = Student.objects.get(uid=i["uid"])
                     AcademicAttendanceSemester.objects.update_or_create(
                         defaults={
                             "attendance": i["attendance"],
-                            "semester": i["semester"],
                         },
+                        semester=i["semester"],
                         student=student,
                     )
                 messages.success(request, "Data imported successfully")
@@ -194,7 +204,6 @@ def attendance(request):
                         student=student,
                         defaults={
                             "performance": i["performance"],
-                            "semester": i["semester"],
                         },
                         semester=i["semester"],
                     )

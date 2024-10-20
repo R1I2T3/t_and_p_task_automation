@@ -68,12 +68,12 @@ def attendance(request):
                 for i in df:
                     student = Student.objects.get(uid=i["uid"])
                     TrainingAttendanceSemester.objects.update_or_create(
+                        student=student,
+                        semester=i["semester"],
+                        program=program_coordinator,
                         defaults={
                             "training_attendance": i["attendance"],
-                            "semester": i["semester"],
-                            "program": program_coordinator,
                         },
-                        student=student,
                     )
                 messages.success(request, "Data imported successfully")
             else:
@@ -85,12 +85,11 @@ def attendance(request):
                     student = Student.objects.get(uid=i["uid"])
                     TrainingPerformanceSemester.objects.update_or_create(
                         student=student,
+                        semester=i["semester"],
+                        program=program_coordinator,
                         defaults={
                             "training_performance": i["performance"],
-                            "semester": i["semester"],
-                            "program": program_coordinator,
                         },
-                        semester=i["semester"],
                     )
                 messages.success(request, "Data imported successfully")
         except Exception as e:

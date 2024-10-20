@@ -1,8 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import (
-    Student,
-)
+from .models import Student, AcademicAttendanceSemester, TrainingAttendanceSemester
 from django.db.models import Sum
 from .utils import categorize
 import json
@@ -15,9 +13,11 @@ def home(request):
         return redirect("/")
     student = Student.objects.get(user=request.user)
     academic_attendance = student.academic_attendance.all()  # type: ignore
+    academic_attendance = AcademicAttendanceSemester.objects.filter(student=student)
     academic_performance = student.academic_performance.all()  # type: ignore
-    training_attendance = student.training_attendance.all()  # type: ignore
+    training_attendance = TrainingAttendanceSemester.objects.filter(student=student)  # type: ignore
     training_performance = student.training_performance.all()  # type: ignore
+    print(len(training_attendance))
     (
         academic_attendance_dict,
         academic_performance_dict,
@@ -29,6 +29,7 @@ def home(request):
     for i in academic_performance:
         academic_performance_dict[i.semester] = i.performance
     for i in training_attendance:
+        print(i.semester)
         training_attendance_dict[i.semester] = i.training_attendance
     for i in training_performance:
         training_performance_dict[i.semester] = i.training_performance
@@ -76,6 +77,7 @@ def sdP(request):
         "academic_year": student.academic_year,
         "full_name": student.user.full_name,
         "category": category,
+        "batch": student.batch,
     }
     return render(request, "student/sdP.html", context)
 

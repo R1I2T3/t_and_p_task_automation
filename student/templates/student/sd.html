@@ -78,7 +78,7 @@
       const academic_attendance = JSON.parse('{{ academic_attendance|safe }}');
       const training_attendance = JSON.parse('{{ training_attendance|safe }}');
       const academic_performance = JSON.parse('{{ academic_performance|safe }}');
-      console.log(academic_performance);
+      const training_performance = JSON.parse('{{training_performance|safe}}')
 
       window.onload = function () {
         // Academic Attendance Chart
@@ -135,7 +135,6 @@
               datasets: [
                 {
                   data: Object.values(training_attendance),
-                  backgroundColor: ["#1e3a8a", "#3b82f6", "#14b8a6"],
                 },
               ],
             },
@@ -171,6 +170,41 @@
                 label: "Performance",
                 data: Object.values(academic_performance),
                 backgroundColor: "#14b8a6",
+              },
+            ],
+          },
+          options: {
+            scales: {
+              x: {
+                ticks: {
+                  color: 'white',
+                },
+              },
+              y: {
+                ticks: {
+                  color: 'white',
+                  beginAtZero: true,
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: 'white',
+                },
+              },
+            },
+          },
+        });
+        new Chart(document.getElementById("trainingPerformace"), {
+          type: "bar",
+          data: {
+            labels: Object.keys(training_performance),
+            datasets: [
+              {
+                label: "Performance",
+                data: Object.values(training_performance),
+                backgroundColor: "#ef4444",
               },
             ],
           },
@@ -257,6 +291,10 @@
           <div class="chart-container col-span-1 md:col-span-2">
             <h2 class="text-white">ACADEMIC PERFORMANCE</h2>
             <canvas id="academicPerformanceChart" class="chart-canvas"></canvas>
+          </div>
+          <div class="chart-container col-span-1 md:col-span-2">
+            <h2 class="text-white">Training PERFORMANCE</h2>
+            <canvas id="trainingPerformace" class="chart-canvas"></canvas>
           </div>
         </div>
       </div>
