@@ -183,7 +183,6 @@ def attendance(request):
                     messages.error(request, "Invalid file type")
                 df = importExcelAndReturnJSON(request.FILES.get("file_attendance"))
                 for i in df:
-                    print(i)
                     student = Student.objects.get(uid=i["uid"])
                     AcademicAttendanceSemester.objects.update_or_create(
                         defaults={
