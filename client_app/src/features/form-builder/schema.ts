@@ -5,7 +5,13 @@ export const formCreationSchema = z.object({
   label: z.string().min(1, { message: "Field label is required" }),
   placeholder: z.string(),
   type: z.string(),
-  options: z.array(z.string()).optional(),
+  options: z
+    .array(
+      z.object({
+        value: z.string(),
+      })
+    )
+    .optional(),
 });
 
 export type formCreationType = z.infer<typeof formCreationSchema>;

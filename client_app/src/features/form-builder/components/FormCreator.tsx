@@ -1,15 +1,20 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useEffect } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { formCreationSchema, formCreationType } from "../schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/Input";
 import SelectFormControl from "@/components/Select";
 import { Button } from "@/components/ui/button";
-import { formElementAtom } from "../atoms";
+import { formElementAtom, editFormElementAtom } from "../atoms";
+import Options from "./Options";
+
 const FormCreator = () => {
   const [formElements, setFormElements] = useAtom(formElementAtom);
+  const editFormElementValue = useAtomValue(editFormElementAtom);
+  const setEditFormElement = useSetAtom(editFormElementAtom);
   const form = useForm<formCreationType>({
     resolver: zodResolver(formCreationSchema),
     defaultValues: {
@@ -17,25 +22,71 @@ const FormCreator = () => {
       label: "",
       placeholder: "",
       type: "",
+      options: [{ value: "" }],
     },
   });
+  useEffect(() => {
+    if (editFormElementValue) {
+      form.reset({
+        name: editFormElementValue.name,
+        label: editFormElementValue.label,
+        placeholder: editFormElementValue.placeholder,
+        type: editFormElementValue.type,
+        options: editFormElementValue.options || [{ value: "" }],
+      });
+    }
+  }, [editFormElementValue, form]);
 
-  const options = ["text", "number", "file", "select"];
+  const options = ["text", "number", "file", "select", "radio", "checkbox"];
+  const selectedType = useWatch({
+    control: form.control,
+    name: "type",
+  });
+  console.log(selectedType);
+
   const onFormSubmit = (values: formCreationType) => {
-    const allFormElements = [
-      ...formElements,
-      {
-        name: values.name,
-        type: values.type,
-        id: crypto.randomUUID(),
-        placeholder: values.placeholder,
-        label: values.label,
-      },
-    ];
-    setFormElements(allFormElements);
+    if (!editFormElementValue) {
+      const allFormElements = [
+        ...formElements,
+        {
+          name: values.name,
+          type: values.type,
+          id: crypto.randomUUID(),
+          placeholder: values.placeholder,
+          label: values.label,
+          options: values.options,
+        },
+      ];
+      setFormElements(allFormElements);
+    }
+    if (editFormElementValue) {
+      const updatedFormElements = formElements.map((element) => {
+        if (element.id === editFormElementValue.id) {
+          return {
+            name: values.name,
+            type: values.type,
+            id: editFormElementValue.id,
+            placeholder: values.placeholder,
+            label: values.label,
+            options: values.options,
+          };
+        }
+        return element;
+      });
+      setFormElements(updatedFormElements);
+      setEditFormElement(null);
+    }
+    form.reset({
+      name: "",
+      label: "",
+      placeholder: "",
+      type: "",
+      options: [],
+    });
   };
+
   return (
-    <Card className="w-full">
+    <Card className="w-full max-w-[50dvw]  overflow-y-auto mx-auto">
       <CardTitle className="text-2xl text-center font-bold">
         Form Creator
       </CardTitle>
@@ -55,8 +106,11 @@ const FormCreator = () => {
                 label="Field Type"
                 options={options}
               />
+              {(selectedType === "checkbox" ||
+                selectedType === "select" ||
+                selectedType === "radio") && <Options />}
               <Button className="py-1 rounded-md" type="submit">
-                Add Element
+                {editFormElementValue ? "Update" : "Add"}
               </Button>
             </FormProvider>
           </form>

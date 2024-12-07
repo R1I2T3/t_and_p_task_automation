@@ -4,8 +4,8 @@ import FormCreator from "@/features/form-builder/components/FormCreator";
 const FormBuilder = () => {
   return (
     <main className="flex justify-between items-center h-screen px-4 gap-3">
-      <FormPreview />
       <FormCreator />
+      <FormPreview />
     </main>
   );
 };
