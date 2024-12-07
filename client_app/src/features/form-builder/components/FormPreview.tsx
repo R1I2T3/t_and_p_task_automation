@@ -31,7 +31,7 @@ const FormPreview = () => {
   };
   return formElements.length === 0 ? null : (
     <Card className="w-full px-2 py-2 text-center max-h-[70dvh] overflow-y-auto">
-      <CardTitle className="text-2xl text-center font-bold">
+      <CardTitle className="text-2xl text-center font-bold my-3 text-[#d17a00]">
         Form Preview
       </CardTitle>
       <CardContent>
@@ -40,7 +40,7 @@ const FormPreview = () => {
             <Label className="text-xl font-semibold text-start">
               {element.label}
             </Label>
-            <div className="flex gap-4">
+            <div className="flex gap-4 justify-between">
               {element.type !== "select" &&
                 element.type !== "radio" &&
                 element.type !== "checkbox" && (
@@ -64,38 +64,53 @@ const FormPreview = () => {
                   </SelectContent>
                 </Select>
               )}
-              {element.type === "radio" &&
-                element.options &&
-                element.options.length > 0 && (
-                  <RadioGroup
-                    name={element.name}
-                    defaultValue={element.options[0].value}
-                    className="flex flex-row gap-2"
-                  >
-                    {element.options.map((option, index) => (
-                      <div className="flex items-center space-x-2" key={index}>
-                        <RadioGroupItem
-                          value={option.value}
-                          id={option.value}
-                        />
-                        <Label htmlFor={option.value}>{option.value}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                )}
-              {element.type === "checkbox" &&
-                element.options &&
-                element.options.length > 0 &&
-                element.options.map((option, index) => (
-                  <div className="flex items-center space-x-2" key={index}>
-                    <Checkbox value={option.value} id={option.value} />
-                    <Label htmlFor={option.value}>{option.value}</Label>
-                  </div>
-                ))}
-              <Button onClick={() => editButtonClick(element.id)}>Edit</Button>
-              <Button onClick={() => deleteButtonClick(element.id)}>
-                Delete
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                {element.type === "radio" &&
+                  element.options &&
+                  element.options.length > 0 && (
+                    <RadioGroup
+                      name={element.name}
+                      defaultValue={element.options[0].value}
+                      className="flex flex-row gap-2"
+                    >
+                      {element.options.map((option, index) => (
+                        <div
+                          className="flex items-center space-x-2"
+                          key={index}
+                        >
+                          <RadioGroupItem
+                            value={option.value}
+                            id={option.value}
+                          />
+                          <Label htmlFor={option.value}>{option.value}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  )}
+                {element.type === "checkbox" &&
+                  element.options &&
+                  element.options.length > 0 &&
+                  element.options.map((option, index) => (
+                    <div className="flex items-center space-x-2" key={index}>
+                      <Checkbox value={option.value} id={option.value} />
+                      <Label htmlFor={option.value}>{option.value}</Label>
+                    </div>
+                  ))}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => editButtonClick(element.id)}
+                  className="bg-[#d17a00] hover:bg-[#d17a00]/70"
+                >
+                  Edit
+                </Button>
+                <Button
+                  onClick={() => deleteButtonClick(element.id)}
+                  className="bg-[#d17a00] hover:bg-[#d17a00]/70"
+                >
+                  Delete
+                </Button>
+              </div>
             </div>
           </div>
         ))}

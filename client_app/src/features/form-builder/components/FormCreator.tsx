@@ -35,7 +35,7 @@ const FormCreator = () => {
         options: editFormElementValue.options || [{ value: "" }],
       });
     }
-  }, [editFormElementValue, form]);
+  }, [editFormElementValue]);
 
   const options = ["text", "number", "file", "select", "radio", "checkbox"];
   const selectedType = useWatch({
@@ -81,13 +81,13 @@ const FormCreator = () => {
       label: "",
       placeholder: "",
       type: "",
-      options: [],
+      options: [{ value: "" }],
     });
   };
 
   return (
-    <Card className="w-full max-w-[50dvw]  overflow-y-auto mx-auto">
-      <CardTitle className="text-2xl text-center font-bold">
+    <Card className="w-full max-w-[50dvw]  overflow-y-auto mx-auto py-3">
+      <CardTitle className="text-2xl text-center font-bold my-2 text-[#d17a00]">
         Form Creator
       </CardTitle>
       <CardContent>
@@ -109,7 +109,10 @@ const FormCreator = () => {
               {(selectedType === "checkbox" ||
                 selectedType === "select" ||
                 selectedType === "radio") && <Options />}
-              <Button className="py-1 rounded-md" type="submit">
+              <Button
+                className="py-2 rounded-md bg-[#d17a00] hover:bg-[#d17a00]/80 text-xl font-bold"
+                type="submit"
+              >
                 {editFormElementValue ? "Update" : "Add"}
               </Button>
             </FormProvider>

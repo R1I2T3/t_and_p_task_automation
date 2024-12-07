@@ -26,11 +26,19 @@ const Options = () => {
               <Input placeholder="name" value={value} onChange={onChange} />
             )}
           />
-          <Button onClick={() => append({ value: "" })} type="button">
+          <Button
+            onClick={() => append({ value: "" })}
+            type="button"
+            className="bg-[#d17a00] hover:bg-[#d17a00]/70"
+          >
             Add
           </Button>
           {index !== 0 && (
-            <Button onClick={() => remove(index)} type="button">
+            <Button
+              onClick={() => remove(index)}
+              type="button"
+              className="bg-[#d17a00] hover:bg-[#d17a00]/70"
+            >
               Remove
             </Button>
           )}
