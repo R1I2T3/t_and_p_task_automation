@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "tailwind",
     "import_export",
     "django_cotton",
+    "rest_framework",
     # Our created apps
     "theme",
     "base",
@@ -60,6 +61,7 @@ INSTALLED_APPS = [
     "program_coordinator",
     "training_officer",
     "internship_officer",
+    "forms",
 ]
 
 MIDDLEWARE = [
@@ -76,7 +78,14 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "t_and_p_automation.urls"
-
+# REST_FRAMEWORK = {
+#     "DEFAULT_AUTHENTICATION_CLASSES": [
+#         "rest_framework.authentication.SessionAuthentication",
+#     ],
+#     "DEFAULT_PERMISSION_CLASSES": [
+#         "rest_framework.permissions.IsAuthenticated",
+#     ],
+# }
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
