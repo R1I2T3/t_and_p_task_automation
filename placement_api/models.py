@@ -34,20 +34,23 @@ class Offers(models.Model):
 
 
 class placementNotice(models.Model):
-    id = models.UUIDField(primary_key=True)
-    sr_no = models.TextField()
-    to = models.TextField()
-    subject = models.TextField()
-    date = models.DateTimeField(auto_now=True)
-    eligibility_criteria = models.TextField()
-    roles = models.TextField()
-    about = models.TextField(null=True)
-    skill_required = models.TextField()
-    company_registration_link = models.URLField()
-    note = models.TextField()
-    from_user = models.TextField()
-    from_designation = models.TextField()
-    extra = models.TextField()
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    srNo = models.TextField(default="")
+    to = models.TextField(default="")
+    subject = models.TextField(default="")
+    date = models.TextField(default="")
+    intro = models.TextField(default="")
+    eligibility_criteria = models.TextField(default="")
+    roles = models.TextField(default="")
+    about = models.TextField(default="")
+    skill_required = models.TextField(default="")
+    Location = models.TextField(default="")
+    Documents_to_Carry = models.TextField(default="")
+    Walk_in_interview = models.TextField(default="")
+    Company_registration_Link = models.TextField(default="")
+    Note = models.TextField(default="")
+    From = models.TextField(default="")
+    From_designation = models.TextField(default="")
     company = models.OneToOneField(
         to=CompanyRegistration,
         on_delete=models.CASCADE,

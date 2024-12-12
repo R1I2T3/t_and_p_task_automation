@@ -3,7 +3,7 @@ import { MoveLeft } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router";
 
-const NavBar = () => {
+const NavBar = ({ title }: { title: string }) => {
   const navigate = useNavigate();
   return (
     <div className="flex bg-[#d17a00] w-full justify-between ">
@@ -14,7 +14,7 @@ const NavBar = () => {
         >
           <MoveLeft size={100} />
         </Button>
-        <span className="text-white font-bold text-xl">Form Builder</span>
+        <span className="text-white font-bold text-xl">{title}</span>
       </div>
       <img src="/tcet_logo_2.png" />
     </div>

@@ -2,8 +2,12 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rest_framework import status
-from .models import CompanyRegistration, Offers
-from .serializers import CompanyRegistrationSerializer, OffersSerializer
+from .models import CompanyRegistration, Offers, placementNotice
+from .serializers import (
+    CompanyRegistrationSerializer,
+    OffersSerializer,
+    PlacementNoticeSerializer,
+)
 
 
 @api_view(["POST"])
@@ -97,6 +101,36 @@ def get_all_companies(request):
                 {"company": company_serializer.data, "offers": offers_serializer.data}
             )
         return JsonResponse(company_data, safe=False, status=status.HTTP_200_OK)
+    except Exception as e:
+        return JsonResponse(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["POST"])
+def create_notice(request, pk):
+    try:
+        company = CompanyRegistration.objects.get(id=pk)
+        data = JSONParser().parse(request)
+        notice = data.get("notice")
+        notice["company"] = company
+        placementNotice.objects.create(**notice)
+        return JsonResponse(
+            {"message": "Notice created successfully"}, status=status.HTTP_201_CREATED
+        )
+    except Exception as e:
+        print(e)
+        return JsonResponse(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET"])
+def get_notice(request, pk):
+    try:
+        notice = placementNotice.objects.get(id=pk)
+        notice = PlacementNoticeSerializer(notice)
+        return JsonResponse({"notice": notice.data}, status=status.HTTP_200_OK)
     except Exception as e:
         return JsonResponse(
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
