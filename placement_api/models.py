@@ -1,15 +1,16 @@
 from django.db import models
 from student.models import Student
+from uuid import uuid4
 
 # Create your models here.
 
 
 class CompanyRegistration(models.Model):
     DOMAIN_TYPES = [("core", "core"), ("it", "it")]
-    id = models.UUIDField(primary_key=True)
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     name = models.CharField(max_length=100)
-    min_tenth_marks = models.FloatField()
-    min_higher_secondary_marks = models.FloatField()
+    min_tenth_marks = models.FloatField(null=True)
+    min_higher_secondary_marks = models.FloatField(null=True)
     min_cgpa = models.FloatField()
     min_attendance = models.FloatField()
     is_kt = models.BooleanField(default=False)
@@ -23,7 +24,7 @@ class CompanyRegistration(models.Model):
 
 
 class Offers(models.Model):
-    id = models.UUIDField(primary_key=True)
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     type = models.CharField(max_length=100)
     salary = models.FloatField()
     position = models.CharField(max_length=100)
