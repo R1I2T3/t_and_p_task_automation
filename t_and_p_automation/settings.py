@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "training_officer",
     "internship_officer",
     "forms",
+    "placement_api",
 ]
 
 MIDDLEWARE = [

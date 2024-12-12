@@ -1,12 +1,9 @@
 import React from "react";
 import { MoveLeft } from "lucide-react";
 import { Button } from "./ui/button";
-import { useLocation, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 
 const NavBar = () => {
-  const location = useLocation();
-  const redirectTo = location;
-  console.log(redirectTo);
   const navigate = useNavigate();
   return (
     <div className="flex bg-[#d17a00] w-full justify-between ">

@@ -14,6 +14,13 @@ class SingleForm(APIView):
         print(serializer.data)
         return Response(serializer.data)
 
+    def post(self, request, pk):
+        form = Forms.objects.prefetch_related("formfield_set__options_set").get(id=pk)
+        print(form)
+        return Response(
+            {"message": "Form submitted successfully!"}, status=status.HTTP_201_CREATED
+        )
+
 
 class FormList(APIView):
 
@@ -32,7 +39,6 @@ class FormList(APIView):
                 id=uuid4(),
             )
             for field in fields_data:
-                print(field)
                 form_field = FormField.objects.create(
                     id=uuid4(),
                     field_name=field.get("name"),
@@ -46,7 +52,9 @@ class FormList(APIView):
                 if options[0].get("value") != "":
                     for option_value in options:
                         Options.objects.create(
-                            value=option_value, field=form_field, id=uuid4()
+                            value=option_value.get("value"),
+                            field=form_field,
+                            id=uuid4(),
                         )
 
             return Response(
