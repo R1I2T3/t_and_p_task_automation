@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter, Route, Routes } from "react-router";
 import Home from "./pages/home";
 import FormBuilder from "./pages/Form-builder";

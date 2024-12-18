@@ -20,6 +20,7 @@ from django.urls import path, include
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
+from .views import my_protected_view
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -34,4 +35,5 @@ urlpatterns = [
     path("training_officer/", include("training_officer.urls")),
     path("api/", include("forms.urls")),
     path("api/placement/", include("placement_api.urls")),
+    path("api/", views.my_protected_view, name="check-auth"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
