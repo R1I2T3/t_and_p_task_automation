@@ -5,6 +5,9 @@ from .views import (
     get_company_with_offers,
     create_notice,
     get_notice,
+    job_application,
+    get_student_application,
+    get_all_applied_students,
 )
 
 urlpatterns = [
@@ -13,4 +16,7 @@ urlpatterns = [
     path("company/<str:pk>", get_company_with_offers),
     path("notice/create/<str:pk>", create_notice),
     path("notice/get/<str:pk>", get_notice),
+    path("job_application/create/<str:pk>", job_application),
+    path("job_application/get/<str:uid>", get_student_application),
+    path("job_application/company/get/<str:pk>", get_all_applied_students),
 ]

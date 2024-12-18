@@ -17,7 +17,7 @@ const Home = () => {
       if (res.ok) {
         setIsAuthenticated(true);
       } else {
-        window.open("http://localhost:8000/auth/login");
+        window.open("http://localhost:8000/auth/login", "_self");
       }
     };
     onAuthenticate();

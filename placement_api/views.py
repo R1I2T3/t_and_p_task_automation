@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 from rest_framework import status
 from .models import CompanyRegistration, Offers, placementNotice
@@ -7,10 +7,21 @@ from .serializers import (
     CompanyRegistrationSerializer,
     OffersSerializer,
     PlacementNoticeSerializer,
+    JobAcceptanceSerializer,
+    JobApplicationSerializer,
 )
+from rest_framework.permissions import IsAuthenticated
+from base.models import User
+from django.views.decorators.csrf import csrf_exempt
+from student.models import Student
+from .models import jobApplication
+from uuid import uuid4
+from student.serializers import StudentSerializer
+from rest_framework.exceptions import NotFound
 
 
-@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@api_view(["GET"])
 def create_company_with_offers(request):
     try:
         data = JSONParser().parse(request)
@@ -44,6 +55,7 @@ def create_company_with_offers(request):
         )
 
 
+@permission_classes([IsAuthenticated])
 @api_view(["GET"])
 def get_company_with_offers(request, pk=None):
     try:
@@ -88,6 +100,7 @@ def get_company_with_offers(request, pk=None):
         )
 
 
+@permission_classes([IsAuthenticated])
 @api_view(["GET"])
 def get_all_companies(request):
     try:
@@ -107,6 +120,7 @@ def get_all_companies(request):
         )
 
 
+@permission_classes([IsAuthenticated])
 @api_view(["POST"])
 def create_notice(request, pk):
     try:
@@ -125,6 +139,7 @@ def create_notice(request, pk):
         )
 
 
+@permission_classes([IsAuthenticated])
 @api_view(["GET"])
 def get_notice(request, pk):
     try:
@@ -137,6 +152,47 @@ def get_notice(request, pk):
         )
 
 
-@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@api_view(["GET"])
+@csrf_exempt
 def job_application(request, pk):
-    pass
+    try:
+        user = User.objects.get(email=request.user.email)
+        student = Student.objects.get(user=user)
+        company = CompanyRegistration.objects.get(pk=pk)
+        jobApplication.objects.create(student=student, company=company, id=uuid4())
+        return JsonResponse(
+            {"success": "Job application submitted successfully"},
+            status=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        return JsonResponse(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_student_application(request, uid):
+    try:
+        student = Student.objects.get(uid=uid)
+    except Student.DoesNotExist:
+        raise NotFound("Student not found.")
+
+    serializer = StudentSerializer(student)
+    return JsonResponse({"student": serializer.data}, safe=False)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_all_applied_students(request, pk):
+    try:
+        company = jobApplication(pk=pk)
+        students = JobApplicationSerializer(company)
+        print(students.data)
+        return JsonResponse({"students": students.data})
+    except Exception as e:
+        print(e)
+        return JsonResponse(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

@@ -62,7 +62,9 @@ class jobApplication(models.Model):
     id = models.UUIDField(primary_key=True)
     student = models.ForeignKey(to=Student, on_delete=models.DO_NOTHING)
     company = models.ForeignKey(
-        to=Student, on_delete=models.DO_NOTHING, related_name="company_job_applications"
+        to=CompanyRegistration,
+        on_delete=models.DO_NOTHING,
+        related_name="company_job_applications",
     )
     attendance = models.BooleanField(default=False)
     aptitude = models.BooleanField(null=True)
@@ -79,6 +81,7 @@ class jobAcceptance(models.Model):
         related_name="company_job_offer_acceptance",
     )
     company = models.ForeignKey(to=CompanyRegistration, on_delete=models.DO_NOTHING)
+    company_name = models.CharField(max_length=100, null=True)
     offer_letter = models.URLField()
     type = models.CharField(max_length=100, default="")
     salary = models.FloatField(default=0)

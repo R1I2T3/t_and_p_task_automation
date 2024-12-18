@@ -4,6 +4,9 @@ import FormBuilder from "./pages/Form-builder";
 import Form from "./pages/form";
 import CreatePlacementNotice from "./pages/placement/create-notice";
 import Notice from "./pages/placement/notice";
+import PlacementJobApplications from "./pages/placement/placement_job_application";
+import StudentJobApplication from "./pages/placement/student_job_application";
+import CompanyJobApplications from "./pages/placement/company_job_applications";
 const App = () => {
   return (
     <BrowserRouter>
@@ -16,6 +19,18 @@ const App = () => {
           element={<CreatePlacementNotice />}
         />
         <Route path="/placement/notice/:id" element={<Notice />} />
+        <Route
+          path="/placement/job/:id"
+          element={<PlacementJobApplications />}
+        />
+        <Route
+          path="/job/application/student/:uid"
+          element={<StudentJobApplication />}
+        />
+        <Route
+          path="/job/application/company/:id"
+          element={<CompanyJobApplications />}
+        />
       </Routes>
     </BrowserRouter>
   );
