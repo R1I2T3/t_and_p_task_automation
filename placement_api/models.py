@@ -80,9 +80,11 @@ class jobAcceptance(models.Model):
         on_delete=models.DO_NOTHING,
         related_name="company_job_offer_acceptance",
     )
-    company = models.ForeignKey(to=CompanyRegistration, on_delete=models.DO_NOTHING)
+    company = models.ForeignKey(
+        to=CompanyRegistration, on_delete=models.DO_NOTHING, null=True
+    )
     company_name = models.CharField(max_length=100, null=True)
-    offer_letter = models.URLField()
+    offer_letter = models.FileField()
     type = models.CharField(max_length=100, default="")
     salary = models.FloatField(default=0)
     position = models.CharField(max_length=100, default="")

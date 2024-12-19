@@ -1,8 +1,13 @@
 from django.http import JsonResponse
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.parsers import JSONParser
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+    parser_classes,
+)
+from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
 from rest_framework import status
-from .models import CompanyRegistration, Offers, placementNotice
+from .models import CompanyRegistration, Offers, placementNotice, jobAcceptance
 from .serializers import (
     CompanyRegistrationSerializer,
     OffersSerializer,
@@ -18,10 +23,13 @@ from .models import jobApplication
 from uuid import uuid4
 from student.serializers import StudentSerializer
 from rest_framework.exceptions import NotFound
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from uuid import uuid4
 
 
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
-@api_view(["GET"])
 def create_company_with_offers(request):
     try:
         data = JSONParser().parse(request)
@@ -55,8 +63,9 @@ def create_company_with_offers(request):
         )
 
 
-@permission_classes([IsAuthenticated])
 @api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_company_with_offers(request, pk=None):
     try:
         if pk:
@@ -100,8 +109,9 @@ def get_company_with_offers(request, pk=None):
         )
 
 
-@permission_classes([IsAuthenticated])
 @api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_all_companies(request):
     try:
         companies = CompanyRegistration.objects.all()
@@ -120,8 +130,9 @@ def get_all_companies(request):
         )
 
 
-@permission_classes([IsAuthenticated])
 @api_view(["POST"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def create_notice(request, pk):
     try:
         company = CompanyRegistration.objects.get(id=pk)
@@ -139,8 +150,9 @@ def create_notice(request, pk):
         )
 
 
-@permission_classes([IsAuthenticated])
 @api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_notice(request, pk):
     try:
         notice = placementNotice.objects.get(id=pk)
@@ -152,9 +164,9 @@ def get_notice(request, pk):
         )
 
 
-@permission_classes([IsAuthenticated])
 @api_view(["GET"])
-@csrf_exempt
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def job_application(request, pk):
     try:
         user = User.objects.get(email=request.user.email)
@@ -172,6 +184,7 @@ def job_application(request, pk):
 
 
 @api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_student_application(request, uid):
     try:
@@ -184,6 +197,7 @@ def get_student_application(request, uid):
 
 
 @api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_applied_students(request, pk):
     try:
@@ -196,3 +210,71 @@ def get_all_applied_students(request, pk):
         return JsonResponse(
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def create_job_acceptance(request):
+    user = User.objects.get(email=request.user.email)
+    if not user:
+        return JsonResponse(
+            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
+        )
+    student = Student.objects.get(user=user)
+    print(request.data["company_name"])
+    company = None
+    required_fields = ["type", "salary", "position"]
+    for field in required_fields:
+        if field not in request.data:
+            return JsonResponse(
+                {"error": f"Missing required field: {field}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+    if "offer_letter" not in request.FILES:
+        return JsonResponse(
+            {"error": "Offer letter file is required"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    job_acceptance = jobAcceptance.objects.create(
+        id=uuid4(),
+        student=student,
+        company=None,
+        company_name=request.data["company_name"][
+            0
+        ],  # Assuming company has company_name field
+        offer_letter=request.FILES["offer_letter"],
+        type=request.data["type"][0],
+        salary=float(request.data["salary"][0]),
+        position=request.data["position"][0],
+        isVerified=False,  # Default value
+    )
+    return JsonResponse({"success": "Job application created"})
+
+
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@api_view(["GET"])
+def get_job_acceptance_by_id(request, pk):
+    try:
+        job_acceptance = jobAcceptance.objects.get(id=pk)
+    except jobAcceptance.DoesNotExist:
+        return JsonResponse(
+            {"error": "Job acceptance not found."}, status=status.HTTP_404_NOT_FOUND
+        )
+
+    serializer = JobAcceptanceSerializer(job_acceptance)
+    return JsonResponse(serializer.data)
+
+
+@api_view(["GET"])
+def get_jobs_by_company_name(request, company_name):
+    jobs = jobAcceptance.objects.filter(company_name=company_name)
+    if not jobs.exists():
+        return JsonResponse(
+            {"error": "No jobs found for this company name."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    serializer = JobAcceptanceSerializer(jobs, many=True)
+    return JsonResponse(serializer.data)

@@ -7,6 +7,7 @@ import Notice from "./pages/placement/notice";
 import PlacementJobApplications from "./pages/placement/placement_job_application";
 import StudentJobApplication from "./pages/placement/student_job_application";
 import CompanyJobApplications from "./pages/placement/company_job_applications";
+import CompanyJobAcceptance from "./pages/placement/company_job_acceptance";
 const App = () => {
   return (
     <BrowserRouter>
@@ -31,6 +32,7 @@ const App = () => {
           path="/job/application/company/:id"
           element={<CompanyJobApplications />}
         />
+        <Route path="/job/acceptance" element={<CompanyJobAcceptance />} />
       </Routes>
     </BrowserRouter>
   );
