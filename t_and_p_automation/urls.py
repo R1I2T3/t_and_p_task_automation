@@ -20,7 +20,6 @@ from django.urls import path, include
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import my_protected_view
 
 urlpatterns = [
     path("admin/", admin.site.urls),
