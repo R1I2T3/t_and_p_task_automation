@@ -8,6 +8,7 @@ import PlacementJobApplications from "./pages/placement/placement_job_applicatio
 import StudentJobApplication from "./pages/placement/student_job_application";
 import CompanyJobApplications from "./pages/placement/company_job_applications";
 import CompanyJobAcceptance from "./pages/placement/company_job_acceptance";
+import CompanyRegistrationForm from "./pages/placement/companyRegistration";
 const App = () => {
   return (
     <BrowserRouter>
@@ -33,6 +34,7 @@ const App = () => {
           element={<CompanyJobApplications />}
         />
         <Route path="/job/acceptance" element={<CompanyJobAcceptance />} />
+        <Route path="/company/register" element={<CompanyRegistrationForm />} />
       </Routes>
     </BrowserRouter>
   );

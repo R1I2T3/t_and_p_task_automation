@@ -28,12 +28,10 @@ from uuid import uuid4
 
 
 @api_view(["POST"])
-@authentication_classes([SessionAuthentication, BasicAuthentication])
-@permission_classes([IsAuthenticated])
 def create_company_with_offers(request):
+    print(request)
     try:
         data = JSONParser().parse(request)
-
         # Create CompanyRegistration
         company_data = data.get("company")
         company_serializer = CompanyRegistrationSerializer(data=company_data)
@@ -43,7 +41,6 @@ def create_company_with_offers(request):
             return JsonResponse(
                 company_serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
-
         # Create Offers
         offers_data = data.get("offers", [])
         for offer_data in offers_data:
@@ -52,7 +49,6 @@ def create_company_with_offers(request):
                 Offers.objects.create(**offer_data)
             except:
                 pass
-
         return JsonResponse(
             {"message": "Company and related offers created successfully!"},
             status=status.HTTP_201_CREATED,
