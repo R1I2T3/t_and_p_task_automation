@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router";
 import axios from "axios";
 
 const NotificationDetail = () => {
@@ -69,6 +69,7 @@ const NotificationDetail = () => {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
+        marginTop: "90px",
       }}
     >
       <div

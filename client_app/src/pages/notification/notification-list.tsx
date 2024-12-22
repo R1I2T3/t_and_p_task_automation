@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import {
   Typography,
   Grid,
@@ -10,31 +9,16 @@ import {
   Box,
   Button,
 } from "@mui/material";
-
-interface Notification {
-  id: number;
-  title: string;
-  message: string;
-  creator_name: string;
-  created_at: string;
-}
-
+import axios from "axios";
 const NotificationList = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
-
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const accessToken = localStorage.getItem("access_token");
-        const response = await axios.get(
-          "http://127.0.0.1:8000/api/notifications/",
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        );
+        const response = await axios.get("/api/notifications/", {
+          withCredentials: true,
+        });
         setNotifications(response.data);
       } catch (error) {
         console.error("Error fetching notifications:", error);
@@ -42,15 +26,9 @@ const NotificationList = () => {
     };
     fetchNotifications();
   }, []);
-
-  const handleViewNotification = (id: number) => {
+  const handleViewNotification = (id) => {
     navigate(`/notifications/${id}`);
   };
-
-  const handleCreateNotification = () => {
-    navigate("/create-notification");
-  };
-
   return (
     <Box
       sx={{
@@ -59,6 +37,7 @@ const NotificationList = () => {
         flexDirection: "column",
         alignItems: "center",
         position: "relative",
+        marginTop: "80px",
       }}
     >
       <Typography
@@ -73,14 +52,6 @@ const NotificationList = () => {
       >
         Notifications
       </Typography>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleCreateNotification}
-        sx={{ position: "absolute", top: "20px", right: "20px" }}
-      >
-        Create
-      </Button>
       {notifications.length === 0 ? (
         <Typography variant="body1">No notifications available.</Typography>
       ) : (

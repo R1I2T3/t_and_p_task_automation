@@ -1,6 +1,7 @@
 # filepath: backend/notifications/models.py
 from django.db import models
 from base.models import User
+from student.models import Student
 
 
 class Notification(models.Model):
