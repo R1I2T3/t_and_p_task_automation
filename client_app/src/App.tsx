@@ -12,6 +12,10 @@ import PlacementParent from "./pages/placement/components/PlacementParent";
 import { getCookie } from "./utils";
 import { authAtom } from "./authAtom";
 import { useSetAtom } from "jotai";
+import CreateNotification from "./pages/notification/create-notification";
+import NotificationDetail from "./pages/notification/notification-detail";
+import NotificationList from "./pages/notification/notification-list";
+import NotificationParent from "./pages/notification/notification-parent";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -54,6 +58,11 @@ const App = () => {
             path="company/register"
             element={<CompanyRegistrationForm />}
           />
+        </Route>
+        <Route path="/notifications" element={<NotificationParent />}>
+          <Route path="/" element={<NotificationList />} />
+          <Route path="create" element={<CreateNotification />} />
+          <Route path=":id" element={<NotificationDetail />} />
         </Route>
       </Routes>
     </BrowserRouter>
