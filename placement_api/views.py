@@ -124,6 +124,7 @@ def company_register(request, safe):
         company_serializer = CompanyRegistrationSerializer(data=company_data)
         if company_serializer.is_valid():
             company = company_serializer.save()
+            print(company)
         else:
             return JsonResponse(
                 company_serializer.errors, status=status.HTTP_400_BAD_REQUEST
@@ -137,7 +138,9 @@ def company_register(request, safe):
             except:
                 pass
         return JsonResponse(
-            {"message": "Company and related offers created successfully!"},
+            {
+                "message": "Company and related offers created successfully!",
+            },
             status=status.HTTP_201_CREATED,
         )
     except Exception as e:

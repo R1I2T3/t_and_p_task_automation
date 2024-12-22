@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { getCookie } from "@/utils"; // Ensure this function correctly retrieves the CSRF token
 import NavBar from "@/components/NavBar";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router";
 const CompanyRegistrationForm = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -15,7 +17,7 @@ const CompanyRegistrationForm = () => {
     selectedDepartments: [],
     jobOffers: [{ type: "", salary: "", position: "" }],
   });
-
+  const navigate = useNavigate();
   const departmentOptions = [
     "CS",
     "IT",
@@ -111,10 +113,12 @@ const CompanyRegistrationForm = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to register company");
+        toast.error("Failed to load company registration data");
+      } else {
+        const data = await response.json();
+        toast.success("Company registered successfully!");
+        navigate(`placement/create_notice/${data.id}`);
       }
-      alert("Company registered successfully!");
     } catch (error) {
       console.error("Error registering company:", error);
       alert("Error registering company. Check console for details.");
