@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    create_company_with_offers,
+    company_register,
     get_all_companies,
     get_company_with_offers,
     create_notice,
@@ -12,7 +12,7 @@ from .views import (
 )
 
 urlpatterns = [
-    path("company/register/", create_company_with_offers),
+    path("company/register/<str:safe>", company_register),
     path("company/", get_all_companies),
     path("company/<str:pk>", get_company_with_offers),
     path("notice/create/<str:pk>", create_notice),

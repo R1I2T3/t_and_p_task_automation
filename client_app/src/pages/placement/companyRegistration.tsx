@@ -56,7 +56,6 @@ const CompanyRegistrationForm = () => {
     updatedJobOffers[index][name] = value;
     setFormData({ ...formData, jobOffers: updatedJobOffers });
   };
-
   const addJobOffer = () => {
     setFormData((prevData) => ({
       ...prevData,
@@ -101,16 +100,20 @@ const CompanyRegistrationForm = () => {
 
     try {
       const csrfToken = getCookie("csrftoken");
-      const response = await fetch("/api/placement/company/register", {
+      const response = await fetch("/api/placement/company/register/1", {
         method: "POST",
         headers: {
           "X-CSRFToken": csrfToken || "",
           "Content-Type": "application/json",
         },
         credentials: "include",
-        mode: "cors",
         body: JSON.stringify(payload),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to register company");
+      }
       alert("Company registered successfully!");
     } catch (error) {
       console.error("Error registering company:", error);
@@ -134,9 +137,7 @@ const CompanyRegistrationForm = () => {
           <input
             type="text"
             name="name"
-            onChange={(e) =>
-              setFormData({ ...formData, Departments: e.target.value })
-            }
+            onChange={handleChange}
             required
             className="w-full mt-1 p-2 border border-gray-500 rounded-md focus:ring focus:ring-blue-200"
           />

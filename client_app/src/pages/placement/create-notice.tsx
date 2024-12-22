@@ -5,6 +5,7 @@ import copytoimage from "../../assets/pmt-placement_drive_copytoImage.png";
 import NavBar from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
 import { useParams } from "react-router";
+import { getCookie } from "@/utils";
 const CreatePlacementNotice = () => {
   const editor = useRef(null);
   const [content, setContent] = useState("");
@@ -35,9 +36,12 @@ const CreatePlacementNotice = () => {
   const printContent = async () => {
     const previewContent = editor.current?.value || content;
     const newWindow = window.open("", "_blank", "width=800,height=600");
+    const csrfToken = getCookie("csrftoken");
     const res = await fetch(`/api/placement/notice/create/${id}`, {
       method: "POST",
+      credentials: "include",
       headers: {
+        "X-CSRFToken": csrfToken || "",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ notice: formData }),

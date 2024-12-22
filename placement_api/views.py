@@ -27,38 +27,6 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 from uuid import uuid4
 
 
-@api_view(["POST"])
-def create_company_with_offers(request):
-    print(request)
-    try:
-        data = JSONParser().parse(request)
-        # Create CompanyRegistration
-        company_data = data.get("company")
-        company_serializer = CompanyRegistrationSerializer(data=company_data)
-        if company_serializer.is_valid():
-            company = company_serializer.save()
-        else:
-            return JsonResponse(
-                company_serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
-        # Create Offers
-        offers_data = data.get("offers", [])
-        for offer_data in offers_data:
-            offer_data["company"] = company
-            try:
-                Offers.objects.create(**offer_data)
-            except:
-                pass
-        return JsonResponse(
-            {"message": "Company and related offers created successfully!"},
-            status=status.HTTP_201_CREATED,
-        )
-    except Exception as e:
-        return JsonResponse(
-            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
@@ -127,7 +95,7 @@ def get_all_companies(request):
 
 
 @api_view(["POST"])
-@authentication_classes([SessionAuthentication, BasicAuthentication])
+@authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_notice(request, pk):
     try:
@@ -140,7 +108,39 @@ def create_notice(request, pk):
             {"message": "Notice created successfully"}, status=status.HTTP_201_CREATED
         )
     except Exception as e:
-        print(e)
+        return JsonResponse(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def company_register(request, safe):
+    try:
+        data = request.data
+        print(data)
+        company_data = data.get("company")
+        company_serializer = CompanyRegistrationSerializer(data=company_data)
+        if company_serializer.is_valid():
+            company = company_serializer.save()
+        else:
+            return JsonResponse(
+                company_serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+        # Create Offers
+        offers_data = data.get("offers", [])
+        for offer_data in offers_data:
+            offer_data["company"] = company
+            try:
+                Offers.objects.create(**offer_data)
+            except:
+                pass
+        return JsonResponse(
+            {"message": "Company and related offers created successfully!"},
+            status=status.HTTP_201_CREATED,
+        )
+    except Exception as e:
         return JsonResponse(
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
@@ -199,7 +199,6 @@ def get_all_applied_students(request, pk):
     try:
         company = jobApplication(pk=pk)
         students = JobApplicationSerializer(company)
-        print(students.data)
         return JsonResponse({"students": students.data})
     except Exception as e:
         print(e)
@@ -219,7 +218,6 @@ def create_job_acceptance(request):
             {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
         )
     student = Student.objects.get(user=user)
-    print(request.data["company_name"])
     company = None
     required_fields = ["type", "salary", "position"]
     for field in required_fields:
