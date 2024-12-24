@@ -36,4 +36,5 @@ urlpatterns = [
     path("api/placement/", include("placement_api.urls")),
     path("api/", views.my_protected_view, name="check-auth"),
     path("api/notifications/", include("notifications.urls")),
+    path("api/program_coordinator/", include("program_coordinator_api.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

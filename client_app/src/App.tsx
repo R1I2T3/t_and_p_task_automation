@@ -16,6 +16,12 @@ import CreateNotification from "./pages/notification/create-notification";
 import NotificationDetail from "./pages/notification/notification-detail";
 import NotificationList from "./pages/notification/notification-list";
 import NotificationParent from "./pages/notification/notification-parent";
+import ProgramCoordinatorLayout from "./pages/program_coordinator/layout";
+import ProgramHome from "./pages/program_coordinator";
+import Update from "./pages/program_coordinator/Update";
+import Session from "./pages/program_coordinator/Session";
+import Upload from "./pages/program_coordinator/Upload";
+import Attendance from "./pages/program_coordinator/Attendance";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -63,6 +69,16 @@ const App = () => {
           <Route index element={<NotificationList />} />
           <Route path="create" element={<CreateNotification />} />
           <Route path=":id" element={<NotificationDetail />} />
+        </Route>
+        <Route
+          path="/program_coordinator"
+          element={<ProgramCoordinatorLayout />}
+        >
+          <Route path="session-creation" element={<Session />} />
+          <Route path="attendance-and-marks" element={<Attendance />} />
+          <Route path="update-attendance" element={<Update />} />
+          <Route path="upload-file" element={<Upload />} />
+          <Route index element={<ProgramHome />} />
         </Route>
       </Routes>
     </BrowserRouter>
