@@ -50,3 +50,13 @@ export const convertImageToBase64 = async (imageUrl: string) => {
     reader.readAsDataURL(blob);
   });
 };
+
+export const Capitalize = (str: string) => {
+  const str_array = str.split("_");
+  if (str_array.length > 1) {
+    return str_array
+      .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+      .join(" ");
+  }
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};

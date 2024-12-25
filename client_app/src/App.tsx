@@ -22,6 +22,9 @@ import Update from "./pages/program_coordinator/Update";
 import Session from "./pages/program_coordinator/Session";
 import Upload from "./pages/program_coordinator/Upload";
 import Attendance from "./pages/program_coordinator/Attendance";
+import StudentLayout from "./pages/student/student_layout";
+import StudentHome from "./pages/student";
+import StudentPersonalInfo from "./pages/student/student-personal-info";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -79,6 +82,10 @@ const App = () => {
           <Route path="update-attendance" element={<Update />} />
           <Route path="upload-file" element={<Upload />} />
           <Route index element={<ProgramHome />} />
+        </Route>
+        <Route path="/student" element={<StudentLayout />}>
+          <Route index element={<StudentHome />} />
+          <Route path="info" element={<StudentPersonalInfo />} />
         </Route>
       </Routes>
     </BrowserRouter>

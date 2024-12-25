@@ -7,7 +7,6 @@ import {
   CardContent,
   CardActionArea,
   Box,
-  Button,
 } from "@mui/material";
 import axios from "axios";
 const NotificationList = () => {
@@ -26,7 +25,7 @@ const NotificationList = () => {
     };
     fetchNotifications();
   }, []);
-  const handleViewNotification = (id) => {
+  const handleViewNotification = (id: number) => {
     navigate(`/notifications/${id}`);
   };
   return (
@@ -59,7 +58,7 @@ const NotificationList = () => {
           container
           spacing={3}
           direction="column"
-          sx={{ maxWidth: "600px", margin: "0 auto" }}
+          sx={{ maxWidth: "600px" }}
         >
           {notifications.map((notification) => (
             <Grid item key={notification.id}>
