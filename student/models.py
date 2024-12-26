@@ -1,6 +1,7 @@
 from django.db import models
 from base.models import User
 from program_coordinator.models import ProgramCoordinator
+from uuid import uuid4
 
 # Create your models here.
 
@@ -85,3 +86,54 @@ class TrainingAttendanceSemester(models.Model):
 
     class Meta:
         unique_together = ["student", "semester"]
+
+
+class Resume(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name="resume"
+    )
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone_number = models.CharField(max_length=15)
+
+
+class Resume_Contact(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="contact")
+    url = models.URLField()
+
+
+class Resume_Skill(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="skill")
+    skill = models.CharField(max_length=100)
+
+
+class Resume_WorkExperience(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="work")
+    company = models.CharField(max_length=100)
+    position = models.CharField(max_length=100)
+    start_date = models.TextField()
+    end_date = models.TextField()
+    description = models.TextField(null=True)
+
+
+class Resume_Education(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    resume = models.ForeignKey(
+        Resume, on_delete=models.CASCADE, related_name="education"
+    )
+    institution = models.CharField(max_length=100)
+    degree = models.CharField(max_length=100)
+    start_date = models.TextField()
+    end_date = models.TextField()
+    percentage = models.TextField()
+
+
+class Resume_Project(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="project")
+    title = models.CharField(max_length=100)
+    description = models.TextField(null=True)

@@ -5,6 +5,12 @@ from .models import (
     AcademicAttendanceSemester,
     TrainingPerformanceSemester,
     TrainingAttendanceSemester,
+    Resume,
+    Resume_Contact,
+    Resume_Education,
+    Resume_Project,
+    Resume_Skill,
+    Resume_WorkExperience,
 )
 from base.models import User
 from program_coordinator.models import ProgramCoordinator
@@ -75,3 +81,118 @@ class TrainingAttendanceSemesterSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainingAttendanceSemester
         fields = ["id", "student", "training_attendance", "semester", "program"]
+
+
+class ResumeEducationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resume_Education
+        fields = ["id", "institution", "degree", "start_date", "end_date", "percentage"]
+
+
+class ResumeProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resume_Project
+        fields = ["id", "title", "description"]
+
+
+class ResumeWorkExperienceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resume_WorkExperience
+        fields = ["id", "company", "position", "start_date", "end_date", "description"]
+
+
+class ResumeSerializer(serializers.ModelSerializer):
+    contacts = serializers.ListField(
+        child=serializers.URLField(), source="contact", write_only=True
+    )
+    skills = serializers.ListField(
+        child=serializers.CharField(), source="skill", write_only=True
+    )
+    education = ResumeEducationSerializer(
+        many=True,
+    )
+    projects = ResumeProjectSerializer(many=True, source="project")
+    workExperience = ResumeWorkExperienceSerializer(many=True, source="work")
+    phone_no = serializers.CharField(source="phone_number")
+
+    class Meta:
+        model = Resume
+        fields = [
+            "id",
+            "name",
+            "email",
+            "phone_no",
+            "contacts",
+            "skills",
+            "education",
+            "projects",
+            "workExperience",
+        ]
+
+    def create(self, validated_data):
+        contacts = validated_data.pop("contact", [])
+        skills = validated_data.pop("skill", [])
+        education_data = validated_data.pop("education", [])
+        projects_data = validated_data.pop("project", [])
+        work_experience_data = validated_data.pop("work", [])
+
+        resume = Resume.objects.create(**validated_data)
+
+        for url in contacts:
+            Resume_Contact.objects.create(resume=resume, url=url)
+        for skill_name in skills:
+            Resume_Skill.objects.create(resume=resume, skill=skill_name)
+
+        for edu_data in education_data:
+            Resume_Education.objects.create(resume=resume, **edu_data)
+
+        for project_data in projects_data:
+            Resume_Project.objects.create(resume=resume, **project_data)
+        for work_data in work_experience_data:
+            Resume_WorkExperience.objects.create(resume=resume, **work_data)
+
+        return resume
+
+    def update(self, instance, validated_data):
+        contacts = validated_data.pop("contact", [])
+        skills = validated_data.pop("skill", [])
+        education_data = validated_data.pop("education", [])
+        projects_data = validated_data.pop("project", [])
+        work_experience_data = validated_data.pop("work", [])
+
+        instance.name = validated_data.get("name", instance.name)
+        instance.email = validated_data.get("email", instance.email)
+        instance.phone_number = validated_data.get(
+            "phone_number", instance.phone_number
+        )
+        instance.save()
+
+        instance.contact.all().delete()
+        for url in contacts:
+            Resume_Contact.objects.create(resume=instance, url=url)
+        instance.skill.all().delete()
+        for skill_name in skills:
+            Resume_Skill.objects.create(resume=instance, skill=skill_name)
+
+        instance.education.all().delete()
+        for edu_data in education_data:
+            Resume_Education.objects.create(resume=instance, **edu_data)
+
+        instance.project.all().delete()
+        for project_data in projects_data:
+            Resume_Project.objects.create(resume=instance, **project_data)
+
+        instance.work.all().delete()
+        for work_data in work_experience_data:
+            Resume_WorkExperience.objects.create(resume=instance, **work_data)
+
+        return instance
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        representation["contacts"] = [contact.url for contact in instance.contact.all()]
+
+        representation["skills"] = [skill.skill for skill in instance.skill.all()]
+
+        return representation

@@ -1,6 +1,13 @@
 import React from "react";
 import { Link, Outlet } from "react-router";
-import { BarChart, User, LogOut, Menu, MessageCircle } from "lucide-react";
+import {
+  BarChart,
+  User,
+  LogOut,
+  Menu,
+  MessageCircle,
+  FileUser,
+} from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -14,6 +21,7 @@ const StudentLayout = () => {
   const menuItems = [
     { icon: BarChart, label: "Stats", href: "/student/" },
     { icon: User, label: "Personal Info", href: "/student/info" },
+    { icon: FileUser, label: "Resume", href: "/student/resume" },
     { icon: MessageCircle, label: "Notifications", href: "/notifications/" },
   ];
 
