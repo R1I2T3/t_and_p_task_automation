@@ -25,6 +25,7 @@ from student.serializers import StudentSerializer
 from rest_framework.exceptions import NotFound
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from uuid import uuid4
+from rest_framework.views import APIView
 
 
 @api_view(["GET"])
@@ -275,3 +276,29 @@ def get_jobs_by_company_name(request, company_name):
 
     serializer = JobAcceptanceSerializer(jobs, many=True)
     return JsonResponse(serializer.data)
+
+
+class SaveAttendance(APIView):
+    def post(self, request):
+        # Expecting a list of job application data
+        data = request.data
+
+        try:
+            # Iterate through the data and create or update job applications
+            for item in data:
+                serializer = JobApplicationSerializer(data=item)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return JsonResponse(
+                        {"error": "Invalid data", "details": serializer.errors},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            return JsonResponse(
+                {"message": "Data saved successfully!"}, status=status.HTTP_201_CREATED
+            )
+        except Exception as e:
+            return JsonResponse(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

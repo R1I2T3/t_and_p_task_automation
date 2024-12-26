@@ -27,6 +27,7 @@ import StudentHome from "./pages/student";
 import StudentPersonalInfo from "./pages/student/student-personal-info";
 import Resume from "./pages/student/resume";
 import ResumePreview from "./pages/student/resume-preview";
+import PlacementAttendance from "./pages/placement/placement_attendance";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -69,6 +70,7 @@ const App = () => {
             path="company/register"
             element={<CompanyRegistrationForm />}
           />
+          <Route path="attendance" element={<PlacementAttendance />} />
         </Route>
         <Route path="/notifications" element={<NotificationParent />}>
           <Route index element={<NotificationList />} />
