@@ -26,6 +26,7 @@ import StudentLayout from "./pages/student/student_layout";
 import StudentHome from "./pages/student";
 import StudentPersonalInfo from "./pages/student/student-personal-info";
 import Resume from "./pages/student/resume";
+import ResumePreview from "./pages/student/resume-preview";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -88,6 +89,7 @@ const App = () => {
           <Route index element={<StudentHome />} />
           <Route path="info" element={<StudentPersonalInfo />} />
           <Route path="resume" element={<Resume />} />
+          <Route path="resume-preview" element={<ResumePreview />} />
         </Route>
       </Routes>
     </BrowserRouter>

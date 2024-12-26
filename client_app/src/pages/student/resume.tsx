@@ -10,12 +10,13 @@ import {
   ThemeProvider,
 } from "@mui/material";
 import theme from "../placement/components/theme";
-import Submit from "../placement/components/submit";
 import { PlusCircle, MinusCircle } from "lucide-react";
 import { getCookie } from "@/utils";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router";
 const Resume = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -511,7 +512,20 @@ const Resume = () => {
             </Button>
 
             {/* Submit Button */}
-            <Submit isSubmitted={isSubmitted} />
+            <div className="flex justify-between mt-2 gap-2">
+              <Button
+                type="button"
+                variant="contained"
+                color="primary"
+                className="w-full"
+                onClick={() => navigate("/student/resume-preview")}
+              >
+                Preview
+              </Button>
+              <Button type="submit" variant="contained" className="w-full">
+                {isUpdate ? "Update" : "Submit"}
+              </Button>
+            </div>
           </form>
         </Paper>
       </Container>
