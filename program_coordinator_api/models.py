@@ -1,4 +1,5 @@
 from django.db import models
+from student.models import SEM_OPTIONS
 
 
 # Model to store attendance data for a student
@@ -12,6 +13,9 @@ class AttendanceData(models.Model):
     timestamp = models.DateTimeField()
     uid = models.CharField(max_length=100)
     year = models.CharField(max_length=100)
+    semester = models.CharField(
+        max_length=100, default="SEMESTER 1", choices=SEM_OPTIONS
+    )
 
     def __str__(self):
         return f"{self.batch} - {self.session}"
