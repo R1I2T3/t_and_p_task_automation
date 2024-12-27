@@ -49,7 +49,7 @@ const DepartmentHome = () => {
   const fetchDepartmentStats = async () => {
     try {
       const response = await fetch(
-        `/api/department/?year=${searchParams.get("year") || ""}`
+        `/api/department_coordinator/?year=${searchParams.get("year") || ""}`
       );
       const data = await response.json();
       setStats(data);

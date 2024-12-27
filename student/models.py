@@ -24,13 +24,14 @@ class Student(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.SET_NULL, related_name="students", null=True
     )
-    uid = models.CharField(max_length=100, unique=True, primary_key=True)
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    uid = models.CharField(max_length=100, unique=True)
     department = models.CharField(max_length=100)
     academic_year = models.CharField(max_length=30)
     current_category = models.TextField(choices=category_Type, default="No category")
     is_dse_student = models.BooleanField(default=False)
-    gender = models.CharField(max_length=10)
-    dob = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=10, default="MALE")
+    dob = models.CharField(null=True, blank=True, default="Not Provided", max_length=20)
     contact = models.CharField(max_length=15, default="Not Provided")
     personal_email = models.EmailField(blank=True, null=True)
     is_student_coordinator = models.BooleanField(default=False)
@@ -38,6 +39,7 @@ class Student(models.Model):
     higher_secondary_grade = models.FloatField(default=0.0)
     card = models.CharField(max_length=40, choices=CARD_TYPE, default="Green")
     consent = models.CharField(choices=consent_Type, default="placement", max_length=30)
+    batch = models.CharField(max_length=100, default="2021")
 
     def __str__(self) -> str:
         return f"{self.uid}"
@@ -83,7 +85,7 @@ class TrainingPerformanceSemester(models.Model):
     )
     training_performance = models.FloatField(default=0)
     semester = models.CharField(max_length=30, choices=SEM_OPTIONS)
-    program = models.CharField(max_length=100)
+    program = models.CharField(max_length=100, default="ACT_TECHNICAL")
 
     class Meta:
         unique_together = ["student", "semester"]
@@ -95,7 +97,7 @@ class TrainingAttendanceSemester(models.Model):
     )
     training_attendance = models.FloatField(default=0)
     semester = models.CharField(max_length=30, choices=SEM_OPTIONS)
-    program = models.CharField(max_length=100)
+    program = models.CharField(max_length=100, default="ACT_TECHNICAL")
 
     class Meta:
         unique_together = ["student", "semester"]

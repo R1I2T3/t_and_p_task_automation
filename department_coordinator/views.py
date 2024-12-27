@@ -38,8 +38,9 @@ class DepartmentCoordinatorViewSet(viewsets.ViewSet):
     def list(self, request):
         department_coordinator = self.get_department_coordinator()
         students = Student.objects.select_related("user").all()
+        print(department_coordinator.department)
         department_students = students.filter(
-            department=department_coordinator.department
+            department__startswith=department_coordinator.department
         )
 
         if request.query_params.get("year"):
