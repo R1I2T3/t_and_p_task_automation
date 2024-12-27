@@ -13,7 +13,6 @@ from .models import (
     Resume_WorkExperience,
 )
 from base.models import User
-from program_coordinator.models import ProgramCoordinator
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -24,7 +23,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProgramCoordinatorSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ProgramCoordinator
         fields = [
             "id",
             "name",

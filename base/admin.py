@@ -90,3 +90,51 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
             },
         ),
     )
+
+
+from django.contrib.admin import register
+from unfold.admin import ModelAdmin
+from .models import FacultyResponsibility
+from import_export.admin import ImportExportModelAdmin
+from unfold.contrib.import_export.forms import (
+    ExportForm,
+    ImportForm,
+)
+
+
+# Register your models here.
+
+
+@register(FacultyResponsibility)
+class FacultyAdmin(ImportExportModelAdmin, ModelAdmin):
+    import_form_class = ImportForm
+    export_form_class = ExportForm
+
+    list_display = [
+        # "uid",
+        "department",
+        "get_faculty_name",
+        "get_faculty_email",
+    ]
+
+    def get_faculty_name(self, obj):
+        return obj.user.full_name if obj.user else ""
+
+    def get_faculty_email(self, obj):
+        return obj.user.email if obj.user else ""
+
+    get_faculty_name.short_description = "Name"
+    get_faculty_email.short_description = "Email"
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": (
+                    "user",
+                    "department",
+                    "program",
+                ),
+            },
+        ),
+    )

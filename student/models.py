@@ -1,6 +1,5 @@
 from django.db import models
 from base.models import User
-from program_coordinator.models import ProgramCoordinator
 from uuid import uuid4
 
 # Create your models here.
@@ -70,7 +69,6 @@ class TrainingPerformanceSemester(models.Model):
     )
     training_performance = models.FloatField(default=0)
     semester = models.CharField(max_length=30, choices=SEM_OPTIONS)
-    program = models.ForeignKey(ProgramCoordinator, on_delete=models.CASCADE, null=True)
 
     class Meta:
         unique_together = ["student", "semester"]
@@ -82,7 +80,6 @@ class TrainingAttendanceSemester(models.Model):
     )
     training_attendance = models.FloatField(default=0)
     semester = models.CharField(max_length=30, choices=SEM_OPTIONS)
-    program = models.ForeignKey(ProgramCoordinator, on_delete=models.CASCADE, null=True)
 
     class Meta:
         unique_together = ["student", "semester"]

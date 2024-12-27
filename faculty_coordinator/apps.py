@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class FormsConfig(AppConfig):
+class FacultyCoordinatorConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'forms'
+    name = 'faculty_coordinator'

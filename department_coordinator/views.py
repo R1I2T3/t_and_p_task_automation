@@ -9,7 +9,7 @@ from student.models import (
     TrainingAttendanceSemester,
     TrainingPerformanceSemester,
 )
-from .models import DepartmentCoordinator
+from base.models import FacultyResponsibility
 from django.db.models import Avg, FloatField
 from django.db.models.functions import Cast
 import os
@@ -25,7 +25,7 @@ JSON_FILE_PATH_PLACEMENT = os.path.join("static", "Data", "placement_data.json")
 def index(request):
     if request.user.role != "department_coordinator":
         return redirect("/")
-    department_coordinator = DepartmentCoordinator.objects.get(user=request.user)
+    department_coordinator = FacultyResponsibility.objects.get(user=request.user)
     students = Student.objects.select_related("user").all()
     context = {}
     context["total_students"] = len(
@@ -65,7 +65,7 @@ def index(request):
 def stats(request):
     if request.user.role != "department_coordinator":
         return redirect("/")
-    department_coordinator = DepartmentCoordinator.objects.get(user=request.user)
+    department_coordinator = FacultyResponsibility.objects.get(user=request.user)
     average_academic_attendance = (
         AcademicAttendanceSemester.objects.select_related("student")
         .filter(student__department=department_coordinator.department)

@@ -45,11 +45,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         ("student", "student"),
         ("system_admin", "system_admin"),
         ("principal", "principal"),
-        ("department_coordinator", "department_coordinator"),
-        ("program_coordinator", "program_coordinator"),
         ("training_officer", "training_officer"),
         ("placement_officer", "placement_officer"),
         ("internship_officer", "internship_officer"),
+        ("faculty", "faculty"),
+        ("staff", "staff"),
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
@@ -93,3 +93,18 @@ class PasswordResetOTP(models.Model):
         return totp.verify(otp) and self.created_at >= timezone.now() - timedelta(
             minutes=10
         )
+
+
+PROGRAM_OPTIONS = [
+    ("ACT_Technical", "ACT_Technical"),
+    ("ACT_Aptitude", "ACT_Aptitude"),
+    ("Coding_Contest", "Coding_Contest"),
+    ("SDP", "SDP"),
+]
+
+
+class FacultyResponsibility(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    program = models.CharField(max_length=255, null=True)
+    department = models.CharField(max_length=255, null=True)
