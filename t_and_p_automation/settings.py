@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     "notifications",
     "program_coordinator_api",
     "internship_api",
+    "faculty_coordinator",
 ]
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",  # Must be at the top

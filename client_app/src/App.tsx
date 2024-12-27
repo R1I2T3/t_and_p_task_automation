@@ -28,6 +28,8 @@ import StudentPersonalInfo from "./pages/student/student-personal-info";
 import Resume from "./pages/student/resume";
 import ResumePreview from "./pages/student/resume-preview";
 import PlacementAttendance from "./pages/placement/placement_attendance";
+import FacultyLayout from "./pages/faculty_coordinator/FacultyLayout";
+import FacultyHome from "./pages/faculty_coordinator/FacultyHome";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -92,6 +94,9 @@ const App = () => {
           <Route path="info" element={<StudentPersonalInfo />} />
           <Route path="resume" element={<Resume />} />
           <Route path="resume-preview" element={<ResumePreview />} />
+        </Route>
+        <Route path="/faculty_coordinator" element={<FacultyLayout />}>
+          <Route index element={<FacultyHome />} />
         </Route>
       </Routes>
     </BrowserRouter>

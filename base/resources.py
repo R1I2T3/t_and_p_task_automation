@@ -1,37 +1,21 @@
-from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from import_export import resources
-from .models import Student, User
+from .models import FacultyResponsibility, User
+from django.contrib.auth.hashers import make_password
 
 
-class StudentResource(resources.ModelResource):
+class FacultyResponsibilityResource(resources.ModelResource):
     class Meta:
-        model = Student
+        model = FacultyResponsibility
         fields = (
-            "email",
-            "full_name",
-            "role",
-            "password",
-            "uid",
-            "department",
-            "academic_year",
             "user",
-            "current_category",
-            "is_dse_student",
-            "gender",
-            "dob",
-            "contact",
-            "personal_email",
-            "is_student_coordinator",
-            "tenth_grade",
-            "higher_secondary_grade",
-            "card",
-            "consent",
+            "program",
+            "department",
         )
-        import_id_fields = ("uid",)
+        import_id_fields = ("program", "department")
 
     def import_row(self, row, instance_loader, **kwargs):
-        # Get or create the User instance linked to the Student
+        # Ensure the User instance exists and link it to FacultyResponsibility
         user = User.objects.filter(email=row["email"]).first()
         if not user:
             user, user_created = User.objects.update_or_create(
@@ -40,18 +24,14 @@ class StudentResource(resources.ModelResource):
                     "email": row["email"],
                     "full_name": row.get("full_name", ""),
                     "password": make_password(row.get("password")),
-                    "role": "student",
+                    "role": "faculty",
                 },
             )
         row["user"] = user.id
 
-        # Validate and set fields with default values if not provided
-        row["current_category"] = row.get("current_category", "No category")
-        row["is_dse_student"] = row.get("is_dse_student", False)
-        row["gender"] = row.get("gender", "Not Provided")
-        row["contact"] = row.get("contact", "Not Provided")
-        row["card"] = row.get("card", "Green")
-        row["consent"] = row.get("consent", "placement")
+        # Set defaults for program and department if not provided
+        row["program"] = row.get("program", None)
+        row["department"] = row.get("department", None)
 
         return super().import_row(row, instance_loader, **kwargs)
 

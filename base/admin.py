@@ -5,6 +5,7 @@ from .models import User
 from unfold.admin import ModelAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
+from .resources import FacultyResponsibilityResource
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -113,6 +114,7 @@ class FacultyAdmin(ImportExportModelAdmin, ModelAdmin):
     list_display = [
         # "uid",
         "department",
+        "program",
         "get_faculty_name",
         "get_faculty_email",
     ]
@@ -138,3 +140,4 @@ class FacultyAdmin(ImportExportModelAdmin, ModelAdmin):
             },
         ),
     )
+    resource_class = FacultyResponsibilityResource
