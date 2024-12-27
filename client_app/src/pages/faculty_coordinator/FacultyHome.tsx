@@ -15,12 +15,12 @@ import {
   Fade,
   CircularProgress,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import {
-  CalendarMonth as CalendarIcon,
+  Calendar as CalendarIcon,
   School as SchoolIcon,
-  ArrowForward as ArrowForwardIcon,
-} from "@mui/icons-material";
+  ArrowRight as ArrowForwardIcon,
+} from "lucide-react";
 import Sidebar from "./components/Sidebar";
 
 interface ProgramData {

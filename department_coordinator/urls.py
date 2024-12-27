@@ -1,8 +1,27 @@
 from django.urls import path
-from . import views
+from .views import DepartmentCoordinatorViewSet, AttendanceViewSet
 
 urlpatterns = [
-    path("",views.index,name='department_coordinator_index'),
-    path("stats/",views.stats,name='department_coordinator_stats'),
-    path("attendance/",views.attendance,name='department_coordinator_attendance'),
+    # Department Coordinator URLs
+    path(
+        "",
+        DepartmentCoordinatorViewSet.as_view({"get": "list"}),
+        name="department-list",
+    ),
+    path(
+        "stats/",
+        DepartmentCoordinatorViewSet.as_view({"get": "stats"}),
+        name="department-stats",
+    ),
+    # Attendance URLs
+    path(
+        "attendance/upload-attendance/",
+        AttendanceViewSet.as_view({"post": "upload_attendance"}),
+        name="upload-attendance",
+    ),
+    path(
+        "attendance/upload-performance/",
+        AttendanceViewSet.as_view({"post": "upload_performance"}),
+        name="upload-performance",
+    ),
 ]

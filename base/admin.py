@@ -59,7 +59,7 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
     ordering = ["email"]
     list_display = ["email", "full_name", "role"]
     list_filter = ["role", "is_superuser"]
-
+    search_fields = ["email", "full_name"]
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         ("Personal Info", {"fields": ("full_name", "role")}),
