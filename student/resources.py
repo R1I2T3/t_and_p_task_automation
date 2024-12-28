@@ -2,6 +2,7 @@ from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from import_export import resources
 from .models import Student, User
+from uuid import uuid4
 
 
 class StudentResource(resources.ModelResource):
@@ -32,16 +33,15 @@ class StudentResource(resources.ModelResource):
 
     def import_row(self, row, instance_loader, **kwargs):
         # Get or create the User instance linked to the Student
-        user = User.objects.filter(email=row["email"]).first()
-        if not user:
-            user, user_created = User.objects.update_or_create(
+        try:
+            user = User.objects.get(email=row["email"])
+        except User.DoesNotExist:
+            user = User.objects.create(
+                id=uuid4(),
                 email=row["email"],
-                defaults={
-                    "email": row["email"],
-                    "full_name": row.get("full_name", ""),
-                    "password": make_password(row.get("password")),
-                    "role": "student",
-                },
+                full_name=row.get("full_name", ""),
+                password=make_password(row.get("password")),
+                role="student",
             )
         row["user"] = user.id
 

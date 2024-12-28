@@ -5,9 +5,10 @@ from student.models import SEM_OPTIONS
 # Model to store attendance data for a student
 class AttendanceData(models.Model):
     batch = models.CharField(max_length=100)
-    late = models.IntegerField()
+    late = models.BooleanField(default=False)
     name = models.CharField(max_length=100)
-    present = models.IntegerField()
+    present = models.IntegerField(default=False)
+    absent = models.BooleanField(default=False)
     program_name = models.CharField(max_length=100)
     session = models.CharField(max_length=100)
     timestamp = models.DateTimeField()
@@ -16,6 +17,9 @@ class AttendanceData(models.Model):
     semester = models.CharField(
         max_length=100, default="SEMESTER 1", choices=SEM_OPTIONS
     )
+
+    class Meta:
+        db_table = "attendance_data"
 
     def __str__(self):
         return f"{self.batch} - {self.session}"
@@ -33,6 +37,7 @@ class BatchAttendance(models.Model):
     year = models.CharField(max_length=100)
 
     class Meta:
+        db_table = "batch_attendance"
         unique_together = (
             "batch",
             "session",
@@ -50,9 +55,16 @@ class Program1(models.Model):
     Year = models.IntegerField()
     training_attendance = models.FloatField()
     training_performance = models.FloatField()
+    semester = models.CharField(
+        max_length=100, choices=SEM_OPTIONS, default="SEMESTER 1"
+    )
+    program_name = models.CharField(max_length=100, default="ACT_APTITUDE")
 
     def __str__(self):
         return self.Branch_Div
+
+    class Meta:
+        db_table = "program1"
 
 
 # Revised model to store simple attendance records (student presence/absence) for a session
@@ -76,6 +88,12 @@ class AttendanceRecord(models.Model):
     dates = models.JSONField()  # Stores a list of dates
     file_headers = models.JSONField(default=list)  # Default empty list
     student_data = models.JSONField(default=list)  # Default empty list
+    semester = models.CharField(
+        max_length=100, choices=SEM_OPTIONS, default="SEMESTER 1"
+    )
+
+    class Meta:
+        db_table = "attendance_attendancerecord"
 
     def __str__(self):
         return f"Attendance record for {self.program_name} - {self.year}"

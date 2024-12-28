@@ -4,6 +4,7 @@ from base.views import redirect_user
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response as JSONResponse
+from base.models import User, FacultyResponsibility
 
 
 @login_required
@@ -14,5 +15,15 @@ def index(request):
 
 @api_view(["GET"])
 def my_protected_view(request):
-    user = request.user
-    return JSONResponse({"role": user.role, "email": user.email})
+    current_user = User.objects.get(email=request.user.email)
+    if current_user.role == "faculty":
+        faculty = FacultyResponsibility.objects.get(user=current_user)
+        return JSONResponse(
+            {
+                "role": "faculty",
+                "email": current_user.email,
+                "department": faculty.department,
+                "program": faculty.program,
+            }
+        )
+    return JSONResponse({"role": current_user.role, "email": current_user.email})

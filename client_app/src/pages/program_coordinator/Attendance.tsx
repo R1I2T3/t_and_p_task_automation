@@ -14,6 +14,7 @@ import {
   Paper,
   Box,
 } from "@mui/material";
+import { getCookie } from "@/utils";
 
 const Attendance = () => {
   const [rawData, setRawData] = useState([]);
@@ -68,11 +69,11 @@ const Attendance = () => {
 
       if (student) {
         student[item.session] = item.present;
-        if (item.present === "Present") {
+        if (item.present === 1) {
           student.totalPresent = (student.totalPresent || 0) + 1;
-        } else if (item.present === "Absent") {
+        } else if (item.absent === 1) {
           student.totalAbsent = (student.totalAbsent || 0) + 1;
-        } else if (item.late === "Late") {
+        } else if (item.late === 1) {
           student.totalLate = (student.totalLate || 0) + 1;
         }
       } else {
@@ -83,9 +84,9 @@ const Attendance = () => {
           year: item.year,
           uid: item.uid,
           [item.session]: item.present,
-          totalPresent: item.present === "Present" ? 1 : 0,
-          totalAbsent: item.present === "Absent" ? 1 : 0,
-          totalLate: item.late === "Late" ? 1 : 0,
+          totalPresent: item.present === 1 ? 1 : 0,
+          totalAbsent: item.present === 1 ? 1 : 0,
+          totalLate: item.late === 1 ? 1 : 0,
         };
         consolidated.push(newStudent);
       }
@@ -93,22 +94,22 @@ const Attendance = () => {
     return consolidated;
   };
 
-  interface SessionData {
+  type SessionData = {
     Present: number;
     Absent: number;
     Late: number;
-  }
+  };
 
-  interface BatchData {
+  type BatchData = {
     batch: string;
     program_name: string;
     year: string;
     totalPresent: number;
     totalAbsent: number;
     totalLate: number;
-    totalStudents?: number;
-    [key: string]: SessionData | string | number | undefined;
-  }
+    totalStudents: number;
+    [key: string]: any; // Allows dynamic session keys
+  };
 
   const consolidateAttendanceByBatch = (data: any) => {
     const batchConsolidated: BatchData[] = [];
@@ -128,51 +129,62 @@ const Attendance = () => {
           Late: 0,
         };
 
-        if (item.present === "Present" && batch[item.session]) {
+        // Update session-specific data
+        if (item.present === 1) {
           (batch[item.session] as SessionData).Present += 1;
           batch.totalPresent = (batch.totalPresent || 0) + 1;
-        } else if (item.present === "Absent" && batch[item.session]) {
+        }
+        if (item.absent === 1) {
           (batch[item.session] as SessionData).Absent += 1;
           batch.totalAbsent = (batch.totalAbsent || 0) + 1;
         }
-
-        if (item.late === "Late" && batch[item.session]) {
+        if (item.late === 1) {
           (batch[item.session] as SessionData).Late += 1;
           batch.totalLate = (batch.totalLate || 0) + 1;
         }
       } else {
-        const newBatch = {
+        // Add a new batch
+        const newBatch: BatchData = {
           batch: item.batch,
           program_name: item.program_name,
           year: item.year,
+          totalPresent: item.present === 1 ? 1 : 0,
+          totalAbsent: item.absent === 1 ? 1 : 0,
+          totalLate: item.late === 1 ? 1 : 0,
+          totalStudents: 0, // Will be updated later
           [item.session]: {
-            Present: item.present === "Present" ? 1 : 0,
-            Absent: item.present === "Absent" ? 1 : 0,
-            Late: item.late === "Late" ? 1 : 0,
+            Present: item.present === 1 ? 1 : 0,
+            Absent: item.absent === 1 ? 1 : 0,
+            Late: item.late === 1 ? 1 : 0,
           },
-          totalPresent: item.present === "Present" ? 1 : 0,
-          totalAbsent: item.present === "Absent" ? 1 : 0,
-          totalLate: item.late === "Late" ? 1 : 0,
         };
         batchConsolidated.push(newBatch);
       }
     });
 
+    // Update totalStudents for each batch (including Late students)
     batchConsolidated.forEach((batch) => {
-      Object.keys(batch).forEach((session) => {
+      let totalStudents = 0;
+
+      Object.keys(batch).forEach((key) => {
         if (
-          session !== "batch" &&
-          session !== "program_name" &&
-          session !== "year" &&
-          session !== "totalPresent" &&
-          session !== "totalAbsent" &&
-          session !== "totalLate"
+          key !== "batch" &&
+          key !== "program_name" &&
+          key !== "year" &&
+          key !== "totalPresent" &&
+          key !== "totalAbsent" &&
+          key !== "totalLate" &&
+          key !== "totalStudents"
         ) {
-          const sessionData = batch[session] as SessionData | undefined;
-          batch.totalStudents =
-            (sessionData?.Present || 0) + (sessionData?.Absent || 0);
+          const sessionData = batch[key] as SessionData;
+          if (sessionData) {
+            totalStudents +=
+              sessionData.Present + sessionData.Absent + sessionData.Late;
+          }
         }
       });
+
+      batch.totalStudents = totalStudents;
     });
 
     return batchConsolidated;
@@ -221,13 +233,18 @@ const Attendance = () => {
   };
 
   const saveToDatabase = async () => {
+    const csrfToken = getCookie("csrftoken");
     try {
       const response = await fetch(
-        "http://127.0.0.1:5000/api/save-branch-attendance/batch_attendance/",
+        "/api/program_coordinator/save-branch-attendance/batch_attendance/",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken || "",
+          },
           body: JSON.stringify({ branchData: branchConsolidatedData }),
+          credentials: "include",
         }
       );
 

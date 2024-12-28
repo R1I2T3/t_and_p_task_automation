@@ -13,6 +13,7 @@ import {
   TableRow,
   CircularProgress,
 } from "@mui/material";
+import { getCookie } from "@/utils";
 
 interface AttendanceRecord {
   uid: number;
@@ -75,13 +76,15 @@ const Update = () => {
 
   // Handle attendance update
   const handleUpdate = (uid: any, session: any, currentStatus: any) => {
-    const newStatus = currentStatus === "Present" ? "Absent" : "Present";
-
+    console.log(currentStatus);
+    const newStatus = currentStatus === "1" ? "Absent" : "Present";
+    const csrfToken = getCookie("csrftoken");
     // Update data in the backend
-    fetch("http://127.0.0.1:5000/api/attendance/update/attendance_data/", {
+    fetch("/api/program_coordinator/attendance/update/attendance_data/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken || "",
       },
       body: JSON.stringify({
         uid,
@@ -121,6 +124,7 @@ const Update = () => {
         console.error("Error updating attendance:", error);
       });
   };
+  console.log(attendanceData);
 
   return (
     <Box

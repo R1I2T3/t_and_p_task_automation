@@ -8,9 +8,20 @@ from rest_framework.views import APIView
 from .models import AttendanceRecord
 from .serializers import AttendanceRecordSerializer
 import json
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+    parser_classes,
+)
+from base.models import FacultyResponsibility
 
 
-# Route 1: Fetch attendance data (using raw SQL with dynamic table names)
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_attendance_data(request, table_name):
     try:
         # Validate table_name to prevent SQL injection
@@ -23,7 +34,7 @@ def get_attendance_data(request, table_name):
 
         # Construct query with dynamic table name
         query = f"""
-            SELECT batch, late, name, present, program_name, session, timestamp, uid, year
+            SELECT batch, name, present,absent,late, program_name, session, timestamp, uid, year
             FROM {table_name}
         """
 
@@ -33,17 +44,18 @@ def get_attendance_data(request, table_name):
             # Convert the rows into a list of dictionaries
             columns = [col[0] for col in cursor.description]
             result = [dict(zip(columns, row)) for row in rows]
-
         return JsonResponse(result, safe=False)
 
     except Exception as e:
+        print(e)
         return JsonResponse(
             {"error": f"Failed to fetch attendance data: {str(e)}"}, status=500
         )
 
 
-# Route 2: Save batch-wise attendance to the database (using raw SQL with dynamic table names)
-@csrf_exempt
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def save_branch_attendance(request, table_name):
     if request.method == "POST":
         try:
@@ -54,8 +66,7 @@ def save_branch_attendance(request, table_name):
             ]  # Add valid table names here
             if table_name not in valid_tables:
                 return JsonResponse({"error": "Invalid table name"}, status=400)
-
-            branch_data = json.loads(request.body).get("branchData", [])
+            branch_data = request.data.get("branchData")
             if not branch_data:
                 return JsonResponse({"error": "No data provided"}, status=400)
 
@@ -121,6 +132,9 @@ from django.http import JsonResponse
 from django.db import connection
 
 
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_avg_data(request, table_name):
     try:
         # Validate table_name to prevent SQL injection
@@ -151,13 +165,15 @@ def get_avg_data(request, table_name):
         return JsonResponse(result, safe=False)
 
     except Exception as e:
+        print(e)
         return JsonResponse(
             {"error": f"Failed to fetch average data: {str(e)}"}, status=500
         )
 
 
-# Route 4: Update attendance (using raw SQL)
-@csrf_exempt
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def update_attendance(request, table_name):
     if request.method == "POST":
         try:
@@ -183,6 +199,7 @@ def update_attendance(request, table_name):
                 {"message": "Attendance updated successfully"}, status=200
             )
         except Exception as e:
+            print(e)
             return JsonResponse(
                 {"error": f"Failed to update attendance: {str(e)}"}, status=500
             )
@@ -193,14 +210,21 @@ def update_attendance(request, table_name):
 # Route 5: Create attendance record (using Django ORM and DRF APIView)
 
 
-# Route 5: Create attendance record (using Django ORM and DRF APIView)
 class CreateAttendanceRecord(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
         data = request.data
-
+        faculty = FacultyResponsibility.objects.get(user=request.user)
+        if not faculty.program:
+            return Response(
+                {"error": "Faculty is not assigned to any program"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         # Validate required fields
+        print(data)
         required_fields = [
-            "program_name",
+            "semester",
             "year",
             "num_sessions",
             "num_days",
@@ -243,6 +267,7 @@ class CreateAttendanceRecord(APIView):
         program_name = data["program_name"]
         year = data["year"]
         num_sessions = data["num_sessions"]
+        semester = data["semester"]
         num_days = data["num_days"]
         dates = json.dumps(data["dates"])  # Convert list to JSON string
         file_headers = json.dumps(data["file_headers"])  # Convert list to JSON string
@@ -252,8 +277,8 @@ class CreateAttendanceRecord(APIView):
 
         # Create raw SQL insert query
         query = """
-            INSERT INTO attendance_attendancerecord (program_name, year, num_sessions, num_days, dates, file_headers, student_data)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO attendance_attendancerecord (program_name, year, num_sessions, num_days, dates, file_headers, student_data,semester)
+            VALUES (%s, %s, %s, %s, %s, %s, %s,%s)
         """
 
         # Execute the query using Django's connection cursor
@@ -268,6 +293,7 @@ class CreateAttendanceRecord(APIView):
                     dates,
                     file_headers,
                     student_data,
+                    semester,
                 ],
             )
 
@@ -291,7 +317,9 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 
 
-@csrf_exempt
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def upload_data(request):
     if request.method == "POST":
         try:

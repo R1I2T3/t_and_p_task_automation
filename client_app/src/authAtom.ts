@@ -1,3 +1,9 @@
 import { atom } from "jotai";
 
-export const authAtom = atom(null);
+interface Auth {
+  email: string;
+  role: string;
+  department?: string;
+  program?: string;
+}
+export const authAtom = atom<Auth | null>(null);

@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router";
 import { Box, Typography, IconButton } from "@mui/material";
 import { styled } from "@mui/material/styles";
-
+import { MessageCircle } from "lucide-react";
 const Sidebar = () => {
   return (
     <SidebarContainer>
@@ -38,6 +38,11 @@ const Sidebar = () => {
           to="/program_coordinator/upload-file"
           label="Upload Report"
           icon="/img/Training_Programme_Statistics.png"
+        />
+        <MenuItem
+          to="/notifications/create"
+          label="Create Notification"
+          icon={<MessageCircle size={24} />}
         />
       </Menu>
 
@@ -109,16 +114,20 @@ const MenuItem = ({
 }: {
   to: string;
   label: string;
-  icon: string;
+  icon: string | React.ReactNode;
 }) => {
   return (
     <MenuItemLink to={to}>
-      <img
-        src={icon}
-        alt={label}
-        className="menu-icon"
-        style={{ height: "1.5rem", marginRight: "10px" }}
-      />
+      {typeof icon === "string" ? (
+        <img
+          src={icon}
+          alt={label}
+          className="menu-icon"
+          style={{ height: "1.5rem", marginRight: "10px" }}
+        />
+      ) : (
+        icon
+      )}
       <Typography>{label}</Typography>
     </MenuItemLink>
   );

@@ -30,6 +30,7 @@ import ResumePreview from "./pages/student/resume-preview";
 import PlacementAttendance from "./pages/placement/placement_attendance";
 import FacultyLayout from "./pages/faculty_coordinator/FacultyLayout";
 import FacultyHome from "./pages/faculty_coordinator/FacultyHome";
+import FacultyTablePage from "./pages/faculty_coordinator/FacultyAttendanceTable";
 import DepartmentParent from "./pages/department_coordinator/DepartmentParent";
 import DepartmentDashboard from "./pages/department_coordinator/DepartmentHome";
 import DepartmentStats from "./pages/department_coordinator/DepartmentStats";
@@ -101,6 +102,7 @@ const App = () => {
         </Route>
         <Route path="/faculty_coordinator" element={<FacultyLayout />}>
           <Route index element={<FacultyHome />} />
+          <Route path="attendance" element={<FacultyTablePage />} />
         </Route>
         <Route path="/department_coordinator" element={<DepartmentParent />}>
           <Route index element={<DepartmentDashboard />} />

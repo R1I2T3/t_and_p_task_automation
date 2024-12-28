@@ -64,6 +64,13 @@ const DepartmentHome = () => {
       params.delete("year");
     } else {
       params.set("year", year);
+      console.log(year);
+      setStats({
+        ...stats,
+        department_students: stats.department_students.filter((student) => {
+          return student.academic_year === year;
+        }),
+      });
     }
     window.history.pushState(null, "", `?${params.toString()}`);
   };

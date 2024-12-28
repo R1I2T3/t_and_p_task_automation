@@ -3,22 +3,31 @@ import { Link } from "react-router"; // Import Link for routing
 import "./Sidebar.css";
 
 const Sidebar = () => {
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
       <div className="logo-container">
         <img src="/img/logo.png" alt="TCET Logo" className="logo" />
-        <h1 className="title" style={{ color: "#153f74" }}>
-          TCET - TNP
-        </h1>
+        {!isCollapsed && (
+          <h1 className="title" style={{ color: "#153f74" }}>
+            TCET - TNP
+          </h1>
+        )}
+        <button
+          className="collapse-btn"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+        >
+          {isCollapsed ? "→" : "←"}
+        </button>
       </div>
       <ul className="menu">
-        <Link to="/" className="menu-item">
+        <Link to="/faculty_coordinator" className="menu-item">
           <img
             src="/img/Training_Programme_Statistics.png"
             alt="Student Data"
             className="menu-icon"
           />
-          <p>Session Attendance</p>
+          {!isCollapsed && <p>Session Attendance</p>}
         </Link>
       </ul>
       <div className="footer"></div>

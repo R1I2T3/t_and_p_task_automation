@@ -45,7 +45,7 @@ function FacultyHome() {
 
   useEffect(() => {
     axios
-      .get("http://127.0.0.1:5000/api/data")
+      .get("/api/faculty_coordinator/data")
       .then((response) => {
         setData(response.data);
         const uniquePrograms = [
@@ -89,7 +89,7 @@ function FacultyHome() {
 
   const handleSubmit = () => {
     if (selectedProgram && selectedDateSession) {
-      navigate("/table", {
+      navigate("/faculty_coordinator/attendance", {
         state: {
           program: selectedProgram,
           dateSession: selectedDateSession,
