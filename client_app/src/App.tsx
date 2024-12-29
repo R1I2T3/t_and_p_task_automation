@@ -37,6 +37,9 @@ import PlacementStats from "./pages/placement_officer";
 import Old from "./pages/placement_officer/Old";
 import JobVerification from "./pages/placement_officer/components/JobVerification";
 import PlacementAttendance from "./pages/placement_officer/PlacementAttendance";
+import TrainingLayout from "./pages/training_officer/TrainingLayout";
+import TrainingStats from "./pages/training_officer/TrainingStats";
+import TrainingNotice from "./pages/training_officer/TrainingNotice";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -122,6 +125,10 @@ const App = () => {
               </div>
             }
           />
+        </Route>
+        <Route path="/training_officer" element={<TrainingLayout />}>
+          <Route index element={<TrainingStats />} />
+          <Route path="notice" element={<TrainingNotice />} />
         </Route>
       </Routes>
     </BrowserRouter>

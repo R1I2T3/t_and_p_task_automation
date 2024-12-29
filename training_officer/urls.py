@@ -1,7 +1,6 @@
-from . import views
 from django.urls import path
+from .views import get_avg_data
 
 urlpatterns = [
-    path("", views.TnPStats, name="training_officer_index"),
-    path("training2023/", views.training2023, name="training2023"),
+    path("get-avg-data/<str:table_name>/", get_avg_data, name="get_avg_data"),
 ]

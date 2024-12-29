@@ -1,65 +1,38 @@
-from django.shortcuts import render, redirect
-from principal.views import handle_uploaded_file
-from principal.views import process_trainig_data, JSON_FILE_PATH_TRAINING
-from principal.forms import UploadExcelForm
-import json
-from django.contrib.auth.decorators import login_required
-import os
+from django.http import JsonResponse
+from django.db import connection
 
 
-# Create your views here.
-@login_required
-def TnPStats(request):
-    if request.user.role != "training_officer":
-        return redirect("/")
-    if request.method == "POST":
-        if "file" in request.FILES:
-            file_path = handle_uploaded_file(request.FILES["file"])
-            process_trainig_data(file_path)
-            return redirect("/training_officer")
-        else:
-            return render(request, "internship.html", {"error": "No file uploaded!"})
-    else:
-        form = UploadExcelForm()
+def get_avg_data(request, table_name):
     try:
-        with open(JSON_FILE_PATH_TRAINING, "r") as file:
-            data = json.load(file)[0]
-            avg_attendance_phase_1_2 = data.get("avg_attendance_phase_1_2")
-            cleaned_scores_technical = data.get("cleaned_scores_technical")
-            mock_test_marks = data.get("mock_test_marks")
-    except FileNotFoundError:
-        avg_attendance_phase_1_2 = {}
+        # Validate table_name to prevent SQL injection
+        valid_tables = [
+            "program1",
+            "another_program_table",
+        ]  # Add valid table names here
+        if table_name not in valid_tables:
+            return JsonResponse({"error": "Invalid table name"}, status=400)
 
-    context = {
-        "avg_attendance_phase_1_2": json.dumps(avg_attendance_phase_1_2),
-        "cleaned_scores_technical": json.dumps(cleaned_scores_technical),
-        "mock_test_marks": json.dumps(mock_test_marks),
-    }
+        # Construct query to fetch average attendance and performance by Branch_Div
+        query = f"""
+        SELECT Branch_Div,
+               Year,
+               Program_name,
+               AVG(training_attendance) AS avg_attendance,
+               AVG(training_performance) AS avg_performance
+        FROM {table_name}
+        GROUP BY Branch_Div, Year, Program_name
+        """
 
-    return render(request, "training_officer/index.html", context)
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            # Convert the rows into a list of dictionaries
+            columns = [col[0] for col in cursor.description]
+            result = [dict(zip(columns, row)) for row in rows]
 
+        return JsonResponse(result, safe=False)
 
-@login_required
-def training2023(request):
-    if request.user.role != "training_officer":
-        return redirect("/")
-    try:
-        with open(os.path.join("static", "Data", "data_2023.json"), "r") as file:
-            data = json.load(file)[0]
-            avg_attendance_phase1 = data.get("avg_attendance_phase1", 0)
-            avg_attendance_phase2 = data.get("avg_attendance_phase2", 0)
-            mock_test_marks = data.get("Mock Test Marks", [])
-            Technical_Score = data.get("Technical_Score", [])
-    except FileNotFoundError:
-        avg_attendance_phase1 = avg_attendance_phase2 = 0
-        mock_test_marks = []
-        Technical_Score = []
-
-    context = {
-        "avg_attendance_phase1": json.dumps(avg_attendance_phase1),
-        "avg_attendance_phase2": json.dumps(avg_attendance_phase2),
-        "mock_test_marks": json.dumps(mock_test_marks),
-        "Technical_Score": json.dumps(Technical_Score),
-    }
-
-    return render(request, "training_officer/training2023.html", context)
+    except Exception as e:
+        return JsonResponse(
+            {"error": f"Failed to fetch average data: {str(e)}"}, status=500
+        )
