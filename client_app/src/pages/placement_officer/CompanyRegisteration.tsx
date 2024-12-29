@@ -15,6 +15,7 @@ import {
   Box,
 } from "@mui/material";
 import { getCookie } from "@/utils";
+import toast from "react-hot-toast";
 
 const CompanyRegistrationForm = () => {
   interface FormDataType {
@@ -64,9 +65,6 @@ const CompanyRegistrationForm = () => {
 
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target;
-    if (name === "batch" && (isNaN(value) || value > 11)) {
-      return;
-    }
     setFormData({
       ...formData,
       [name]: type === "checkbox" ? checked : value,
@@ -161,8 +159,9 @@ const CompanyRegistrationForm = () => {
       }
 
       const data = await response.json();
-      console.log("Company registered successfully:", data);
-      navigate(`/placement/create_notice`);
+      console.log(data);
+      toast.success("Company registered successfully:");
+      navigate(`/placement_officer/company_register`);
     } catch (error) {
       console.error("Error registering company:", error);
       alert("Error registering company. Check console for details.");
@@ -231,10 +230,9 @@ const CompanyRegistrationForm = () => {
                 <TextField
                   name="batch"
                   label="Batch"
-                  type="number"
-                  inputProps={{ max: 11 }}
                   fullWidth
                   required
+                  type="text"
                   onChange={handleChange}
                 />
               </Grid>
@@ -286,17 +284,6 @@ const CompanyRegistrationForm = () => {
                 </Select>
               </Grid>
               <Grid item xs={12}>
-                {/* <Select
-                                    name="Departments"
-                                    value={formData.Departments}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, Departments: e.target.value })
-                                    }
-                                    fullWidth
-                                >
-                                    <MenuItem value="all">All</MenuItem>
-                                    <MenuItem value="select">Select Departments</MenuItem>
-                                </Select> */}
                 <Select
                   name="Departments"
                   value={formData.Departments}
@@ -315,26 +302,6 @@ const CompanyRegistrationForm = () => {
                   <MenuItem value="select">Select Departments</MenuItem>
                 </Select>
               </Grid>
-              {/* {formData.Departments === "select" && (
-                                <Grid item xs={12}>
-                                    <Grid container spacing={1}>
-                                        {departmentOptions.map((dept) => (
-                                            <Grid item xs={6} key={dept}>
-                                                <FormControlLabel
-                                                    control={
-                                                        <Checkbox
-                                                            value={dept}
-                                                            onChange={handleDepartmentChange}
-                                                            color="primary"
-                                                        />
-                                                    }
-                                                    label={dept}
-                                                />
-                                            </Grid>
-                                        ))}
-                                    </Grid>
-                                </Grid>
-                            )} */}
               {formData.Departments === "select" && (
                 <Grid item xs={12}>
                   <Grid container spacing={1}>

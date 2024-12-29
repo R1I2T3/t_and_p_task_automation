@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Container,
   TextField,
@@ -10,9 +10,11 @@ import {
   Paper,
 } from "@mui/material";
 import axios from "axios";
-
-//
+import Notice from "./components/notice";
 import { getCookie } from "../../utils";
+import { NoticeData } from "./components/notice";
+import toast from "react-hot-toast";
+import { useReactToPrint } from "react-to-print";
 //
 
 const NoticeCreationForm = () => {
@@ -35,10 +37,13 @@ const NoticeCreationForm = () => {
     From_designation: "",
     company: "",
   });
-
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [noticeData, setNoticeData] = useState<NoticeData | null>(null);
+  const reactPrintFn = useReactToPrint({ contentRef });
   interface Company {
     id: number;
     name: string;
+    batch: string;
   }
 
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -49,10 +54,8 @@ const NoticeCreationForm = () => {
       [e.target.name]: e.target.value,
     });
   };
-
+  const csrfToken = getCookie("csrftoken");
   useEffect(() => {
-    const csrfToken = getCookie("csrftoken");
-
     axios
       .get("/api/placement/company/", {
         headers: {
@@ -64,6 +67,7 @@ const NoticeCreationForm = () => {
         const formattedCompanies = response.data.map((item: any) => ({
           id: item.company.id,
           name: item.company.name,
+          batch: item.company.batch,
         }));
         setCompanies(formattedCompanies);
       })
@@ -75,15 +79,23 @@ const NoticeCreationForm = () => {
   const handleSubmit = (e: any) => {
     e.preventDefault();
     axios
-      .post(`/api/placement/notice/create/${formData.company}`, formData)
+      .post(`/api/placement/notice/create/${formData.company}`, formData, {
+        headers: {
+          "X-CSRFToken": csrfToken || "",
+        },
+        withCredentials: true,
+      })
       .then((response) => {
-        console.log("Notice created:", response.data);
-        alert("Notice created successfully!");
+        setNoticeData(response.data.data);
+        toast.success("Notice created successfully!");
       })
       .catch((error) => {
         console.error("Error creating notice:", error);
         alert("Failed to create notice!");
       });
+  };
+  const onPrint = () => {
+    reactPrintFn();
   };
 
   return (
@@ -105,7 +117,7 @@ const NoticeCreationForm = () => {
               >
                 {companies.map((company) => (
                   <MenuItem key={company.id} value={company.id}>
-                    {company.name}
+                    {company.name}-{company.batch}
                   </MenuItem>
                 ))}
               </TextField>
@@ -275,6 +287,20 @@ const NoticeCreationForm = () => {
           </Button>
         </form>
       </Paper>
+      {noticeData && (
+        <div>
+          <Notice formData={noticeData} ref={contentRef} />
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth={true}
+            style={{ marginTop: "20px" }}
+            onClick={onPrint}
+          >
+            Print Notice
+          </Button>
+        </div>
+      )}
     </Container>
   );
 };

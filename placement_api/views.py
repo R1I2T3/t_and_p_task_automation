@@ -102,27 +102,67 @@ def get_all_companies(request):
 def create_notice(request, pk):
     try:
         company = CompanyRegistration.objects.get(id=pk)
-        data = JSONParser().parse(request)
+        data = request.data
+        print(company)
         if not company:
             return JsonResponse(
                 {"error": "Company not found."}, status=status.HTTP_404_NOT_FOUND
             )
+
+        # Extract fields from request data
         notice_data = data
-        print(notice_data)
         notice_data["company"] = company
+        # Create the placement notice
         placement_notice = placementNotice.objects.create(**notice_data)
+        notice_data = {
+            "srNo": data.get("srNo", ""),
+            "date": data.get("date", ""),
+            "to": data.get("to", ""),
+            "subject": data.get("subject", ""),
+            "Intro": data.get("intro", ""),
+            "Eligibility_Criteria": data.get("eligibility_criteria", ""),
+            "About_Company": data.get("about", ""),
+            "Location": data.get("location", ""),
+            "Documents_to_Carry": data.get("document to cary", ""),
+            "Walk_in_interview": data.get("Walk_in_interview", ""),
+            "Company_registration_Link": data.get("Company_registration_Link", ""),
+            "College_registration_Link": data.get("College_registration_Link", ""),
+            "Note": data.get("Note", ""),
+            "From": data.get("From", ""),
+            "From_designation": data.get("From_designation", ""),
+            "CompanyId": pk,
+        }
+        # Prepare tableData from related offers (assuming a related field 'offers' exists)
+        offers = Offers.objects.filter(
+            company=company
+        )  # Adjust as per your related name
+        table_data = [
+            {
+                "type": offer.type,
+                "salary": offer.salary,
+                "position": offer.position,
+            }
+            for offer in offers
+        ]
+
+        # Construct response data
+        response_data = {
+            **notice_data,
+            "tableData": table_data,
+        }
+
         return JsonResponse(
-            {"message": "Notice created successfully"}, status=status.HTTP_201_CREATED
+            {"message": "Notice created successfully", "data": response_data},
+            status=status.HTTP_201_CREATED,
         )
 
     except CompanyRegistration.DoesNotExist:
-        # Handle case where company does not exist
         return JsonResponse(
             {"error": "Company not found."}, status=status.HTTP_404_NOT_FOUND
         )
 
     except Exception as e:
-        # Handle any other exception and return the error
+        print(e)
         return JsonResponse(
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
@@ -159,6 +199,7 @@ def company_register(request, safe):
             status=status.HTTP_201_CREATED,
         )
     except Exception as e:
+        print(e)
         return JsonResponse(
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

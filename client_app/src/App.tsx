@@ -36,6 +36,7 @@ import { Typography } from "@mui/material";
 import PlacementStats from "./pages/placement_officer";
 import Old from "./pages/placement_officer/Old";
 import JobVerification from "./pages/placement_officer/components/JobVerification";
+import PlacementAttendance from "./pages/placement_officer/PlacementAttendance";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -100,6 +101,7 @@ const App = () => {
           <Route path="verify" element={<JobVerification />} />
           <Route path="create_notice" element={<NoticeCreationForm />} />
           <Route path="report" element={<PlacementReport />} />
+          <Route path="attendance" element={<PlacementAttendance />} />
           <Route
             path="comparative_Placement_Statistics"
             element={

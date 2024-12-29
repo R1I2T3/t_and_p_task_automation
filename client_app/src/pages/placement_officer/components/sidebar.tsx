@@ -48,6 +48,10 @@ const Sidebar = () => {
           <Verified />
           <p>Verify</p>
         </NavLink>
+        <NavLink to="attendance" className="menu-item gap-3">
+          <Verified />
+          <p>Attendance</p>
+        </NavLink>
         <NavLink to="/notifications/create" className="menu-item gap-3">
           <Send />
           <p>Notification</p>
