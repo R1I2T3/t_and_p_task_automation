@@ -18,6 +18,8 @@ class CompanyRegistration(models.Model):
     domain = models.CharField(choices=DOMAIN_TYPES, max_length=40)
     Departments = models.TextField(default="all")
     created_at = models.DateTimeField(auto_now=True)
+    is_pli = models.BooleanField(default=False)
+    batch = models.IntegerField(default=11)
 
     def __str__(self) -> str:
         return f"{self.name}-{self.id}"
@@ -55,6 +57,11 @@ class placementNotice(models.Model):
         to=CompanyRegistration,
         on_delete=models.CASCADE,
         related_name="placement_notice",
+    )
+    offers = models.ManyToManyField(
+        to=Offers,
+        related_name="notices",
+        blank=True,  # Allow creating notices without offers initially
     )
 
 

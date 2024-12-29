@@ -1,14 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { useEffect } from "react";
 import Home from "./pages/home";
-import CreatePlacementNotice from "./pages/placement/create-notice";
-import Notice from "./pages/placement/notice";
-import PlacementJobApplications from "./pages/placement/placement_job_application";
-import StudentJobApplication from "./pages/placement/student_job_application";
-import CompanyJobApplications from "./pages/placement/company_job_applications";
-import CompanyJobAcceptance from "./pages/placement/company_job_acceptance";
-import CompanyRegistrationForm from "./pages/placement/companyRegistration";
-import PlacementParent from "./pages/placement/components/PlacementParent";
 import { getCookie } from "./utils";
 import { authAtom } from "./authAtom";
 import { useSetAtom } from "jotai";
@@ -27,7 +19,6 @@ import StudentHome from "./pages/student";
 import StudentPersonalInfo from "./pages/student/student-personal-info";
 import Resume from "./pages/student/resume";
 import ResumePreview from "./pages/student/resume-preview";
-import PlacementAttendance from "./pages/placement/placement_attendance";
 import FacultyLayout from "./pages/faculty_coordinator/FacultyLayout";
 import FacultyHome from "./pages/faculty_coordinator/FacultyHome";
 import FacultyTablePage from "./pages/faculty_coordinator/FacultyAttendanceTable";
@@ -35,6 +26,16 @@ import DepartmentParent from "./pages/department_coordinator/DepartmentParent";
 import DepartmentDashboard from "./pages/department_coordinator/DepartmentHome";
 import DepartmentStats from "./pages/department_coordinator/DepartmentStats";
 import DepartmentAttendance from "./pages/department_coordinator/DepartmentAttendance";
+import PlacementLayout from "./pages/placement_officer/PlacementLayout";
+import CompanyRegistrationForm from "./pages/placement_officer/CompanyRegisteration";
+import NoticeCreationForm from "./pages/placement_officer/NoticeCreation";
+import PlacementReport from "./pages/placement_officer/PlacementReport";
+import { CategoryDataStatistics } from "./pages/placement_officer/CategoryData";
+import { ComparativePlacementStatistics } from "./pages/placement_officer/ComparitivePlacementStatistic";
+import { Typography } from "@mui/material";
+import PlacementStats from "./pages/placement_officer";
+import Old from "./pages/placement_officer/Old";
+import JobVerification from "./pages/placement_officer/components/JobVerification";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -60,25 +61,6 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/placement" element={<PlacementParent />}>
-          <Route path="create_notice/:id" element={<CreatePlacementNotice />} />
-          <Route path="notice/:id" element={<Notice />} />
-          <Route path="job/:id" element={<PlacementJobApplications />} />
-          <Route
-            path="job/application/student/:uid"
-            element={<StudentJobApplication />}
-          />
-          <Route
-            path="job/application/:id"
-            element={<CompanyJobApplications />}
-          />
-          <Route path="job/acceptance" element={<CompanyJobAcceptance />} />
-          <Route
-            path="company/register"
-            element={<CompanyRegistrationForm />}
-          />
-          <Route path="attendance" element={<PlacementAttendance />} />
-        </Route>
         <Route path="/notifications" element={<NotificationParent />}>
           <Route index element={<NotificationList />} />
           <Route path="create" element={<CreateNotification />} />
@@ -108,6 +90,36 @@ const App = () => {
           <Route index element={<DepartmentDashboard />} />
           <Route path="stats" element={<DepartmentStats />} />
           <Route path="attendance" element={<DepartmentAttendance />} />
+        </Route>
+        <Route path="/placement_officer" element={<PlacementLayout />}>
+          <Route index element={<PlacementStats />} />
+          <Route
+            path="company_register"
+            element={<CompanyRegistrationForm />}
+          />
+          <Route path="verify" element={<JobVerification />} />
+          <Route path="create_notice" element={<NoticeCreationForm />} />
+          <Route path="report" element={<PlacementReport />} />
+          <Route
+            path="comparative_Placement_Statistics"
+            element={
+              <div>
+                <CategoryDataStatistics />
+                <ComparativePlacementStatistics />
+              </div>
+            }
+          />
+          <Route
+            path="/placement_officer/2024"
+            element={
+              <div>
+                <Typography variant="h5">
+                  Placement Statistics of 2024
+                </Typography>
+                <Old />
+              </div>
+            }
+          />
         </Route>
       </Routes>
     </BrowserRouter>

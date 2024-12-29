@@ -5,6 +5,7 @@ from rest_framework.decorators import (
     authentication_classes,
     parser_classes,
 )
+from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
 from rest_framework import status
 from .models import CompanyRegistration, Offers, placementNotice, jobAcceptance
@@ -16,6 +17,7 @@ from .serializers import (
     JobApplicationSerializer,
 )
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from base.models import User
 from django.views.decorators.csrf import csrf_exempt
 from student.models import Student
@@ -25,7 +27,6 @@ from student.serializers import StudentSerializer
 from rest_framework.exceptions import NotFound
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from uuid import uuid4
-from rest_framework.views import APIView
 
 
 @api_view(["GET"])
@@ -102,13 +103,26 @@ def create_notice(request, pk):
     try:
         company = CompanyRegistration.objects.get(id=pk)
         data = JSONParser().parse(request)
-        notice = data.get("notice")
-        notice["company"] = company
-        placementNotice.objects.create(**notice)
+        if not company:
+            return JsonResponse(
+                {"error": "Company not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+        notice_data = data
+        print(notice_data)
+        notice_data["company"] = company
+        placement_notice = placementNotice.objects.create(**notice_data)
         return JsonResponse(
             {"message": "Notice created successfully"}, status=status.HTTP_201_CREATED
         )
+
+    except CompanyRegistration.DoesNotExist:
+        # Handle case where company does not exist
+        return JsonResponse(
+            {"error": "Company not found."}, status=status.HTTP_404_NOT_FOUND
+        )
+
     except Exception as e:
+        # Handle any other exception and return the error
         return JsonResponse(
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
@@ -156,8 +170,12 @@ def company_register(request, safe):
 def get_notice(request, pk):
     try:
         notice = placementNotice.objects.get(id=pk)
-        notice = PlacementNoticeSerializer(notice)
-        return JsonResponse({"notice": notice.data}, status=status.HTTP_200_OK)
+        notice_data = PlacementNoticeSerializer(notice).data
+        return JsonResponse(notice_data, status=status.HTTP_200_OK)
+    except placementNotice.DoesNotExist:
+        return JsonResponse(
+            {"error": "Notice not found"}, status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         return JsonResponse(
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -278,27 +296,23 @@ def get_jobs_by_company_name(request, company_name):
     return JsonResponse(serializer.data)
 
 
-class SaveAttendance(APIView):
-    def post(self, request):
-        # Expecting a list of job application data
-        data = request.data
+class JobAcceptanceView(APIView):
+    def get(self, request):
+        jobs = jobAcceptance.objects.all()
+        serializer = JobAcceptanceSerializer(jobs, many=True)
+        return JsonResponse(serializer.data)
 
-        try:
-            # Iterate through the data and create or update job applications
-            for item in data:
-                serializer = JobApplicationSerializer(data=item)
-                if serializer.is_valid():
-                    serializer.save()
-                else:
-                    return JsonResponse(
-                        {"error": "Invalid data", "details": serializer.errors},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
 
-            return JsonResponse(
-                {"message": "Data saved successfully!"}, status=status.HTTP_201_CREATED
-            )
-        except Exception as e:
-            return JsonResponse(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+@api_view(["POST"])
+def verify_job(request, job_id):
+    try:
+        job = verify_job.objects.get(id=job_id)
+        job.verified = True
+        job.save()
+        return JsonResponse(
+            {"message": "Job verified successfully"}, status=status.HTTP_200_OK
+        )
+    except jobAcceptance.DoesNotExist:
+        return JsonResponse(
+            {"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND
+        )

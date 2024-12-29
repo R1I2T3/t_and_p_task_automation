@@ -29,10 +29,17 @@ class PlacementNoticeSerializer(serializers.ModelSerializer):
     company = (
         CompanyRegistrationSerializer()
     )  # Nested serialization for related company
+    offers = OffersSerializer(many=True, read_only=True)
+    company_offers = serializers.SerializerMethodField()
 
     class Meta:
         model = placementNotice
         fields = "__all__"
+
+    def get_company_offers(self, obj):
+        # Get all offers associated with the company
+        offers = obj.company.company_offers.all()
+        return OffersSerializer(offers, many=True).data
 
 
 class JobApplicationSerializer(serializers.ModelSerializer):

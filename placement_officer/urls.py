@@ -2,5 +2,62 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.index, name="placement_index"),
+    path("consent/<int:year>/", views.statistic, name="statistic_by_year"),
+    path("consent/", views.statistic, name="statistic"),
+    path(
+        "filter/<str:department>/<int:year>/",
+        views.filter_by_department,
+        name="filter_by_department_by_year",
+    ),
+    path(
+        "filter/<str:department>/",
+        views.filter_by_department,
+        name="filter_by_department",
+    ),
+    path(
+        "unique-departments/<int:year>/",
+        views.get_unique_departments,
+        name="unique_departments_by_year",
+    ),
+    path(
+        "unique-departments/", views.get_unique_departments, name="unique_departments"
+    ),
+    path(
+        "get_category_data/<int:year>/",
+        views.get_category,
+        name="get_category_data_by_year",
+    ),
+    path("get_category_data/", views.get_category, name="get_category_data"),
+    path(
+        "get_category_data_by_department/<str:department>/<int:year>/",
+        views.get_category_by_department,
+        name="get_category_data_by_department_by_year",
+    ),
+    path(
+        "get_category_data_by_department/<str:department>/",
+        views.get_category_by_department,
+        name="get_category_data_by_department",
+    ),
+    path(
+        "get_top_companies_with_offers/<int:year>/",
+        views.get_top_companies_with_offers,
+        name="get_top_companies_with_offers_by_year",
+    ),
+    path(
+        "get_top_companies_with_offers/",
+        views.get_top_companies_with_offers,
+        name="get_top_companies_with_offers",
+    ),
+    path("get_all_companies/", views.get_all_companies, name="get_all_companies"),
+    path(
+        "get_offers_by_department/<str:department>/<int:year>/",
+        views.get_offers_by_department,
+        name="get_offers_by_department_by_year",
+    ),
+    path(
+        "get_offers_by_department/<str:department>/",
+        views.get_offers_by_department,
+        name="get_offers_by_department",
+    ),
+    path("consolidated/", views.consolidated, name="consolidated"),
 ]

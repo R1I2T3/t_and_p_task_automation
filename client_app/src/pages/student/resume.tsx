@@ -9,7 +9,7 @@ import {
   Paper,
   ThemeProvider,
 } from "@mui/material";
-import theme from "../placement/components/theme";
+import theme from "./components/theme";
 import { PlusCircle, MinusCircle } from "lucide-react";
 import { getCookie } from "@/utils";
 import toast from "react-hot-toast";

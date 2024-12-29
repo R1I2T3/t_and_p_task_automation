@@ -9,7 +9,8 @@ from .views import (
     get_student_application,
     get_all_applied_students,
     create_job_acceptance,
-    SaveAttendance,
+    JobAcceptanceView,
+    verify_job,
 )
 
 urlpatterns = [
@@ -22,5 +23,6 @@ urlpatterns = [
     path("job_application/get/<str:uid>", get_student_application),
     path("job_application/company/get/<str:pk>", get_all_applied_students),
     path("job_acceptance/create", create_job_acceptance),
-    path("save/", SaveAttendance.as_view(), name="save_to_database"),
+    path("jobs/", JobAcceptanceView.as_view(), name="job-acceptance"),
+    path("jobs/verify/<uuid:job_id>/", verify_job, name="verify-job"),
 ]

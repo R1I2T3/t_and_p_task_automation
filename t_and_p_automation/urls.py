@@ -27,7 +27,7 @@ urlpatterns = [
     path("principal/", include("principal.urls")),
     path("api/department_coordinator/", include("department_coordinator.urls")),
     path("", include("base.urls")),
-    path("placement_officer/", include("placement_officer.urls")),
+    path("api/placement_officer/", include("placement_officer.urls")),
     path("internship_officer/", include("internship_officer.urls")),
     path("training_officer/", include("training_officer.urls")),
     path("api/placement/", include("placement_api.urls")),
