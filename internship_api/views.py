@@ -30,22 +30,21 @@ from uuid import uuid4
 
 
 @api_view(["POST"])
-# @authentication_classes([SessionAuthentication, BasicAuthentication])
-# @permission_classes([IsAuthenticated])
-def create_company_with_offers(request):
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def create_company_with_offers(request, safe):
     try:
-        data = JSONParser().parse(request)
-
-        # Create CompanyRegistration
+        data = request.data
+        print(data)
         company_data = data.get("company")
         company_serializer = InternshipRegistrationSerializer(data=company_data)
         if company_serializer.is_valid():
             company = company_serializer.save()
+            print(company)
         else:
             return JsonResponse(
                 company_serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
-
         # Create Offers
         offers_data = data.get("offers", [])
         for offer_data in offers_data:
@@ -54,12 +53,14 @@ def create_company_with_offers(request):
                 Offers.objects.create(**offer_data)
             except:
                 pass
-
         return JsonResponse(
-            {"message": "Company and related offers created successfully!"},
+            {
+                "message": "Company and related offers created successfully!",
+            },
             status=status.HTTP_201_CREATED,
         )
     except Exception as e:
+        print(e)
         return JsonResponse(
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

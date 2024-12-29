@@ -323,10 +323,15 @@ from django.views.decorators.csrf import csrf_exempt
 def upload_data(request):
     if request.method == "POST":
         try:
-            # Parse the JSON data sent in the request body
-            data = json.loads(request.body)
+            # Get the parsed data from request
+            data = request.data
             students = data.get("students", [])
-
+            faculty = FacultyResponsibility.objects.get(user=request.user)
+            if not faculty.program:
+                return Response(
+                    {"error": "Faculty is not assigned to any program"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
             # If no student data is provided
             if not students:
                 return JsonResponse(
@@ -348,8 +353,8 @@ def upload_data(request):
                     # Insert the student data into the table, wrap column names with backticks
                     cursor.execute(
                         """
-                        INSERT INTO program1 (`UID`, `Name`, `branch_div`, `semester`, `training_attendance`, `training_performance`, `year`)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        INSERT INTO program1 (`UID`, `Name`, `branch_div`, `semester`, `training_attendance`, `training_performance`, `year`, `program_name`)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                     """,
                         [
                             UID,
@@ -359,6 +364,7 @@ def upload_data(request):
                             training_attendance,
                             training_performance,
                             year,
+                            faculty.program,
                         ],
                     )
 
@@ -366,7 +372,7 @@ def upload_data(request):
             return JsonResponse({"message": "Data uploaded successfully!"})
 
         except Exception as e:
-            # Handle any errors and return a detailed error message
+            print(e)
             return JsonResponse({"message": f"Error: {str(e)}"}, status=500)
 
     return JsonResponse({"message": "Invalid request method."}, status=400)

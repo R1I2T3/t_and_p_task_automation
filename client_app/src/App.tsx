@@ -40,6 +40,12 @@ import PlacementAttendance from "./pages/placement_officer/PlacementAttendance";
 import TrainingLayout from "./pages/training_officer/TrainingLayout";
 import TrainingStats from "./pages/training_officer/TrainingStats";
 import TrainingNotice from "./pages/training_officer/TrainingNotice";
+import InternshipLayout from "./pages/internship_officer/InternshipLayout";
+import InternShipNotice from "./pages/internship_officer/InternShipNotice";
+import InternshipCompanyRegister from "./pages/internship_officer/InternshipCompanyRegister";
+import InternShipVerify from "./pages/internship_officer/InternShipVerify";
+import InternshipStats from "./pages/internship_officer/Stats";
+import OnePageReport from "./pages/internship_officer/OnePageReport";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -129,6 +135,16 @@ const App = () => {
         <Route path="/training_officer" element={<TrainingLayout />}>
           <Route index element={<TrainingStats />} />
           <Route path="notice" element={<TrainingNotice />} />
+        </Route>
+        <Route path="/internship_officer" element={<InternshipLayout />}>
+          <Route index element={<InternshipStats />} />
+          <Route path="notice" element={<InternShipNotice />} />
+          <Route
+            path="company_register"
+            element={<InternshipCompanyRegister />}
+          />
+          <Route path="verify" element={<InternShipVerify />} />
+          <Route path="report" element={<OnePageReport />} />
         </Route>
       </Routes>
     </BrowserRouter>

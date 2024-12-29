@@ -26,7 +26,7 @@ import {
 } from "@mui/material";
 import { CheckCircle } from "lucide-react";
 
-const JobVerification = () => {
+const InternShipVerify = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
@@ -127,4 +127,4 @@ const JobVerification = () => {
   );
 };
 
-export default JobVerification;
+export default InternShipVerify;

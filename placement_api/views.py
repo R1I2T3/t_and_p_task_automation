@@ -337,11 +337,13 @@ def get_jobs_by_company_name(request, company_name):
     return JsonResponse(serializer.data)
 
 
-class JobAcceptanceView(APIView):
-    def get(self, request):
-        jobs = jobAcceptance.objects.all()
-        serializer = JobAcceptanceSerializer(jobs, many=True)
-        return JsonResponse(serializer.data)
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_job_acceptances(request):
+    jobs = jobAcceptance.objects.all()
+    serializer = JobAcceptanceSerializer(jobs, many=True)
+    return JsonResponse(serializer.data, safe=False)
 
 
 @api_view(["POST"])

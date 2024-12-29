@@ -51,6 +51,9 @@ class BatchAttendance(models.Model):
 
 # Model to store attendance and performance data for a program/branch/division
 class Program1(models.Model):
+    UID = models.CharField(max_length=100, default="20")
+    Name = models.CharField(max_length=100, default="Name")
+
     Branch_Div = models.CharField(max_length=100)
     Year = models.IntegerField()
     training_attendance = models.FloatField()

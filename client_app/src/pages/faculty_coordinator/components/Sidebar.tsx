@@ -1,8 +1,10 @@
 import React from "react";
 import { Link } from "react-router"; // Import Link for routing
 import "./Sidebar.css";
-
+import { authAtom } from "@/authAtom";
+import { useAtomValue } from "jotai";
 const Sidebar = () => {
+  const auth = useAtomValue(authAtom);
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   return (
     <aside className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
@@ -29,6 +31,26 @@ const Sidebar = () => {
           />
           {!isCollapsed && <p>Session Attendance</p>}
         </Link>
+        {auth?.department && (
+          <Link to={"/department_coordinator"} className="menu-item">
+            <img
+              src="/img/Training_Programme_Statistics.png"
+              alt="Student Data"
+              className="menu-icon"
+            />
+            Department
+          </Link>
+        )}
+        {auth?.program && (
+          <Link to={"/program_coordinator"} className="menu-item">
+            <img
+              src="/img/Training_Programme_Statistics.png"
+              alt="Student Data"
+              className="menu-icon"
+            />
+            Program
+          </Link>
+        )}
       </ul>
       <div className="footer"></div>
       <div className="bottom-menu">

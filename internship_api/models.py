@@ -21,7 +21,7 @@ class InternshipRegistration(models.Model):
         default="all"
     )  # Changed `Departments` to lowercase for consistency
     created_at = models.DateTimeField(auto_now=True)
-    batch = models.IntegerField()
+    batch = models.CharField(max_length=100, default="2026")
 
     def __str__(self):
         return f"{self.name}-{self.id}"
