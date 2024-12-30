@@ -9,11 +9,11 @@
   max-width: 100%;
   height: auto;
   object-fit: contain;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
 }
 .content-header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
   font-size: 24px;
   font-weight: bold;
 }
@@ -21,6 +21,7 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 20px;
+  font-size: 12px;
 }
 .main-body {
   margin-bottom: 30px;

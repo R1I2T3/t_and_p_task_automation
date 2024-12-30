@@ -36,6 +36,7 @@ const NoticeCreationForm = () => {
     From: "",
     From_designation: "",
     company: "",
+    location: "",
   });
   const contentRef = useRef<HTMLDivElement>(null);
   const [noticeData, setNoticeData] = useState<NoticeData | null>(null);
@@ -155,6 +156,16 @@ const NoticeCreationForm = () => {
                 name="date"
                 type="date"
                 value={formData.date}
+                onChange={handleChange}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Location"
+                name="location"
+                value={formData.location}
                 onChange={handleChange}
                 fullWidth
                 InputLabelProps={{ shrink: true }}
@@ -289,7 +300,7 @@ const NoticeCreationForm = () => {
       </Paper>
       {noticeData && (
         <div>
-          <Notice formData={noticeData} ref={contentRef} />
+          <Notice formData={noticeData} ref={contentRef} isPlacement />
           <Button
             variant="contained"
             color="primary"

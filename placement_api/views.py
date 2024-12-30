@@ -109,11 +109,8 @@ def create_notice(request, pk):
                 {"error": "Company not found."}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # Extract fields from request data
         notice_data = data
         notice_data["company"] = company
-        # Create the placement notice
-        placement_notice = placementNotice.objects.create(**notice_data)
         notice_data = {
             "srNo": data.get("srNo", ""),
             "date": data.get("date", ""),

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
 import {
   TextField,
   Checkbox,
@@ -29,7 +28,7 @@ const InternshipCompanyRegister = () => {
     domain: string;
     Departments: string;
     selectedDepartments: string[];
-    jobOffers: Array<{ type: string; salary: string; position: string }>;
+    jobOffers: Array<{ type: string; stipend: string; position: string }>;
     batch: string;
   }
 
@@ -44,11 +43,10 @@ const InternshipCompanyRegister = () => {
     domain: "core",
     Departments: "all",
     selectedDepartments: [],
-    jobOffers: [{ type: "", salary: "", position: "" }],
+    jobOffers: [{ type: "", stipend: "", position: "" }],
     batch: "",
   });
 
-  const navigate = useNavigate();
   const departmentOptions = [
     "CS",
     "IT",
@@ -97,7 +95,7 @@ const InternshipCompanyRegister = () => {
       ...prevData,
       jobOffers: [
         ...prevData.jobOffers,
-        { type: "", salary: "", position: "" },
+        { type: "", stipend: "", position: "" },
       ],
     }));
   };
@@ -127,12 +125,12 @@ const InternshipCompanyRegister = () => {
         is_kt: formData.is_kt,
         is_backLog: formData.is_backLog,
         domain: formData.domain,
-        departments: formData.selectedDepartments,
+        departments: formData.selectedDepartments.join(","),
         batch: formData.batch, // Added batch field to payload
       },
       offers: formData.jobOffers.map((offer) => ({
         type: offer.type,
-        salary: parseFloat(offer.salary),
+        stipend: parseFloat(offer.stipend),
         position: offer.position,
       })),
     };
@@ -325,10 +323,10 @@ const InternshipCompanyRegister = () => {
                     </Grid>
                     <Grid item xs={4}>
                       <TextField
-                        name="salary"
-                        label="Salary"
+                        name="stipend"
+                        label="Stipend"
                         type="number"
-                        value={offer.salary}
+                        value={offer.stipend}
                         onChange={(e) => handleJobOfferChange(index, e)}
                         fullWidth
                       />

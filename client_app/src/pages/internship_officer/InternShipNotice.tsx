@@ -28,7 +28,6 @@ const InternshipNotice = () => {
     roles: "",
     about: "",
     skill_required: "",
-    Location: "",
     Documents_to_Carry: "",
     Walk_in_interview: "",
     Company_registration_Link: "",
@@ -36,6 +35,7 @@ const InternshipNotice = () => {
     From: "",
     From_designation: "",
     company: "",
+    location: "",
   });
   const contentRef = useRef<HTMLDivElement>(null);
   const [noticeData, setNoticeData] = useState<NoticeData | null>(null);
@@ -57,7 +57,7 @@ const InternshipNotice = () => {
   const csrfToken = getCookie("csrftoken");
   useEffect(() => {
     axios
-      .get("/api/placement/company/", {
+      .get("/api/internship/company/", {
         headers: {
           "X-CSRFToken": csrfToken || "",
         },
@@ -79,7 +79,7 @@ const InternshipNotice = () => {
   const handleSubmit = (e: any) => {
     e.preventDefault();
     axios
-      .post(`/api/placement/notice/create/${formData.company}`, formData, {
+      .post(`/api/internship/notice/create/${formData.company}`, formData, {
         headers: {
           "X-CSRFToken": csrfToken || "",
         },
@@ -160,6 +160,15 @@ const InternshipNotice = () => {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Location"
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
             <Grid item xs={12}>
               <TextField
                 label="Introduction"
@@ -209,15 +218,6 @@ const InternshipNotice = () => {
                 label="Skills Required"
                 name="skill_required"
                 value={formData.skill_required}
-                onChange={handleChange}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Location"
-                name="Location"
-                value={formData.Location}
                 onChange={handleChange}
                 fullWidth
               />
@@ -289,7 +289,7 @@ const InternshipNotice = () => {
       </Paper>
       {noticeData && (
         <div>
-          <Notice formData={noticeData} ref={contentRef} />
+          <Notice formData={noticeData} ref={contentRef} isPlacement={false} />
           <Button
             variant="contained"
             color="primary"

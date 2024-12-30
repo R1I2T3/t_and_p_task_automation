@@ -32,15 +32,15 @@ from uuid import uuid4
 @api_view(["POST"])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def create_company_with_offers(request, safe):
+def create_company_with_offers(request):
     try:
         data = request.data
         print(data)
         company_data = data.get("company")
+        print(company_data)
         company_serializer = InternshipRegistrationSerializer(data=company_data)
         if company_serializer.is_valid():
             company = company_serializer.save()
-            print(company)
         else:
             return JsonResponse(
                 company_serializer.errors, status=status.HTTP_400_BAD_REQUEST
@@ -51,8 +51,8 @@ def create_company_with_offers(request, safe):
             offer_data["company"] = company
             try:
                 Offers.objects.create(**offer_data)
-            except:
-                pass
+            except Exception as e:
+                print(e)
         return JsonResponse(
             {
                 "message": "Company and related offers created successfully!",
@@ -67,8 +67,8 @@ def create_company_with_offers(request, safe):
 
 
 @api_view(["GET"])
-# @authentication_classes([SessionAuthentication, BasicAuthentication])
-# @permission_classes([IsAuthenticated])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_company_with_offers(request, pk=None):
     try:
         if pk:
@@ -113,8 +113,8 @@ def get_company_with_offers(request, pk=None):
 
 
 @api_view(["GET"])
-# @authentication_classes([SessionAuthentication, BasicAuthentication])
-# @permission_classes([IsAuthenticated])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_all_companies(request):
     try:
         companies = InternshipRegistration.objects.all()
@@ -134,18 +134,67 @@ def get_all_companies(request):
 
 
 @api_view(["POST"])
-# @authentication_classes([SessionAuthentication, BasicAuthentication])
-# @permission_classes([IsAuthenticated])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def create_notice(request, pk):
     try:
         company = InternshipRegistration.objects.get(id=pk)
-        data = JSONParser().parse(request)
-        notice = data.get("notice")
-        notice["company"] = company
-        InternshipNotice.objects.create(**notice)
+        data = request.data
+        print(company)
+        if not company:
+            return JsonResponse(
+                {"error": "Company not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        notice_data = data
+        notice_data["company"] = company
+        notice_data = {
+            "srNo": data.get("srNo", ""),
+            "date": data.get("date", ""),
+            "to": data.get("to", ""),
+            "subject": data.get("subject", ""),
+            "Intro": data.get("intro", ""),
+            "Eligibility_Criteria": data.get("eligibility_criteria", ""),
+            "About_Company": data.get("about", ""),
+            "Location": data.get("location", ""),
+            "Documents_to_Carry": data.get("Documents_to_Carry", ""),
+            "Walk_in_interview": data.get("Walk_in_interview", ""),
+            "Company_registration_Link": data.get("Company_registration_Link", ""),
+            "College_registration_Link": data.get("College_registration_Link", ""),
+            "Note": data.get("Note", ""),
+            "From": data.get("From", ""),
+            "From_designation": data.get("From_designation", ""),
+            "CompanyId": pk,
+        }
+        # Prepare tableData from related offers (assuming a related field 'offers' exists)
+        offers = Offers.objects.filter(
+            company=company
+        )  # Adjust as per your related name
+        table_data = [
+            {
+                "type": offer.type,
+                "salary": offer.stipend,
+                "position": offer.position,
+            }
+            for offer in offers
+        ]
+        print(table_data)
+        # Construct response data
+        response_data = {
+            **notice_data,
+            "tableData": table_data,
+        }
+
         return JsonResponse(
-            {"message": "Notice created successfully"}, status=status.HTTP_201_CREATED
+            {"message": "Notice created successfully", "data": response_data},
+            status=status.HTTP_201_CREATED,
         )
+
+    except InternshipRegistration.DoesNotExist:
+        return JsonResponse(
+            {"error": "Company not found."}, status=status.HTTP_404_NOT_FOUND
+        )
+
     except Exception as e:
         print(e)
         return JsonResponse(
