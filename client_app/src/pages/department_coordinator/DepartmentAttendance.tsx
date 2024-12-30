@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Sidebar from "./components/SideBar";
 const DepartmentAttendance = () => {
   const [attendanceFile, setAttendanceFile] = useState<File | null>(null);
   const [marksFile, setMarksFile] = useState<File | null>(null);
@@ -22,7 +21,7 @@ const DepartmentAttendance = () => {
   };
 
   return (
-    <Sidebar>
+    <>
       <div className="relative">
         <div className="h-[80%] grid grid-cols-1 lg:grid-cols-2 gap-10">
           <div className="flex flex-col justify-center items-center bg-[#153F74] text-white p-6 rounded-xl shadow-lg">
@@ -108,7 +107,7 @@ const DepartmentAttendance = () => {
           </ul>
         )}
       </div>
-    </Sidebar>
+    </>
   );
 };
 

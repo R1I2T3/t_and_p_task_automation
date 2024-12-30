@@ -37,8 +37,7 @@ class DepartmentCoordinatorViewSet(viewsets.ViewSet):
 
     def list(self, request):
         department_coordinator = self.get_department_coordinator()
-        students = Student.objects.select_related("user").all()
-        print(department_coordinator.department)
+        students = Student.objects.select_related("user").select_related("user").all()
         department_students = students.filter(
             department__startswith=department_coordinator.department
         )

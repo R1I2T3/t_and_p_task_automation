@@ -27,6 +27,7 @@ from student.serializers import StudentSerializer
 from rest_framework.exceptions import NotFound
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from uuid import uuid4
+from .utils import is_student_eligible
 
 
 @api_view(["GET"])
@@ -81,15 +82,8 @@ def get_company_with_offers(request, pk=None):
 def get_all_companies(request):
     try:
         companies = CompanyRegistration.objects.all()
-        company_data = []
-        for company in companies:
-            company_serializer = CompanyRegistrationSerializer(company)
-            offers = Offers.objects.filter(company=company)
-            offers_serializer = OffersSerializer(offers, many=True)
-            company_data.append(
-                {"company": company_serializer.data, "offers": offers_serializer.data}
-            )
-        return JsonResponse(company_data, safe=False, status=status.HTTP_200_OK)
+        companies_list = list(companies.values())
+        return JsonResponse(companies_list, safe=False)
     except Exception as e:
         return JsonResponse(
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -225,18 +219,33 @@ def get_notice(request, pk):
 @permission_classes([IsAuthenticated])
 def job_application(request, pk):
     try:
-        user = User.objects.get(email=request.user.email)
-        student = Student.objects.get(user=user)
-        company = CompanyRegistration.objects.get(pk=pk)
-        jobApplication.objects.create(student=student, company=company, id=uuid4())
-        return JsonResponse(
-            {"success": "Job application submitted successfully"},
-            status=status.HTTP_200_OK,
+        data = request.data
+        uid = data.get("uid")
+        company_id = data.get("company_id")
+        offer_id = data.get("offer_id")
+        print(f"Received data: {data}")
+        if not uid or not company_id:
+            return JsonResponse({"error": "Missing uid or company_id"}, status=400)
+        student = Student.objects.get(user=request.user)
+        company = CompanyRegistration.objects.get(id=company_id)
+        offer = Offers.objects.get(id=offer_id)
+        job_application = jobApplication(
+            id=uuid4(),
+            student=student,
+            company=company,
+            offer=offer,
         )
+        job_application.save()
+
+        return JsonResponse(
+            {"message": "Job application created successfully"}, status=201
+        )
+    except Student.DoesNotExist:
+        return JsonResponse({"error": "Student not found"}, status=404)
+    except CompanyRegistration.DoesNotExist:
+        return JsonResponse({"error": "Company not found"}, status=404)
     except Exception as e:
-        return JsonResponse(
-            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @api_view(["GET"])
@@ -356,3 +365,46 @@ def verify_job(request, job_id):
         return JsonResponse(
             {"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND
         )
+
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def check_student_eligibility_for_offer(request):
+    """
+    View to check if a student is eligible for a specific offer.
+    """
+    data = request.data
+    offer_id = data.get("offer_id")
+
+    if not offer_id:
+        return JsonResponse(
+            {"error": "Invalid parameters: offer_id and student_uid are required."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    try:
+        offer = Offers.objects.get(id=offer_id)
+        student = Student.objects.get(user=request.user)
+        company = offer.company
+
+        if is_student_eligible(company, student):
+            return JsonResponse(
+                {
+                    "status": "success",
+                    "eligible": True,
+                    "message": "Student is eligible for the offer.",
+                }
+            )
+        else:
+            return JsonResponse(
+                {
+                    "status": "success",
+                    "eligible": False,
+                    "message": "Student is not eligible for the offer.",
+                }
+            )
+    except Offers.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Offer not found."})
+    except Student.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Student not found."})

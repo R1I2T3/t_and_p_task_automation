@@ -28,7 +28,6 @@ const NoticeCreationForm = () => {
     roles: "",
     about: "",
     skill_required: "",
-    Location: "",
     Documents_to_Carry: "",
     Walk_in_interview: "",
     Company_registration_Link: "",
@@ -215,20 +214,11 @@ const NoticeCreationForm = () => {
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <TextField
                 label="Skills Required"
                 name="skill_required"
                 value={formData.skill_required}
-                onChange={handleChange}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Location"
-                name="Location"
-                value={formData.Location}
                 onChange={handleChange}
                 fullWidth
               />

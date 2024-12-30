@@ -18,7 +18,7 @@ from base.models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "email"]  # Add more fields if necessary
+        fields = ["id", "email", "full_name"]  # Add more fields if necessary
 
 
 class ProgramCoordinatorSerializer(serializers.ModelSerializer):

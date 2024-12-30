@@ -73,6 +73,12 @@ class jobApplication(models.Model):
         on_delete=models.DO_NOTHING,
         related_name="company_job_applications",
     )
+    offer = models.ForeignKey(
+        to=Offers,
+        on_delete=models.DO_NOTHING,
+        related_name="job_applications",
+        null=True,
+    )
     attendance = models.BooleanField(default=False)
     aptitude = models.BooleanField(null=True)
     gd = models.BooleanField(null=True)

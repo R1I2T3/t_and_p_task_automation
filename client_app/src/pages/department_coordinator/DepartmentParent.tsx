@@ -1,11 +1,22 @@
 import React from "react";
+import Sidebar from "./components/SideBar";
+import { Typography } from "@mui/material";
+import "../placement_officer/placement.css";
 import { Outlet } from "react-router";
-const DepartmentParent = () => {
+const PlacementLayout = () => {
   return (
-    <div className="absolute top-0 left-0 w-full h-screen">
-      <Outlet />
+    <div className="ribbon">
+      <div className="app">
+        <Sidebar />
+        <main className="main-content1">
+          <Typography variant="h3" gutterBottom>
+            <u>Department Coordinator</u>
+          </Typography>
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };
 
-export default DepartmentParent;
+export default PlacementLayout;

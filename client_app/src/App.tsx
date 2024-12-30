@@ -17,6 +17,8 @@ import Attendance from "./pages/program_coordinator/Attendance";
 import StudentLayout from "./pages/student/student_layout";
 import StudentHome from "./pages/student";
 import StudentPersonalInfo from "./pages/student/student-personal-info";
+import PlacementRegistration from "./pages/student/PlacementRegistration";
+import InternshipRegistration from "./pages/student/InternshipRegistration";
 import Resume from "./pages/student/resume";
 import ResumePreview from "./pages/student/resume-preview";
 import FacultyLayout from "./pages/faculty_coordinator/FacultyLayout";
@@ -91,6 +93,14 @@ const App = () => {
           <Route path="info" element={<StudentPersonalInfo />} />
           <Route path="resume" element={<Resume />} />
           <Route path="resume-preview" element={<ResumePreview />} />
+          <Route
+            path="placement/registration/:id"
+            element={<PlacementRegistration />}
+          />
+          <Route
+            path="internship/registration/:id"
+            element={<InternshipRegistration />}
+          />
         </Route>
         <Route path="/faculty_coordinator" element={<FacultyLayout />}>
           <Route index element={<FacultyHome />} />

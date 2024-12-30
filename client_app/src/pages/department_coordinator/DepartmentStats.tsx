@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
-import SideBar from "./components/SideBar";
+import toast from "react-hot-toast";
 const DepartmentStats = () => {
   const [averageAcademicAttendance, setAverageAcademicAttendance] = useState(
     {}
@@ -15,14 +15,37 @@ const DepartmentStats = () => {
   const [averageTrainingPerformance, setAverageTrainingPerformance] = useState(
     {}
   );
-  const [internshipData, setInternshipData] = useState({
-    it_branches: {},
-    it_stipends: {},
-  });
-  const [placementData, setPlacementData] = useState({
-    "2023": {},
-    "2024": {},
-  });
+  interface InternshipData {
+    branches: Record<string, number>;
+    stipends: Record<string, number>;
+  }
+  const [internshipData, setInternshipData] = useState<
+    InternshipData | undefined
+  >();
+  const [placementData, setPlacementData] = useState();
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("/api/department_coordinator/stats", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await response.json();
+        console.log(data);
+        // setAverageAcademicAttendance(data.averageAcademicAttendance);
+        // setAverageAcademicPerformance(data.averageAcademicPerformance);
+        // setAverageTrainingAttendance(data.averageTrainingAttendance);
+        // setAverageTrainingPerformance(data.averageTrainingPerformance);
+        setInternshipData(data.internship);
+        setPlacementData(data.placement);
+      } catch (error) {
+        toast.error("Error fetching data");
+      }
+    };
+    fetchData();
+  }, []);
   const barOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -120,40 +143,50 @@ const DepartmentStats = () => {
     ],
   };
 
-  const internshipChartData = {
-    labels: Object.keys(internshipData.it_branches),
-    datasets: [
-      {
-        label: "Class Data",
-        data: Object.values(internshipData.it_branches),
-        backgroundColor: "#ef4444",
-      },
-      {
-        label: "Stipend (in INR)",
-        data: Object.values(internshipData.it_stipends),
-        backgroundColor: "#f59e0b",
-      },
-    ],
-  };
+  const internshipChartData = internshipData
+    ? {
+        labels: Object.keys(internshipData.branches),
+        datasets: [
+          {
+            label: "Class Data",
+            data: Object.values(internshipData.branches),
+            backgroundColor: "#ef4444",
+          },
+          {
+            label: "Stipend (in INR)",
+            data: Object.values(internshipData.stipends),
+            backgroundColor: "#f59e0b",
+          },
+        ],
+      }
+    : {
+        labels: [],
+        datasets: [],
+      };
 
-  const placementChartData = {
-    labels: Object.keys(placementData["2023"]),
-    datasets: [
-      {
-        label: "2023",
-        data: Object.values(placementData["2023"]),
-        backgroundColor: "#ef4444",
-      },
-      {
-        label: "2024",
-        data: Object.values(placementData["2024"]),
-        backgroundColor: "#f59e0b",
-      },
-    ],
-  };
+  const placementChartData = placementData
+    ? {
+        labels: Object.keys(placementData["2023"]),
+        datasets: [
+          {
+            label: "2023",
+            data: Object.values(placementData["2023"]),
+            backgroundColor: "#ef4444",
+          },
+          {
+            label: "2024",
+            data: Object.values(placementData["2024"]),
+            backgroundColor: "#f59e0b",
+          },
+        ],
+      }
+    : {
+        labels: [],
+        datasets: [],
+      };
 
   return (
-    <SideBar>
+    <>
       <div>
         <div className="bg-[#153F74] rounded-lg shadow-lg h-[50vh] p-4 mb-4 flex flex-col">
           <h1 className="text-xl lg:text-2xl font-bold">Academic Details</h1>
@@ -177,12 +210,12 @@ const DepartmentStats = () => {
             </div>
           </div>
         </div>
-        <div className="bg-[#153F74] rounded-lg shadow-lg p-4 h-[50vh] mb-4 flex flex-col">
+        <div className="bg-[#153F74] rounded-lg shadow-lg p-4 h-[50vh]  flex flex-col">
           <h1 className="text-xl lg:text-2xl font-bold">
             Placement and Internship Detail
           </h1>
-          <div className="flex flex-col md:flex-row justify-between items-center w-full h-full mx-auto">
-            <div className="w-full md:w-[35%] border-white mb-4 md:mb-0 h-[80%]">
+          <div className="flex flex-col md:flex-row justify-between items-center w-full h-full ">
+            <div className="w-full md:w-[35%] border-white mb-4 md:mb-0 h-full">
               <h1>Internship Data</h1>
               <Bar data={internshipChartData} options={dualBarOptions} />
             </div>
@@ -193,7 +226,7 @@ const DepartmentStats = () => {
           </div>
         </div>
       </div>
-    </SideBar>
+    </>
   );
 };
 
