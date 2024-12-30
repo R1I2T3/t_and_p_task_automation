@@ -5,10 +5,9 @@ from student.models import SEM_OPTIONS
 # Model to store attendance data for a student
 class AttendanceData(models.Model):
     batch = models.CharField(max_length=100)
-    late = models.BooleanField(default=False)
+    late = models.CharField(max_length=100, default="Late")
     name = models.CharField(max_length=100)
-    present = models.IntegerField(default=False)
-    absent = models.BooleanField(default=False)
+    present = models.CharField(max_length=100, default="Present")
     program_name = models.CharField(max_length=100)
     session = models.CharField(max_length=100)
     timestamp = models.DateTimeField()

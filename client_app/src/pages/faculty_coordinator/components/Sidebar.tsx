@@ -5,22 +5,14 @@ import { authAtom } from "@/authAtom";
 import { useAtomValue } from "jotai";
 const Sidebar = () => {
   const auth = useAtomValue(authAtom);
-  const [isCollapsed, setIsCollapsed] = React.useState(false);
   return (
-    <aside className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
+    <aside className={`sidebar `}>
       <div className="logo-container">
         <img src="/img/logo.png" alt="TCET Logo" className="logo" />
-        {!isCollapsed && (
-          <h1 className="title" style={{ color: "#153f74" }}>
-            TCET - TNP
-          </h1>
-        )}
-        <button
-          className="collapse-btn"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          {isCollapsed ? "→" : "←"}
-        </button>
+
+        <h1 className="title" style={{ color: "#153f74" }}>
+          TCET - TNP
+        </h1>
       </div>
       <ul className="menu">
         <Link to="/faculty_coordinator" className="menu-item">
@@ -29,7 +21,7 @@ const Sidebar = () => {
             alt="Student Data"
             className="menu-icon"
           />
-          {!isCollapsed && <p>Session Attendance</p>}
+          <p>Session Attendance</p>
         </Link>
         {auth?.department && (
           <Link to={"/department_coordinator"} className="menu-item">

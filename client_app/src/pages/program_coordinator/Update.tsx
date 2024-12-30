@@ -15,15 +15,15 @@ import {
 } from "@mui/material";
 import { getCookie } from "@/utils";
 
-interface AttendanceRecord {
-  uid: number;
-  name: string;
-  batch: string;
-  session: string;
-  present: string;
-}
-
 const Update = () => {
+  interface AttendanceRecord {
+    uid: number;
+    name: string;
+    batch: string;
+    session: string;
+    present: string;
+  }
+
   const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
   const [filteredData, setFilteredData] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,16 +75,19 @@ const Update = () => {
   };
 
   // Handle attendance update
-  const handleUpdate = (uid: any, session: any, currentStatus: any) => {
-    console.log(currentStatus);
-    const newStatus = currentStatus === "1" ? "Absent" : "Present";
-    const csrfToken = getCookie("csrftoken");
+  const handleUpdate = (
+    uid: number,
+    session: string,
+    currentStatus: string
+  ) => {
+    const newStatus = currentStatus === "Present" ? "Absent" : "Present";
+
     // Update data in the backend
     fetch("/api/program_coordinator/attendance/update/attendance_data/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRFToken": csrfToken || "",
+        "X-CSRFToken": getCookie("csrftoken") || "",
       },
       body: JSON.stringify({
         uid,
@@ -124,7 +127,6 @@ const Update = () => {
         console.error("Error updating attendance:", error);
       });
   };
-  console.log(attendanceData);
 
   return (
     <Box

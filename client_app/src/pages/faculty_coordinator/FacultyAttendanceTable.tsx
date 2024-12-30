@@ -1,88 +1,64 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import "./TablePage.css";
 import Sidebar from "./components/Sidebar";
 import { getCookie } from "@/utils";
 
-interface LocationState {
-  program: string;
-  dateSession: string;
-}
-
-interface StudentData {
-  student_data: [string, string, string]; // [UID, Name, Batch]
-  year: string;
-}
-
-interface ProgramData {
-  program_name: string;
-  student_data: string; // JSON string of StudentData[]
-  dates: string; // JSON string of dates
-  num_sessions: number;
-  year: string;
-  semester: string;
-}
-
-interface AttendanceRecord {
-  UID: string;
-  Batch: string;
-  Session: string;
-  Present: boolean;
-  status: "present" | "late" | "absent";
-}
-
-interface AttendanceData {
-  [key: string]: AttendanceRecord;
-}
-
-interface SaveAttendancePayload {
-  ProgramName: string;
-  Session: string;
-  UID: string;
-  Name: string;
-  Year: string;
-  Batch: string;
-  status: "present" | "late" | "absent";
-}
-
-function TablePage(): JSX.Element {
+function TablePage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { program, dateSession } = (location.state as LocationState) || {};
-  const [data, setData] = useState<ProgramData[]>([]);
-  const [attendanceData, setAttendanceData] = useState<AttendanceData>({});
-  const [selectedBatch, setSelectedBatch] = useState<string>("");
-  const [batches, setBatches] = useState<string[]>([]);
+  const { program, dateSession } = location.state || {};
+  interface DataItem {
+    program_name: string;
+    student_data: string;
+    dates: string;
+    num_sessions: number;
+    year: string;
+    semester: string;
+  }
+  const [data, setData] = useState<DataItem[]>([]);
+  interface AttendanceRecord {
+    UID: string;
+    Batch: string;
+    Session: string;
+    Present: boolean;
+    Late: boolean;
+  }
+  const [attendanceData, setAttendanceData] = useState<
+    Record<string, AttendanceRecord>
+  >({});
+  const [selectedBatch, setSelectedBatch] = useState("");
+  const [batches, setBatches] = useState([]);
+
   // Fetch data and populate batches
   useEffect(() => {
     if (!program) return;
 
     axios
-      .get<ProgramData[]>("/api/faculty_coordinator/data")
+      .get("/api/faculty_coordinator/data")
       .then((response) => {
         setData(response.data);
 
-        // Filter batches based on program name
+        console.log(response.data);
         const programData = response.data.filter(
-          (item) => item.program_name === program
+          (item: any) => item.program_name === program
         );
         const uniqueBatches = Array.from(
           new Set(
-            programData.flatMap((item) =>
+            programData.flatMap((item: any) =>
               JSON.parse(item.student_data || "[]").map(
-                (student: StudentData) => student.student_data[2]
+                (student: any) => student.student_data[2]
               )
             )
           )
         );
+        // @ts-expect-error: Type 'string[]' is not assignable to type 'never[]'
         setBatches(uniqueBatches);
       })
-      .catch((error: AxiosError) =>
-        console.error("Error fetching data:", error)
-      );
+      .catch((error) => console.error("Error fetching data:", error));
   }, [program]);
 
   // Load attendance data from localStorage on component mount
@@ -99,50 +75,78 @@ function TablePage(): JSX.Element {
   }, [attendanceData]);
 
   // Handle checkbox changes for individual students
-  const handleAttendanceChange = (
-    studentId: string,
-    batch: string,
-    status: "present" | "late" | "absent"
-  ): void => {
+  const handleCheckboxChange = (
+    studentId: any,
+    batch: any,
+    checkboxType: any
+  ) => {
     setAttendanceData((prevState) => {
       const studentKey = `${studentId}-${batch}-${dateSession}`;
       const updatedState = { ...prevState };
 
-      updatedState[studentKey] = {
-        UID: studentId,
-        Batch: batch,
-        Session: dateSession,
-        Present: status === "present" || status === "late",
-        status: status,
-      };
+      if (checkboxType === "Present") {
+        updatedState[studentKey] = {
+          ...(updatedState[studentKey] || {
+            UID: studentId,
+            Batch: batch,
+            Session: dateSession,
+            Present: false,
+            Late: false,
+          }),
+          Present: !updatedState[studentKey]?.Present,
+          Late: updatedState[studentKey]?.Present
+            ? false
+            : updatedState[studentKey]?.Late,
+        };
+      } else if (checkboxType === "Late") {
+        updatedState[studentKey] = {
+          ...(updatedState[studentKey] || {
+            UID: studentId,
+            Batch: batch,
+            Session: dateSession,
+            Present: false,
+            Late: false,
+          }),
+          Late: !updatedState[studentKey]?.Late,
+          Present: updatedState[studentKey]?.Late
+            ? true
+            : updatedState[studentKey]?.Present,
+        };
+      }
 
       return updatedState;
     });
   };
 
   // Handle 'Select All' changes
-  const handleSelectAllChange = (action: string): void => {
+  const handleSelectAllChange = (
+    checkboxType: "Present" | "Late",
+    action: "select" | "deselect"
+  ) => {
     setAttendanceData((prevState) => {
       const updatedState = { ...prevState };
 
       filteredByBatch.forEach((student) => {
-        let status;
-        if (action === "late") {
-          status = "late";
-        } else if (action === "absent") {
-          status = "absent";
-        } else {
-          status = "present";
-        }
         const studentKey = `${student.student_data[0]}-${student.student_data[2]}-${dateSession}`;
-        updatedState[studentKey] = {
+        updatedState[studentKey] = updatedState[studentKey] || {
           UID: student.student_data[0],
           Batch: student.student_data[2],
           Session: dateSession,
-          Present: action === "select",
-          // @ts-expect-error: status is not assignable to type 'boolean'
-          status,
+          Present: false,
+          Late: false,
         };
+
+        if (checkboxType === "Present") {
+          updatedState[studentKey].Present = action === "select";
+          if (action !== "select") {
+            updatedState[studentKey].Late = false;
+          }
+        } else if (checkboxType === "Late") {
+          updatedState[studentKey].Late = action === "select";
+          if (action === "select") {
+            updatedState[studentKey].Present = true;
+          }
+        }
       });
 
       return updatedState;
@@ -150,7 +154,7 @@ function TablePage(): JSX.Element {
   };
 
   // Save data to backend
-  const saveData = (): void => {
+  const saveData = () => {
     const allStudents = filteredByBatch.map((student) => ({
       UID: student.student_data[0],
       Name: student.student_data[1],
@@ -158,26 +162,28 @@ function TablePage(): JSX.Element {
       Batch: student.student_data[2],
     }));
 
-    const attendanceArray: SaveAttendancePayload[] = allStudents.map(
-      (student) => {
-        const studentKey = `${student.UID}-${student.Batch}-${dateSession}`;
-        const attendance = attendanceData[studentKey] || {
-          Present: false,
-          Late: false,
-        };
+    const attendanceArray = allStudents.map((student) => {
+      const studentKey = `${student.UID}-${student.Batch}-${dateSession}`;
+      const attendance = attendanceData[studentKey] || {
+        Present: false,
+        Late: false,
+      };
 
-        return {
-          ProgramName: program,
-          Session: dateSession,
-          UID: student.UID,
-          Name: student.Name,
-          Year: student.Year,
-          Batch: student.Batch,
-          status: attendance.status,
-          semester: data[0].semester,
-        };
-      }
-    );
+      const presentStatus = attendance.Present ? "Present" : "Absent";
+      const lateStatus = attendance.Late ? "Late" : "Not Late";
+
+      return {
+        ProgramName: program,
+        Session: dateSession,
+        UID: student.UID,
+        Name: student.Name,
+        Year: student.Year,
+        Batch: student.Batch,
+        Present: presentStatus,
+        Late: lateStatus,
+        semester: data[0].semester,
+      };
+    });
 
     axios
       .post(
@@ -193,14 +199,14 @@ function TablePage(): JSX.Element {
       .then(() => {
         alert("Data saved successfully!");
       })
-      .catch((error: AxiosError) => {
+      .catch((error) => {
         console.error("Error saving data:", error.response?.data);
         alert("Error saving data.");
       });
   };
 
-  const downloadCSV = (): void => {
-    const csvRows: string[] = [];
+  const downloadCSV = () => {
+    const csvRows = [];
     const headers = [
       "Program",
       "Session",
@@ -215,6 +221,11 @@ function TablePage(): JSX.Element {
 
     filteredByBatch.forEach((student) => {
       const studentKey = `${student.student_data[0]}-${student.student_data[2]}-${dateSession}`;
+      const present = attendanceData[studentKey]?.Present
+        ? "Present"
+        : "Absent";
+      const late = attendanceData[studentKey]?.Late ? "Late" : "Not Late";
+
       const row = [
         program,
         dateSession,
@@ -222,7 +233,8 @@ function TablePage(): JSX.Element {
         student.student_data[1],
         student.year,
         student.student_data[2],
-        attendanceData[studentKey].status,
+        present,
+        late,
       ];
       csvRows.push(row.join(","));
     });
@@ -256,7 +268,7 @@ function TablePage(): JSX.Element {
       console.error("Error parsing dates:", error);
     }
 
-    return dates.flatMap((date) =>
+    return dates.flatMap((date: string) =>
       Array.from({ length: item.num_sessions }, (_, i) => {
         const sessionLabel = `${date} - Session ${i + 1}`;
         return sessionLabel === dateSession ? item : null;
@@ -264,26 +276,17 @@ function TablePage(): JSX.Element {
     );
   });
 
-  const filteredByBatch: (StudentData & { year: string })[] = selectedBatch
+  const filteredByBatch = selectedBatch
     ? filteredSessionData.flatMap((row) =>
-        row
-          ? JSON.parse(row.student_data || "[]")
-              .filter(
-                (student: StudentData) =>
-                  student.student_data[2] === selectedBatch
-              )
-              .map((student: StudentData) => ({ ...student, year: row.year }))
-          : []
+        JSON.parse(row?.student_data || "[]")
+          .filter((student: any) => student.student_data[2] === selectedBatch)
+          .map((student: any) => ({ ...student, year: row?.year }))
       )
     : filteredSessionData.flatMap((row) =>
-        row
-          ? JSON.parse(row.student_data || "[]").map(
-              (student: StudentData) => ({
-                ...student,
-                year: row.year,
-              })
-            )
-          : []
+        JSON.parse(row?.student_data || "[]").map((student: any) => ({
+          ...student,
+          year: row?.year,
+        }))
       );
 
   return (
@@ -315,16 +318,22 @@ function TablePage(): JSX.Element {
             <select
               onChange={(e) =>
                 handleSelectAllChange(
-                  e.target.value as "present" | "late" | "absent"
+                  "Present",
+                  e.target.value as "select" | "deselect"
                 )
               }
-              value=""
             >
               <option value="">-- Select Option --</option>
-              <option value="present">Present</option>
-              <option value="late">Late</option>
-              <option value="absent">Absent</option>
+              <option value="select">Select All</option>
+              <option value="deselect">Deselect All</option>
             </select>
+            <br />
+            {/* <label>Select All Late: </label>
+            <select onChange={(e) => handleSelectAllChange('Late', e.target.value)}>
+              <option value="">-- Select Option --</option>
+              <option value="select">Select All</option>
+              <option value="deselect">Deselect All</option>
+            </select> */}
           </div>
           <br />
 
@@ -340,7 +349,8 @@ function TablePage(): JSX.Element {
                   <th>Name</th>
                   <th>Year</th>
                   <th>Batch</th>
-                  <th>Attendance</th>
+                  <th>Present</th>
+                  <th>Late</th>
                 </tr>
               </thead>
               <tbody>
@@ -355,66 +365,32 @@ function TablePage(): JSX.Element {
                       <td>{student.student_data[1]}</td>
                       <td>{student.year}</td>
                       <td>{student.student_data[2]}</td>
-
-                      <td colSpan={2}>
-                        <div className="flex gap-4">
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name={`attendance-${student.student_data[0]}`}
-                              value="present"
-                              checked={
-                                attendanceData[studentKey]?.status === "present"
-                              }
-                              onChange={() =>
-                                handleAttendanceChange(
-                                  student.student_data[0],
-                                  student.student_data[2],
-                                  "present"
-                                )
-                              }
-                            />
-                            <span className="ml-2">Present</span>
-                          </label>
-
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name={`attendance-${student.student_data[0]}`}
-                              value="late"
-                              checked={
-                                attendanceData[studentKey]?.status === "late"
-                              }
-                              onChange={() =>
-                                handleAttendanceChange(
-                                  student.student_data[0],
-                                  student.student_data[2],
-                                  "late"
-                                )
-                              }
-                            />
-                            <span className="ml-2">Late</span>
-                          </label>
-
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name={`attendance-${student.student_data[0]}`}
-                              value="absent"
-                              checked={
-                                attendanceData[studentKey]?.status === "absent"
-                              }
-                              onChange={() =>
-                                handleAttendanceChange(
-                                  student.student_data[0],
-                                  student.student_data[2],
-                                  "absent"
-                                )
-                              }
-                            />
-                            <span className="ml-2">Absent</span>
-                          </label>
-                        </div>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={attendance.Present || false}
+                          onChange={() =>
+                            handleCheckboxChange(
+                              student.student_data[0],
+                              student.student_data[2],
+                              "Present"
+                            )
+                          }
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={attendance.Late || false}
+                          disabled={!attendance.Present} // Disable if 'Present' is unchecked
+                          onChange={() =>
+                            handleCheckboxChange(
+                              student.student_data[0],
+                              student.student_data[2],
+                              "Late"
+                            )
+                          }
+                        />
                       </td>
                     </tr>
                   );
@@ -425,9 +401,7 @@ function TablePage(): JSX.Element {
 
           <center>
             <button onClick={saveData}>Save Data</button>
-            <button onClick={() => navigate("/faculty_coordinator")}>
-              Go Back
-            </button>
+            <button onClick={() => navigate("/")}>Go Back</button>
             <button onClick={downloadCSV}>Download CSV</button>
           </center>
         </main>

@@ -34,7 +34,7 @@ def get_attendance_data(request, table_name):
 
         # Construct query with dynamic table name
         query = f"""
-            SELECT batch, name, present,absent,late, program_name, session, timestamp, uid, year
+            SELECT batch, late, name, present, program_name, session, timestamp, uid, year
             FROM {table_name}
         """
 
@@ -44,10 +44,10 @@ def get_attendance_data(request, table_name):
             # Convert the rows into a list of dictionaries
             columns = [col[0] for col in cursor.description]
             result = [dict(zip(columns, row)) for row in rows]
+
         return JsonResponse(result, safe=False)
 
     except Exception as e:
-        print(e)
         return JsonResponse(
             {"error": f"Failed to fetch attendance data: {str(e)}"}, status=500
         )
@@ -178,7 +178,7 @@ def update_attendance(request, table_name):
     if request.method == "POST":
         try:
             # Parse JSON data from request
-            data = JSONParser().parse(request)
+            data = request.data
             uid = data.get("uid")
             session = data.get("session")
             new_status = data.get("new_status")
@@ -199,7 +199,6 @@ def update_attendance(request, table_name):
                 {"message": "Attendance updated successfully"}, status=200
             )
         except Exception as e:
-            print(e)
             return JsonResponse(
                 {"error": f"Failed to update attendance: {str(e)}"}, status=500
             )

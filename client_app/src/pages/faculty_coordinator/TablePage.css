@@ -7,6 +7,9 @@
   padding: 15px;
   background-color: orange;
   margin-bottom: 50%;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .back {
