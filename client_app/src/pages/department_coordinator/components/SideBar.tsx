@@ -2,6 +2,7 @@ import React from "react";
 import { NavLink } from "react-router"; // Import Link for routing
 import "../../placement_officer/components/sidebar.css";
 import { NotebookPen, Send } from "lucide-react";
+import { logout, redirectToProfile } from "@/utils";
 const Sidebar = () => {
   return (
     <aside className="sidebar">
@@ -36,12 +37,18 @@ const Sidebar = () => {
         </NavLink>
       </ul>
       <div className="bottom-menu">
-        <NavLink to="/profile" className="profile-icon">
+        <button
+          className="profile-icon bg-transparent hover:bg-transparent"
+          onClick={redirectToProfile}
+        >
           <img src="/img/user_profile.png" alt="Profile" />
-        </NavLink>
-        <NavLink to="/logout" className="logout-icon">
+        </button>
+        <button
+          className="logout-icon bg-transparent hover:bg-transparent"
+          onClick={logout}
+        >
           <img src="/img/logout.png" alt="Logout" />
-        </NavLink>
+        </button>
       </div>
     </aside>
   );

@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router";
 import { Box, Typography, IconButton } from "@mui/material";
 import { styled } from "@mui/system";
+import { logout, redirectToProfile } from "@/utils";
 
 const Sidebar = () => {
   return (
@@ -31,11 +32,11 @@ const Sidebar = () => {
       </Menu>
 
       <BottomMenu>
-        <IconButton component={Link} to="/profile">
+        <IconButton component={Link} to="/profile" onClick={redirectToProfile}>
           <ProfileIcon src="/img/user_profile.png" alt="Profile" />
         </IconButton>
         <IconButton component={Link} to="/logout">
-          <LogoutIcon src="/img/logout.png" alt="Logout" />
+          <LogoutIcon src="/img/logout.png" alt="Logout" onClick={logout} />
         </IconButton>
       </BottomMenu>
     </SidebarContainer>

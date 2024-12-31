@@ -3,6 +3,7 @@ import { Link } from "react-router"; // Import Link for routing
 import "./Sidebar.css";
 import { authAtom } from "@/authAtom";
 import { useAtomValue } from "jotai";
+import { logout, redirectToProfile } from "@/utils";
 const Sidebar = () => {
   const auth = useAtomValue(authAtom);
   return (
@@ -46,12 +47,18 @@ const Sidebar = () => {
       </ul>
       <div className="footer"></div>
       <div className="bottom-menu">
-        <Link to="/profile" className="profile-icon">
+        <button
+          className="profile-icon bg-transparent hover:bg-transparent"
+          onClick={redirectToProfile}
+        >
           <img src="/img/user_profile.png" alt="Profile" />
-        </Link>
-        <Link to="/logout" className="logout-icon">
+        </button>
+        <button
+          className="logout-icon bg-transparent hover:bg-transparent"
+          onClick={logout}
+        >
           <img src="/img/logout.png" alt="Logout" />
-        </Link>
+        </button>
       </div>
     </aside>
   );

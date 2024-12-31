@@ -37,4 +37,5 @@ urlpatterns = [
     path("api/internship/", include("internship_api.urls")),
     path("api/student/", include("student.urls")),
     path("api/faculty_coordinator/", include("faculty_coordinator.urls")),
+    path("api/logout/", views.logout_api, name="logout"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { Box, Typography, IconButton } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { MessageCircle } from "lucide-react";
+import { logout, redirectToProfile } from "@/utils";
 const Sidebar = () => {
   return (
     <SidebarContainer>
@@ -47,10 +48,10 @@ const Sidebar = () => {
       </Menu>
 
       <BottomMenu>
-        <IconButton component={Link} to="/profile">
+        <IconButton component={Link} to="/profile" onClick={redirectToProfile}>
           <ProfileIcon src="/img/user_profile.png" alt="Profile" />
         </IconButton>
-        <IconButton component={Link} to="/logout">
+        <IconButton component={Link} to="/logout" onClick={logout}>
           <LogoutIcon src="/img/logout.png" alt="Logout" />
         </IconButton>
       </BottomMenu>

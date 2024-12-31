@@ -60,3 +60,21 @@ export const Capitalize = (str: string) => {
   }
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
+
+export const logout = async () => {
+  const res = await fetch("/api/logout/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCookie("csrftoken") || "",
+    },
+    credentials: "include",
+  });
+  if (res.ok) {
+    window.open("http://localhost:8000/auth/login", "_self");
+  }
+};
+
+export const redirectToProfile = async () => {
+  window.open("http://localhost:8000/profile", "_self");
+};

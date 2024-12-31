@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response as JSONResponse
 from base.models import User, FacultyResponsibility
+from django.contrib.auth import logout
 
 
 @login_required
@@ -27,3 +28,10 @@ def my_protected_view(request):
             }
         )
     return JSONResponse({"role": current_user.role, "email": current_user.email})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def logout_api(request):
+    logout(request)
+    return JSONResponse({"message": "Logged out successfully."})

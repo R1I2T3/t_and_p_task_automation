@@ -7,6 +7,7 @@ import {
   Menu,
   MessageCircle,
   FileUser,
+  LogOutIcon,
 } from "lucide-react";
 import {
   Sheet,
@@ -17,12 +18,19 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { logout } from "@/utils";
 const StudentLayout = () => {
   const menuItems = [
     { icon: BarChart, label: "Stats", href: "/student/" },
     { icon: User, label: "Personal Info", href: "/student/info" },
     { icon: FileUser, label: "Resume", href: "/student/resume" },
     { icon: MessageCircle, label: "Notifications", href: "/notifications/" },
+    {
+      icon: LogOutIcon,
+      label: "Logout",
+      href: "/notifications/",
+      onclick: logout,
+    },
   ];
 
   return (
@@ -50,22 +58,39 @@ const StudentLayout = () => {
           </SheetHeader>
           <div className="flex h-full flex-col justify-between py-6">
             <nav className="space-y-2 px-4">
-              {menuItems.map((item, index) => (
-                <Link
-                  key={index}
-                  to={item.href}
-                  className={cn(
-                    "flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors",
-                    "hover:bg-gray-100 hover:text-gray-900",
-                    "focus:bg-gray-100 focus:text-gray-900 focus:outline-none",
-                    "dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-50",
-                    "dark:focus:bg-gray-800 dark:focus:text-gray-50"
-                  )}
-                >
-                  <item.icon className="mr-3 h-5 w-5" />
-                  {item.label}
-                </Link>
-              ))}
+              {menuItems.map((item, index) => {
+                return item.onclick ? (
+                  <button
+                    key={index}
+                    onClick={item.onclick}
+                    className={cn(
+                      "flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors",
+                      "hover:bg-gray-100 hover:text-gray-900",
+                      "focus:bg-gray-100 focus:text-gray-900 focus:outline-none",
+                      "dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-50",
+                      "dark:focus:bg-gray-800 dark:focus:text-gray-50"
+                    )}
+                  >
+                    <item.icon className="mr-3 h-5 w-5" />
+                    {item.label}
+                  </button>
+                ) : (
+                  <Link
+                    key={index}
+                    to={item.href}
+                    className={cn(
+                      "flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors",
+                      "hover:bg-gray-100 hover:text-gray-900",
+                      "focus:bg-gray-100 focus:text-gray-900 focus:outline-none",
+                      "dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-50",
+                      "dark:focus:bg-gray-800 dark:focus:text-gray-50"
+                    )}
+                  >
+                    <item.icon className="mr-3 h-5 w-5" />
+                    {item.label}
+                  </Link>
+                );
+              })}
             </nav>
             <div className="px-4">
               <Button
