@@ -57,7 +57,7 @@ const NoticeCreationForm = () => {
   const csrfToken = getCookie("csrftoken");
   useEffect(() => {
     axios
-      .get("/api/placement/company/", {
+      .get("/api/placement/company/all", {
         headers: {
           "X-CSRFToken": csrfToken || "",
         },
@@ -65,10 +65,11 @@ const NoticeCreationForm = () => {
       })
       .then((response) => {
         const formattedCompanies = response.data.map((item: any) => ({
-          id: item.company.id,
-          name: item.company.name,
-          batch: item.company.batch,
+          id: item.id,
+          name: item.name,
+          batch: item.batch,
         }));
+        console.log(formattedCompanies);
         setCompanies(formattedCompanies);
       })
       .catch((error) => {

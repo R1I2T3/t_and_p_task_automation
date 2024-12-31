@@ -184,12 +184,17 @@ class AttendanceViewSet(viewsets.ViewSet):
         try:
             df = importExcelAndReturnJSON(request.FILES.get("file_attendance"))
             for record in df:
-                student = Student.objects.get(uid=record["uid"])
+                student = Student.objects.get(uid=record["uid"].strip())
                 AcademicAttendanceSemester.objects.update_or_create(
                     semester=record["semester"],
                     student=student,
                     defaults={"attendance": record["attendance"]},
                 )
+                average_attendance = AcademicAttendanceSemester.objects.filter(
+                    student=student
+                ).aggregate(avg_attendance=models.Avg("attendance"))["avg_attendance"]
+                student.attendance = average_attendance
+                student.save()
             return Response({"message": "Data imported successfully"})
         except Exception as e:
             print(e)
@@ -205,7 +210,7 @@ class AttendanceViewSet(viewsets.ViewSet):
         try:
             df = importExcelAndReturnJSON(request.FILES.get("file_performance"))
             for record in df:
-                student = Student.objects.get(uid=record["uid"])
+                student = Student.objects.get(uid=record["uid"].strip())
                 semester_record, created = (
                     AcademicPerformanceSemester.objects.update_or_create(
                         semester=record["semester"],

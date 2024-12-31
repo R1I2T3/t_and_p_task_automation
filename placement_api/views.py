@@ -214,21 +214,30 @@ def get_notice(request, pk):
         )
 
 
-@api_view(["GET"])
+@api_view(["POST"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def job_application(request, pk):
     try:
+        company_id = pk
         data = request.data
-        uid = data.get("uid")
-        company_id = data.get("company_id")
         offer_id = data.get("offer_id")
-        print(f"Received data: {data}")
-        if not uid or not company_id:
+        if not offer_id:
+            return JsonResponse(
+                {"error": "Invalid parameters: offer_id and student_uid are required."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        offer_id = data.get("offer_id")
+        if not offer_id or not company_id:
             return JsonResponse({"error": "Missing uid or company_id"}, status=400)
         student = Student.objects.get(user=request.user)
+
         company = CompanyRegistration.objects.get(id=company_id)
         offer = Offers.objects.get(id=offer_id)
+        if not is_student_eligible(company, student):
+            return JsonResponse(
+                {"error": "Student is not eligible for the offer."}, status=401
+            )
         job_application = jobApplication(
             id=uuid4(),
             student=student,
@@ -245,6 +254,7 @@ def job_application(request, pk):
     except CompanyRegistration.DoesNotExist:
         return JsonResponse({"error": "Company not found"}, status=404)
     except Exception as e:
+        print(e)
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -266,9 +276,24 @@ def get_student_application(request, uid):
 @permission_classes([IsAuthenticated])
 def get_all_applied_students(request, pk):
     try:
-        company = jobApplication(pk=pk)
-        students = JobApplicationSerializer(company)
-        return JsonResponse({"students": students.data})
+        company = CompanyRegistration(pk=pk)
+        applications = jobApplication.objects.filter(company=company).select_related(
+            "student"
+        )
+        students_data = [
+            {
+                "id": str(app.id),
+                "student": app.student.user.full_name if app.student.user else "",
+                "company": app.company.name if app.company else "",
+                "attendance": app.attendance if hasattr(app, "attendance") else False,
+                "aptitude": app.aptitude if hasattr(app, "aptitude") else False,
+                "gd": app.gd if hasattr(app, "gd") else False,
+                "case_study": app.case_study if hasattr(app, "case_study") else False,
+                "hr_round": app.hr_round if hasattr(app, "hr_round") else False,
+            }
+            for app in applications
+        ]
+        return JsonResponse({"students": students_data})
     except Exception as e:
         print(e)
         return JsonResponse(
@@ -367,44 +392,28 @@ def verify_job(request, job_id):
         )
 
 
-@api_view(["GET"])
-@authentication_classes([SessionAuthentication, BasicAuthentication])
-@permission_classes([IsAuthenticated])
-def check_student_eligibility_for_offer(request):
-    """
-    View to check if a student is eligible for a specific offer.
-    """
-    data = request.data
-    offer_id = data.get("offer_id")
+class SaveAttendance(APIView):
+    permission_classes = [IsAuthenticated]
 
-    if not offer_id:
-        return JsonResponse(
-            {"error": "Invalid parameters: offer_id and student_uid are required."},
-            status=status.HTTP_404_NOT_FOUND,
-        )
+    def post(self, request):
+        # Expecting a list of job application data
+        data = request.data
+        try:
+            # Iterate through the data and create or update job applications
+            for item in data:
+                serializer = jobApplication.objects.update(
+                    attendance=item.get("attendance", False),
+                    aptitude=item.get("aptitude", False),
+                    gd=item.get("gd", False),
+                    case_study=item.get("case_study", False),
+                    hr_round=item.get("hr_round", False),
+                )
 
-    try:
-        offer = Offers.objects.get(id=offer_id)
-        student = Student.objects.get(user=request.user)
-        company = offer.company
-
-        if is_student_eligible(company, student):
             return JsonResponse(
-                {
-                    "status": "success",
-                    "eligible": True,
-                    "message": "Student is eligible for the offer.",
-                }
+                {"message": "Data saved successfully!"}, status=status.HTTP_201_CREATED
             )
-        else:
+        except Exception as e:
+            print(e)
             return JsonResponse(
-                {
-                    "status": "success",
-                    "eligible": False,
-                    "message": "Student is not eligible for the offer.",
-                }
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-    except Offers.DoesNotExist:
-        return JsonResponse({"status": "error", "message": "Offer not found."})
-    except Student.DoesNotExist:
-        return JsonResponse({"status": "error", "message": "Student not found."})

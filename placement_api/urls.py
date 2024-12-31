@@ -11,11 +11,12 @@ from .views import (
     create_job_acceptance,
     get_all_job_acceptances,
     verify_job,
+    SaveAttendance,
 )
 
 urlpatterns = [
     path("company/register/<str:safe>", company_register),
-    path("company/", get_all_companies),
+    path("company/all", get_all_companies),
     path("company/<str:pk>", get_company_with_offers),
     path("notice/create/<str:pk>", create_notice),
     path("notice/get/<str:pk>", get_notice),
@@ -25,4 +26,5 @@ urlpatterns = [
     path("job_acceptance/create", create_job_acceptance),
     path("jobs/verify", get_all_job_acceptances, name="job-acceptance"),
     path("jobs/verify/<uuid:job_id>/", verify_job, name="verify-job"),
+    path("attendance/save/", SaveAttendance.as_view(), name="save_to_database"),
 ]

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from "react";
 import {
@@ -24,34 +25,14 @@ import {
   Menu,
   MenuItem,
   IconButton,
+  Grid,
 } from "@mui/material";
 import { ExpandIcon, MoreVerticalIcon } from "lucide-react";
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
-
-const sampleData = [
-  {
-    id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    student: "Dhruv Paste",
-    company: "JP Morgan",
-    attendance: true,
-    aptitude: true,
-    gd: true,
-    case_study: true,
-    hr_round: true,
-  },
-  {
-    id: "b2c3d4e5-f6g7-8901-hijk-lm2345678901",
-    student: "Ritesh Jha",
-    company: "Goldman Sachs",
-    attendance: true,
-    aptitude: true,
-    gd: true,
-    case_study: true,
-    hr_round: true,
-  },
-];
-
+import { getCookie } from "@/utils";
+import axios from "axios";
+import { Button as ShadCnButton } from "@/components/ui/button";
 const columnOptions = [
   { field: "attendance", label: "Attendance" },
   { field: "aptitude", label: "Aptitude" },
@@ -73,9 +54,16 @@ export default function PlacementAttendance() {
       hr_round: boolean;
     }[]
   >([]);
+  const [company, setCompany] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  interface CompanyDataType {
+    id: string;
+    name: string;
+    batch: string;
+  }
+  const [companyData, setCompanyData] = useState<CompanyDataType[]>([]);
   const [filteredData, setFilteredData] = useState<
     {
       id: string;
@@ -105,18 +93,30 @@ export default function PlacementAttendance() {
     field: string;
     label: string;
   } | null>(null);
-
+  const csrftoken = getCookie("csrftoken");
   useEffect(() => {
-    setTimeout(() => {
-      try {
-        setFormData(sampleData);
-        setFilteredData(sampleData);
+    axios
+      .get("/api/placement/company/all", {
+        headers: {
+          "X-CSRFToken": csrftoken || "",
+        },
+        withCredentials: true, // Ensure cookies are included in the request
+      })
+      .then((response) => {
+        const formattedCompanies = response.data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          batch: item.batch,
+        }));
+        setCompanyData(formattedCompanies);
+      })
+      .catch((error) => {
+        console.error("Error fetching companies:", error);
+        setError("Failed to fetch data");
+      })
+      .finally(() => {
         setLoading(false);
-      } catch (err) {
-        setError("Failed to load sample data");
-        setLoading(false);
-      }
-    }, 500);
+      });
   }, []);
 
   useEffect(() => {
@@ -223,12 +223,15 @@ export default function PlacementAttendance() {
   };
 
   const saveToDatabase = () => {
-    fetch("http://localhost:8000/api/save/", {
+    console.log(filteredData);
+    fetch("http://localhost:8000/api/placement/attendance/save/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "X-CSRFToken": csrftoken || "",
       },
       body: JSON.stringify(filteredData),
+      credentials: "include",
     })
       .then((response) => response.json())
       .then((data) => {
@@ -259,7 +262,17 @@ export default function PlacementAttendance() {
       </Box>
     );
   }
-
+  const fetchApplicants = async () => {
+    try {
+      const response = await fetch(
+        `/api/placement/job_application/company/get/${company}`
+      );
+      const data = await response.json();
+      setFilteredData(data.students);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
     <Box sx={{ maxWidth: 1000, margin: "0 auto", padding: 2 }}>
       <Accordion sx={{ marginBottom: 2 }}>
@@ -288,15 +301,28 @@ export default function PlacementAttendance() {
         </AccordionDetails>
       </Accordion>
 
-      <Box sx={{ textAlign: "center", marginBottom: 2 }}>
+      <Grid item xs={12}>
         <TextField
-          label="Search by Student or Company"
-          variant="outlined"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          sx={{ width: "60%" }}
-        />
-      </Box>
+          select
+          label="Select Company"
+          name="company"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+          fullWidth
+        >
+          {companyData?.map((company) => (
+            <MenuItem key={company.id} value={company.id}>
+              {company.name}-{company.batch}
+            </MenuItem>
+          ))}
+        </TextField>
+        <ShadCnButton
+          className="mx-auto my-3 bg-orange-500"
+          onClick={() => fetchApplicants()}
+        >
+          Fetch Candidates
+        </ShadCnButton>
+      </Grid>
 
       <TableContainer component={Paper}>
         <Table>

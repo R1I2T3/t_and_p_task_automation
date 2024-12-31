@@ -41,6 +41,9 @@ class Student(models.Model):
     consent = models.CharField(choices=consent_Type, default="placement", max_length=30)
     batch = models.CharField(max_length=100, default="2021")
     cgpa = models.FloatField(null=True)
+    attendance = models.FloatField(null=True)
+    is_kt = models.BooleanField(default=False)
+    is_backLog = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.uid}"

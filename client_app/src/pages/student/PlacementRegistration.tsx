@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { Card, CardContent, CardTitle, CardHeader } from "@/components/ui/card";
 import {
   SelectItem,
@@ -9,6 +9,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { getCookie } from "@/utils";
+import toast from "react-hot-toast";
 interface Company {
   name: string;
   min_tenth_marks: number;
@@ -30,14 +32,14 @@ interface Offer {
   position: string;
 }
 
-interface Data {
+export type CompanyData = {
   company: Company;
   offers: Offer[];
-}
+};
 
 const PlacementRegistration = () => {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<Data>();
+  const [data, setData] = useState<CompanyData>();
   const [selectedOffer, setSelectedOffer] = useState<string>("");
   useEffect(() => {
     const fetchData = async () => {
@@ -52,9 +54,26 @@ const PlacementRegistration = () => {
     };
     fetchData();
   }, []);
-  const handleSubmit = (e: React.FormEvent) => {
+  const navigate = useNavigate();
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Selected offer:", selectedOffer);
+    const res = await fetch(`/api/placement/job_application/create/${id}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken") || "",
+      },
+      credentials: "include",
+      body: JSON.stringify({ offer_id: selectedOffer }),
+    });
+    if (res.status === 401) {
+      toast.error("You are not eligible for this offer");
+    } else if (res.status === 201) {
+      toast.success("Application submitted successfully");
+      navigate("/student");
+    } else {
+      toast.error("Something went wrong");
+    }
     // Here you would typically send this data to your backend
   };
   return (
