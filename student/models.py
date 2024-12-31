@@ -40,6 +40,7 @@ class Student(models.Model):
     card = models.CharField(max_length=40, choices=CARD_TYPE, default="Green")
     consent = models.CharField(choices=consent_Type, default="placement", max_length=30)
     batch = models.CharField(max_length=100, default="2021")
+    cgpa = models.FloatField(null=True)
 
     def __str__(self) -> str:
         return f"{self.uid}"

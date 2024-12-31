@@ -17,6 +17,7 @@ import json
 import os
 from .utils import validate_file, importExcelAndReturnJSON
 from .serializers import DepartmentStatsSerializer
+from django.db import models
 
 
 class IsDepartmentCoordinator(BasePermission):
@@ -66,15 +67,15 @@ class DepartmentCoordinatorViewSet(viewsets.ViewSet):
         # Calculate averages
         average_academic_attendance = (
             AcademicAttendanceSemester.objects.select_related("student")
-            .filter(student__department=department_coordinator.department)
+            .filter(student__department__startswith=department_coordinator.department)
             .values("student__academic_year")
             .annotate(avg_attendance=Avg(Cast("attendance", FloatField())))
             .order_by("student__academic_year")
         )
-
+        print(average_academic_attendance)
         average_academic_performance = (
             AcademicPerformanceSemester.objects.select_related("student")
-            .filter(student__department=department_coordinator.department)
+            .filter(student__department__startswith=department_coordinator.department)
             .values("student__academic_year")
             .annotate(avg_performance=Avg(Cast("performance", FloatField())))
             .order_by("student__academic_year")
@@ -82,7 +83,7 @@ class DepartmentCoordinatorViewSet(viewsets.ViewSet):
 
         average_training_attendance = (
             TrainingAttendanceSemester.objects.select_related("student")
-            .filter(student__department=department_coordinator.department)
+            .filter(student__department__startswith=department_coordinator.department)
             .values("student__academic_year")
             .annotate(avg_attendance=Avg(Cast("training_attendance", FloatField())))
             .order_by("student__academic_year")
@@ -90,11 +91,12 @@ class DepartmentCoordinatorViewSet(viewsets.ViewSet):
 
         average_training_performance = (
             TrainingPerformanceSemester.objects.select_related("student")
-            .filter(student__department=department_coordinator.department)
+            .filter(student__department__startswith=department_coordinator.department)
             .values("student__academic_year")
             .annotate(avg_performance=Avg(Cast("training_performance", FloatField())))
             .order_by("student__academic_year")
         )
+        print(average_academic_attendance)
 
         # Convert to dictionaries
         stats_data = {
@@ -190,6 +192,7 @@ class AttendanceViewSet(viewsets.ViewSet):
                 )
             return Response({"message": "Data imported successfully"})
         except Exception as e:
+            print(e)
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=["post"])
@@ -203,11 +206,20 @@ class AttendanceViewSet(viewsets.ViewSet):
             df = importExcelAndReturnJSON(request.FILES.get("file_performance"))
             for record in df:
                 student = Student.objects.get(uid=record["uid"])
-                AcademicPerformanceSemester.objects.update_or_create(
-                    semester=record["semester"],
-                    student=student,
-                    defaults={"performance": record["performance"]},
+                semester_record, created = (
+                    AcademicPerformanceSemester.objects.update_or_create(
+                        semester=record["semester"],
+                        student=student,
+                        defaults={"performance": record["performance"]},
+                    )
                 )
+                average_performance = AcademicPerformanceSemester.objects.filter(
+                    student=student
+                ).aggregate(avg_performance=models.Avg("performance"))[
+                    "avg_performance"
+                ]
+                student.cgpa = average_performance
+                student.save()
             return Response({"message": "Data imported successfully"})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -1,12 +1,9 @@
 from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import AttendanceRecord
-from .serializers import AttendanceRecordSerializer
 import json
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
@@ -14,9 +11,13 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
     authentication_classes,
-    parser_classes,
 )
 from base.models import FacultyResponsibility
+from student.models import (
+    Student,
+    TrainingAttendanceSemester,
+    TrainingPerformanceSemester,
+)
 
 
 @api_view(["GET"])
@@ -341,6 +342,28 @@ def upload_data(request):
             with connection.cursor() as cursor:
                 for student in students:
                     UID = student.get("UID")
+                    student_db = Student.objects.get(uid=UID)
+                    if student_db:
+                        TrainingAttendanceSemester.objects.update_or_create(
+                            student=student_db,
+                            semester=student.get("semester"),
+                            program=faculty.program,
+                            defaults={
+                                "training_attendance": student.get(
+                                    "training_attendance"
+                                )
+                            },
+                        )
+                        TrainingPerformanceSemester.objects.update_or_create(
+                            student=student_db,
+                            semester=student.get("semester"),
+                            program=faculty.program,
+                            defaults={
+                                "training_performance": student.get(
+                                    "training_performance"
+                                ),
+                            },
+                        )
                     student_name = student.get("Name")
                     branch_div = student.get("Branch_Div")
                     semester = student.get("semester")
