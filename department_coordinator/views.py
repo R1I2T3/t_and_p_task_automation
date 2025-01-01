@@ -38,6 +38,11 @@ class DepartmentCoordinatorViewSet(viewsets.ViewSet):
 
     def list(self, request):
         department_coordinator = self.get_department_coordinator()
+        if not department_coordinator or not department_coordinator.department:
+            return Response(
+                {"error": "Department Coordinator not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         students = Student.objects.select_related("user").select_related("user").all()
         department_students = students.filter(
             department__startswith=department_coordinator.department
@@ -63,7 +68,11 @@ class DepartmentCoordinatorViewSet(viewsets.ViewSet):
     @action(detail=False, methods=["get"])
     def stats(self, request):
         department_coordinator = self.get_department_coordinator()
-
+        if not department_coordinator or not department_coordinator.department:
+            return Response(
+                {"error": "Department Coordinator not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         # Calculate averages
         average_academic_attendance = (
             AcademicAttendanceSemester.objects.select_related("student")
@@ -174,8 +183,17 @@ class DepartmentCoordinatorViewSet(viewsets.ViewSet):
 class AttendanceViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsDepartmentCoordinator]
 
+    def get_department_coordinator(self):
+        return FacultyResponsibility.objects.get(user=self.request.user)
+
     @action(detail=False, methods=["post"])
     def upload_attendance(self, request):
+        department_coordinator = self.get_department_coordinator()
+        if not department_coordinator or not department_coordinator.department:
+            return Response(
+                {"error": "Department Coordinator not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         if not validate_file(request.FILES.get("file_attendance")):
             return Response(
                 {"error": "Invalid file type"}, status=status.HTTP_400_BAD_REQUEST
@@ -202,6 +220,12 @@ class AttendanceViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=["post"])
     def upload_performance(self, request):
+        department_coordinator = self.get_department_coordinator()
+        if not department_coordinator or not department_coordinator.department:
+            return Response(
+                {"error": "Department Coordinator not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         if not validate_file(request.FILES.get("file_performance")):
             return Response(
                 {"error": "Invalid file type"}, status=status.HTTP_400_BAD_REQUEST

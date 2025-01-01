@@ -11,6 +11,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from base.models import User
 
 
 def execute_query(query, params=None, fetch_all=True):
@@ -29,7 +30,9 @@ def execute_query(query, params=None, fetch_all=True):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_program_data(request):
-    """Fetch program and student data."""
+    user = User.objects.get(email=request.user)
+    if user.role != "faculty":
+        return JsonResponse({"error": "Permission denied"}, status=403)
     try:
         query = "SELECT * FROM attendance_attendancerecord"
         data = execute_query(query)
@@ -48,6 +51,9 @@ import json
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def save_attendance(request):
+    user = User.objects.get(email=request.user)
+    if user.role != "faculty":
+        return JsonResponse({"error": "Permission denied"}, status=403)
     try:
         attendance_records = request.data.get("students", [])
         if not attendance_records:

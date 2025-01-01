@@ -37,6 +37,11 @@ from datetime import datetime
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_company_with_offers(request):
+    user = User.objects.get(email=request.user.email)
+    if not user or user.role not in ["internship_coordinator", "staff"]:
+        return JsonResponse(
+            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
+        )
     try:
         data = request.data
         print(data)
@@ -74,6 +79,11 @@ def create_company_with_offers(request):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_company_with_offers(request, pk=None):
+    user = User.objects.get(email=request.user.email)
+    if not user or user.role not in ["internship_coordinator", "staff"]:
+        return JsonResponse(
+            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
+        )
     try:
         if pk:
             # Retrieve a specific company and its offers
@@ -120,6 +130,11 @@ def get_company_with_offers(request, pk=None):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_companies(request):
+    user = User.objects.get(email=request.user.email)
+    if not user or user.role not in ["internship_coordinator", "staff"]:
+        return JsonResponse(
+            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
+        )
     try:
         companies = InternshipRegistration.objects.all()
         company_data = []
@@ -141,6 +156,11 @@ def get_all_companies(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def create_notice(request, pk):
+    user = User.objects.get(email=request.user.email)
+    if not user or user.role not in ["internship_coordinator", "staff"]:
+        return JsonResponse(
+            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
+        )
     try:
         company = InternshipRegistration.objects.get(id=pk)
         data = request.data
@@ -210,6 +230,7 @@ def create_notice(request, pk):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_notice(request, pk):
+
     try:
         notice = InternshipNotice.objects.get(id=pk)
         notice = InternshipNoticeSerializer(notice)
@@ -245,6 +266,11 @@ def job_application(request, pk):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_applied_students(request, pk):
+    user = User.objects.get(email=request.user.email)
+    if not user or user.role not in ["internship_coordinator", "staff"]:
+        return JsonResponse(
+            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
+        )
     try:
         company = InternshipApplication(pk=pk)
         students = InternshipApplicationSerializer(company)
@@ -344,6 +370,11 @@ def get_jobs_by_company_name(request, company_name):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_job_acceptances(request):
+    user = User.objects.get(email=request.user.email)
+    if not user or user.role not in ["internship_coordinator", "staff"]:
+        return JsonResponse(
+            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
+        )
     jobs = InternshipAcceptance.objects.filter(is_verified=False).select_related(
         "student"
     )
@@ -367,6 +398,11 @@ def get_all_job_acceptances(request):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def verify_job(request):
+    user = User.objects.get(email=request.user.email)
+    if not user or user.role not in ["internship_coordinator", "staff"]:
+        return JsonResponse(
+            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
+        )
     try:
         job_ids = request.data.get("jobIds", [])
         for job_id in job_ids:
