@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import theme from "./components/theme";
 import {
   Container,
@@ -18,7 +19,7 @@ import {
   Paper,
 } from "@mui/material";
 import { Button as ShadCnBUtton } from "@/components/ui/button";
-import { objectToFormData } from "@/utils";
+import { getCookie, objectToFormData } from "@/utils";
 import toast from "react-hot-toast";
 
 const JobAcceptanceForm = () => {
@@ -32,11 +33,40 @@ const JobAcceptanceForm = () => {
   const [error, setError] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [salary, setSalary] = useState("");
+  const [position, setPosition] = useState("");
+
   const SIZE_LIMIT_KB = 256; // File size limit in KB
   const SIZE_LIMIT_BYTES = SIZE_LIMIT_KB * 1024;
 
-  const companyOptions = ["Google", "Amazon", "Microsoft", "Facebook", "Apple"];
+  interface Company {
+    id: number;
+    name: string;
+    batch: string;
+  }
 
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const csrfToken = getCookie("csrftoken");
+  useEffect(() => {
+    axios
+      .get("/api/placement/company/all", {
+        headers: {
+          "X-CSRFToken": csrfToken || "",
+        },
+        withCredentials: true, // Ensure cookies are included in the request
+      })
+      .then((response) => {
+        const formattedCompanies = response.data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          batch: item.batch,
+        }));
+        console.log(formattedCompanies);
+        setCompanies(formattedCompanies);
+      })
+      .catch((error) => {
+        console.error("Error fetching companies:", error);
+      });
+  }, []);
   const handleSelectOption = (e: any) => {
     setSelectOption(e.target.value);
     setCustomOption("");
@@ -67,7 +97,7 @@ const JobAcceptanceForm = () => {
     }
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     if (!selectOption) {
       alert("Please select In-house or Out-house.");
@@ -91,14 +121,22 @@ const JobAcceptanceForm = () => {
     }
     const preference = selectOption === "outHouse" ? customOption : companyName;
     const formDataObject = {
-      selectOption,
-      companyName: preference,
-      type: jobType,
+      type: selectOption,
+      company_name: preference,
+      salary_category: jobType,
       offer_letter: offerLetter,
+      salary: salary,
+      position: position,
     };
     const formData = objectToFormData(formDataObject);
     try {
-      console.log("FormData:", [...formData.entries()]);
+      await axios.post("/api/placement/job_acceptance/create/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "X-CSRFToken": csrfToken || "",
+        },
+        withCredentials: true,
+      });
       toast.success("Form submitted successfully!");
       setIsSubmitted(true);
     } catch (error) {
@@ -148,20 +186,20 @@ const JobAcceptanceForm = () => {
             {/* Dropdown for In-house */}
             {selectOption === "inHouse" && (
               <FormControl fullWidth margin="normal" required>
-                <InputLabel id="company-name-label">Select Company</InputLabel>
-                <Select
-                  labelId="company-name-label"
+                <TextField
+                  select
+                  label="Select Company"
+                  name="company"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  disabled={isSubmitted}
-                  label="Select Company"
+                  fullWidth
                 >
-                  {companyOptions.map((company, index) => (
-                    <MenuItem key={index} value={company}>
-                      {company}
+                  {companies.map((company) => (
+                    <MenuItem key={company.id} value={company.name}>
+                      {company.name}-{company.batch}
                     </MenuItem>
                   ))}
-                </Select>
+                </TextField>
               </FormControl>
             )}
 
@@ -186,8 +224,20 @@ const JobAcceptanceForm = () => {
               label="Enter salary"
               variant="outlined"
               value={salary}
+              type="number"
               onChange={(e) => setSalary(e.target.value)}
               placeholder="Enter Salary"
+              disabled={isSubmitted}
+              required
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Enter Position"
+              variant="outlined"
+              value={position}
+              onChange={(e) => setPosition(e.target.value)}
+              placeholder="Enter position"
               disabled={isSubmitted}
               required
             />

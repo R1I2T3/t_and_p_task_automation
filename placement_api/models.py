@@ -100,5 +100,6 @@ class jobAcceptance(models.Model):
     offer_letter = models.FileField()
     type = models.CharField(max_length=100, default="")
     salary = models.FloatField(default=0)
+    salary_category = models.CharField(max_length=100, default="")
     position = models.CharField(max_length=100, default="")
     isVerified = models.BooleanField(default=False)

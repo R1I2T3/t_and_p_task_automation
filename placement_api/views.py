@@ -312,6 +312,16 @@ def create_job_acceptance(request):
             {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
         )
     student = Student.objects.get(user=user)
+    if not student:
+        return JsonResponse(
+            {"error": "Failed to find student"}, status=status.HTTP_404_NOT_FOUND
+        )
+    submittedOffer = jobAcceptance.objects.filter(student=student)
+    if len(submittedOffer) > 0:
+        return JsonResponse(
+            {"error": "Student has already submitted an offer letter"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     company = None
     required_fields = ["type", "salary", "position"]
     for field in required_fields:
@@ -329,13 +339,13 @@ def create_job_acceptance(request):
         id=uuid4(),
         student=student,
         company=None,
-        company_name=request.data["company_name"][
-            0
+        company_name=request.data[
+            "company_name"
         ],  # Assuming company has company_name field
         offer_letter=request.FILES["offer_letter"],
         type=request.data["type"][0],
-        salary=float(request.data["salary"][0]),
-        position=request.data["position"][0],
+        salary=float(request.data["salary"]),
+        position=request.data["position"],
         isVerified=False,  # Default value
     )
     return JsonResponse({"success": "Job application created"})
@@ -372,17 +382,33 @@ def get_jobs_by_company_name(request, company_name):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_job_acceptances(request):
-    jobs = jobAcceptance.objects.all()
+    jobs = jobAcceptance.objects.filter(isVerified=False).select_related("student")
     serializer = JobAcceptanceSerializer(jobs, many=True)
-    return JsonResponse(serializer.data, safe=False)
+    data = []
+    for job in serializer.data:
+        job_data = dict(job)
+        student = job["student"]
+        if student:
+            student_obj = Student.objects.get(id=student)
+            job_data["student_name"] = (
+                student_obj.user.full_name if student_obj.user else ""
+            )
+            job_data["uid"] = student_obj.uid
+        data.append(job_data)
+
+    return JsonResponse(data, safe=False)
 
 
 @api_view(["POST"])
-def verify_job(request, job_id):
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def verify_job(request):
     try:
-        job = verify_job.objects.get(id=job_id)
-        job.verified = True
-        job.save()
+        job_ids = request.data.get("jobIds", [])
+        for job_id in job_ids:
+            job = jobAcceptance.objects.get(id=job_id)
+            job.isVerified = True
+            job.save()
         return JsonResponse(
             {"message": "Job verified successfully"}, status=status.HTTP_200_OK
         )

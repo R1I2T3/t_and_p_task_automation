@@ -92,7 +92,6 @@ const StudentLayout = () => {
                 className="w-full justify-start bg-[#d17a00] text-white"
                 onClick={() => {
                   // Add logout functionality here
-                  console.log("Logout clicked");
                 }}
               >
                 <LogOut className="mr-3 h-5 w-5" />
