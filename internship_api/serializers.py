@@ -75,10 +75,6 @@ class InternshipApplicationSerializer(serializers.ModelSerializer):
 
 
 class InternshipAcceptanceSerializer(serializers.ModelSerializer):
-    company = serializers.PrimaryKeyRelatedField(
-        queryset=InternshipRegistration.objects.all()
-    )
-
     class Meta:
         model = InternshipAcceptance
         fields = "__all__"

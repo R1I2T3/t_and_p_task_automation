@@ -7,6 +7,9 @@ interface Job {
   company_name: string;
   offer_letter: string;
   verified: boolean;
+  uid: string;
+  student_name: string;
+  domain_name: string;
 }
 
 import {
@@ -25,8 +28,8 @@ import {
   Button,
 } from "@mui/material";
 import { CheckCircle } from "lucide-react";
-
-const InternShipVerify = () => {
+import { getCookie } from "@/utils";
+const JobVerification = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
@@ -36,16 +39,24 @@ const InternShipVerify = () => {
 
   const fetchJobs = () => {
     axios
-      .get("/api/placement/jobs/verify")
+      .get("/api/internship/jobs/verify")
       .then((response) => setJobs(response.data))
       .catch((error) => console.error("Error fetching data:", error));
   };
-
+  console.log(jobs);
   const handleVerify = async () => {
     try {
-      await axios.post("http://127.0.0.1:8000/api/jobs/verify/", {
-        ids: selectedIds,
-      });
+      const csrftoken = getCookie("csrftoken");
+      await axios.post(
+        `/api/internship/jobs/verify/selected/`,
+        { jobIds: selectedIds },
+        {
+          headers: {
+            "X-CSRFToken": csrftoken,
+          },
+          withCredentials: true,
+        }
+      );
       alert("Jobs verified successfully");
       fetchJobs();
       setSelectedIds([]);
@@ -76,8 +87,9 @@ const InternShipVerify = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Batch</TableCell>
+              <TableCell>UID</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Domain</TableCell>
               <TableCell>Company Name</TableCell>
               <TableCell>Offer Letter</TableCell>
               <TableCell>Verified</TableCell>
@@ -87,9 +99,10 @@ const InternShipVerify = () => {
           <TableBody>
             {jobs.map((job) => (
               <TableRow key={job.id}>
-                <TableCell>{job.id}</TableCell>
-                <TableCell>{job.batch}</TableCell>
-                <TableCell>{job.company_name}</TableCell>
+                <TableCell>{job.uid}</TableCell>
+                <TableCell>{job.student_name}</TableCell>
+                <TableCell>{job.domain_name}</TableCell>
+                <TableCell>{job.company_name || "In House"}</TableCell>
                 <TableCell>
                   <a
                     href={job.offer_letter}
@@ -127,4 +140,4 @@ const InternShipVerify = () => {
   );
 };
 
-export default InternShipVerify;
+export default JobVerification;

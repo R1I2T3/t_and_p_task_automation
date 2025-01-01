@@ -338,3 +338,45 @@ def get_jobs_by_company_name(request, company_name):
 
     serializer = InternshipAcceptanceSerializer(jobs, many=True)
     return JsonResponse(serializer.data)
+
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_job_acceptances(request):
+    jobs = InternshipAcceptance.objects.filter(is_verified=False).select_related(
+        "student"
+    )
+    serializer = InternshipAcceptanceSerializer(jobs, many=True)
+    data = []
+    for job in serializer.data:
+        job_data = dict(job)
+        student = job["student"]
+        if student:
+            student_obj = Student.objects.get(id=student)
+            job_data["student_name"] = (
+                student_obj.user.full_name if student_obj.user else ""
+            )
+            job_data["uid"] = student_obj.uid
+        data.append(job_data)
+
+    return JsonResponse(data, safe=False)
+
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def verify_job(request):
+    try:
+        job_ids = request.data.get("jobIds", [])
+        for job_id in job_ids:
+            job = InternshipAcceptance.objects.get(id=job_id)
+            job.is_verified = True
+            job.save()
+        return JsonResponse(
+            {"message": "Job verified successfully"}, status=status.HTTP_200_OK
+        )
+    except InternshipAcceptance.DoesNotExist:
+        return JsonResponse(
+            {"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND
+        )
