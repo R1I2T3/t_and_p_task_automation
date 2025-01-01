@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import "../DutyChart.css";
-import headerImage from "@/assets/tcet header.jpg";
-import copytoimage from "@/assets/pmt-placement_drive_copytoImage.png";
-
+import Notice from "./components/notice";
+import { Button } from "@mui/material";
+import { useReactToPrint } from "react-to-print";
 const TrainingNotice = () => {
   const [formData, setFormData] = useState({
     srNo: "",
@@ -15,7 +15,9 @@ const TrainingNotice = () => {
     From: "",
     From_designation: "",
   });
-
+  const contentRef = useRef<HTMLDivElement>(null);
+  const reactPrintFn = useReactToPrint({ contentRef });
+  const [showPreview, setShowPreview] = useState(false);
   const [tableData, setTableData] = useState([
     {
       BatchNo: "",
@@ -60,101 +62,7 @@ const TrainingNotice = () => {
   };
 
   const printContent = () => {
-    const newWindow = window.open("", "_blank", "width=800,height=600");
-    newWindow?.document.write(`
-      <html>
-        <head>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              padding: 20px;
-              margin: 0;
-            }
-            .flex-container {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              gap: 20px;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-            }
-            table, th, td {
-              border: 1px solid black;
-            }
-            th, td {
-              padding: 8px;
-              text-align: left;
-            }
-            .content-header {
-              margin-bottom: 5px;
-              text-align: center;
-            }
-            .fromto {
-              float: right;
-              margin-right: 20px;
-            }
-
-            .footerImage {
-              max-width: 100%;
-              height: auto;
-              object-fit: contain;
-              margin-top: 30px;
-            }
-          </style>
-        </head>
-        <body>
-          ${headerImage ? `<img src="${headerImage}" alt="Header" />` : ""}
-          <h2 class="content-header">NOTICE</h2>
-          <div class="flex-container">
-            <p><strong>Serial No:</strong> ${formData.srNo}</p>
-            <p><strong>Date:</strong> ${formData.date}</p>
-          </div>
-          <p><strong>To:</strong> ${formData.to}</p>
-          <p><strong>Subject:</strong> ${formData.subject}</p>
-          <p><strong>Intro:</strong> ${formData.Intro}</p>
-           <p><strong>Note:</strong> ${formData.Note}</p>
-          <table>
-            <thead>
-              <tr>
-                <th>Batch No</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Program</th>
-                <th>Topics to Revise</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${tableData
-                .map(
-                  (row) => `
-                <tr>
-                  <td>${row.BatchNo}</td>
-                  <td>${row.Date}</td>
-                  <td>${row.Time}</td>
-                  <td>${row.Program}</td>
-                  <td>${row.TopicsToRevise}</td>
-                </tr>`
-                )
-                .join("")}
-            </tbody>
-          </table>
-         
-          <div class="fromto">
-            <p>${formData.From}</p>
-            <p>${formData.From_designation}</p>
-          </div>
-           ${
-             copytoimage
-               ? `<img src="${copytoimage}" alt="Footer" class="footerImage" />`
-               : ""
-           }
-        </body>
-      </html>
-    `);
-    newWindow?.document.close();
-    newWindow?.print();
+    reactPrintFn();
   };
 
   return (
@@ -163,7 +71,7 @@ const TrainingNotice = () => {
       <form className="form-grid">
         {Object.entries(formData).map(([key, value]) => (
           <div key={key} className="form-group">
-            <label htmlFor={key} className="form-label">
+            <label htmlFor={key} className="form-label text-black">
               {key.replace(/_/g, " ").toUpperCase()}
             </label>
             <input
@@ -180,10 +88,10 @@ const TrainingNotice = () => {
       </form>
 
       <div className="table-container">
-        <h3>Table Data</h3>
+        <h3 className="text-black">Table Data</h3>
         <table className="duty-table">
           <thead>
-            <tr>
+            <tr className="text-black">
               <th>Batch No</th>
               <th>Date</th>
               <th>Time</th>
@@ -226,10 +134,24 @@ const TrainingNotice = () => {
         <button className="button" onClick={addRow}>
           Add Row
         </button>
-        <button className="button" onClick={printContent}>
-          Print Content
+        <button className="button" onClick={() => setShowPreview(true)}>
+          View Preview
         </button>
       </div>
+      {showPreview && (
+        <div>
+          <Notice formData={{ ...formData, tableData }} ref={contentRef} />
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth={true}
+            style={{ marginTop: "20px" }}
+            onClick={printContent}
+          >
+            Print Notice
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

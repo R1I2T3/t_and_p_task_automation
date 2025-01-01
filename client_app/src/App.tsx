@@ -51,6 +51,8 @@ import InternshipStats from "./pages/internship_officer/Stats";
 import OnePageReport from "./pages/internship_officer/OnePageReport";
 import JobAcceptance from "./pages/student/JobAcceptance";
 import PrincipalLayout from "./pages/principal/PrincipalLayout";
+import StaffLayout from "./pages/staff/StaffLayout";
+import StaffNotice from "./pages/staff/StaffNotice";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -178,6 +180,19 @@ const App = () => {
             }
           />
           <Route path="internship" element={<InternshipStats />} />
+        </Route>
+        <Route path="/staff" element={<StaffLayout />}>
+          <Route index element={<StaffNotice />} />
+          <Route
+            path="placement/register"
+            element={<CompanyRegistrationForm />}
+          />
+          <Route path="placement/verify" element={<JobVerification />} />
+          <Route
+            path="internship/register"
+            element={<InternshipCompanyRegister />}
+          />
+          <Route path="internship/verify" element={<InternShipVerify />} />
         </Route>
       </Routes>
     </BrowserRouter>
