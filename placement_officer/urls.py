@@ -2,10 +2,10 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("consent/<int:year>/", views.statistic, name="statistic_by_year"),
+    path("consent/<str:year>/", views.statistic, name="statistic_by_year"),
     path("consent/", views.statistic, name="statistic"),
     path(
-        "filter/<str:department>/<int:year>/",
+        "filter/<str:department>/<str:year>/",
         views.filter_by_department,
         name="filter_by_department_by_year",
     ),
@@ -15,7 +15,7 @@ urlpatterns = [
         name="filter_by_department",
     ),
     path(
-        "unique-departments/<int:year>/",
+        "unique-departments/<str:year>/",
         views.get_unique_departments,
         name="unique_departments_by_year",
     ),
@@ -23,13 +23,13 @@ urlpatterns = [
         "unique-departments/", views.get_unique_departments, name="unique_departments"
     ),
     path(
-        "get_category_data/<int:year>/",
+        "get_category_data/<str:year>/",
         views.get_category,
         name="get_category_data_by_year",
     ),
     path("get_category_data/", views.get_category, name="get_category_data"),
     path(
-        "get_category_data_by_department/<str:department>/<int:year>/",
+        "get_category_data_by_department/<str:department>/<str:year>/",
         views.get_category_by_department,
         name="get_category_data_by_department_by_year",
     ),
@@ -60,4 +60,5 @@ urlpatterns = [
         name="get_offers_by_department",
     ),
     path("consolidated/", views.consolidated, name="consolidated"),
+    path("calculate_category/", views.calculateCategory, name="calculate_category"),
 ]

@@ -21,6 +21,10 @@ import {
   Legend,
 } from "chart.js";
 import axios from "axios";
+import { Link } from "react-router";
+import { Button } from "@/components/ui/button";
+import { getCookie } from "@/utils";
+import toast from "react-hot-toast";
 // import "./placement.css";
 ChartJS.register(
   CategoryScale,
@@ -32,7 +36,7 @@ ChartJS.register(
   Legend
 );
 const PlacementStats = () => {
-  const [year, setYear] = useState(2023);
+  const [year, setYear] = useState("BE");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [departments, setDepartments] = useState([]);
   interface ConsentData extends ChartDataItem {
@@ -198,6 +202,26 @@ const PlacementStats = () => {
       ],
     };
   };
+  const calculateCategory = async () => {
+    try {
+      const response = await fetch(
+        `/api/placement_officer/calculate_category/`,
+        {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": getCookie("csrftoken") || "",
+          },
+        }
+      );
+      if (response.status === 200) {
+        toast.success("Category calculated successfully");
+      } else {
+        toast.error("Error calculating category");
+      }
+    } catch (error) {
+      console.error("Error fetching category data:", error);
+    }
+  };
   return (
     <div>
       <div className="main-content">
@@ -207,24 +231,20 @@ const PlacementStats = () => {
       </div>
 
       <div className="statistic">
-        <FormControl fullWidth sx={{ marginBottom: 2 }}>
-          <InputLabel id="year-select-label">Select Year</InputLabel>
-          <Select
-            labelId="year-select-label"
-            id="year-select"
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
+        <div className="w-full flex justify-between items-center">
+          <Button
+            className="bg-orange-500 text-white p-2 rounded-md"
+            onClick={calculateCategory}
           >
-            <MenuItem key={2020} value={2020}>
-              2020
-            </MenuItem>
-            {Array.from({ length: new Date().getFullYear() - 2022 }, (_, i) => (
-              <MenuItem key={2023 + i} value={2023 + i}>
-                {2023 + i}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+            Calculate Category
+          </Button>
+          <Link
+            to="/placement_officer/2024"
+            className="text-end bg-orange-500 text-white p-2  rounded-md"
+          >
+            View old Data
+          </Link>
+        </div>
         <br />
         <br />
         <br />

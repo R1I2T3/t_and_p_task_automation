@@ -7,6 +7,15 @@ from placement_api.models import Offers, CompanyRegistration, jobAcceptance
 from django.views.decorators.csrf import ensure_csrf_cookie
 import re
 from datetime import datetime
+from student.utils import categorize
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+)
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
 
 def get_top_companies_with_offers(request):
@@ -42,14 +51,10 @@ def statistic(request, year=None):
     batch_year_suffix = str(year)[-2:]
     try:
         consent_graph = list(
-            Student.objects.filter(uid__regex=f"^.*-{batch_year_suffix}$")
-            .values("consent")
-            .annotate(count=Count("consent"))
+            Student.objects.all().values("consent").annotate(count=Count("consent"))
         )
         consent_counts_by_branch = list(
-            Student.objects.filter(uid__regex=f"^.*-{batch_year_suffix}$")
-            .values("department")
-            .annotate(count=Count("consent"))
+            Student.objects.all().values("department").annotate(count=Count("consent"))
         )
     except Exception as e:
         print(f"Error reading data from database: {e}")
@@ -68,9 +73,7 @@ def filter_by_department(request, department, year=None):
     batch_year_suffix = str(year)[-2:]
     try:
         filtered_data = list(
-            Student.objects.filter(
-                department=department, uid__regex=f"^.*-{batch_year_suffix}$"
-            )
+            Student.objects.filter(department=department)
             .values("consent")
             .annotate(count=Count("consent"))
         )
@@ -86,9 +89,7 @@ def get_unique_departments(request, year=None):
     batch_year_suffix = str(year)[-2:]
     try:
         unique_departments = list(
-            Student.objects.filter(uid__regex=f"^.*-{batch_year_suffix}$")
-            .values_list("department", flat=True)
-            .distinct()
+            Student.objects.all().values_list("department", flat=True).distinct()
         )
     except Exception as e:
         print(f"Error fetching unique departments: {e}")
@@ -102,7 +103,7 @@ def get_category(request, year=None):
     batch_year_suffix = str(year)[-2:]
     try:
         category = list(
-            Student.objects.filter(uid__regex=f"^.*-{batch_year_suffix}$")
+            Student.objects.filter(academic_year="BE")
             .values("current_category")
             .annotate(count=Count("current_category"))
         )
@@ -118,9 +119,7 @@ def get_category_by_department(request, department, year=None):
     batch_year_suffix = str(year)[-2:]
     try:
         category = list(
-            Student.objects.filter(
-                department=department, uid__regex=f"^.*-{batch_year_suffix}$"
-            )
+            Student.objects.filter(department=department)
             .values("current_category")
             .annotate(count=Count("current_category"))
         )
@@ -146,8 +145,9 @@ def get_offers_by_department(request, department, year=None):
     batch_year_suffix = str(year)[-2:]
     try:
         offer_ids = Student.objects.filter(
-            department=department, uid__regex=f"^.*-{batch_year_suffix}$"
+            department__startswith=department,
         ).values_list("uid", flat=True)
+        print(f"Offer IDs: {offer_ids}")
         offers = list(
             Offers.objects.filter(id__in=offer_ids)
             .values("company__name")
@@ -193,7 +193,8 @@ def consolidated(request):
         for company in companies:
             company_name = company["name"]
             branches = (
-                acceptances.filter(company__name=company_name)
+                acceptances.filter(company_name=company_name)
+                .select_related("student")
                 .values("student__department")
                 .distinct()
             )
@@ -201,12 +202,12 @@ def consolidated(request):
             for branch in branches:
                 branch_name = branch["student__department"]
                 branch_data[branch_name] = acceptances.filter(
-                    company__name=company_name, student__department=branch_name
+                    company_name=company_name, student__department=branch_name
                 ).count()
             company_data[company_name] = branch_data
         student_data = list(
             acceptances.values(
-                "student__uid", "student__department", "company__name", "salary"
+                "student__uid", "student__department", "company_name", "salary"
             )
         )
         context = {
@@ -232,3 +233,48 @@ def consolidated(request):
             "student_data": [],
         }
     return JsonResponse(context)
+
+
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def calculateCategory(request):
+    try:
+        students = Student.objects.filter(academic_year="BE")
+        for student in students:
+            academic_attendance_sum = student.academic_attendance.aggregate(Sum("attendance")).get("attendance__sum")  # type: ignore
+            academic_attendance = (
+                academic_attendance_sum / student.academic_attendance.count()
+                if academic_attendance_sum is not None
+                else None
+            )
+            academic_performance_sum = student.academic_performance.aggregate(Sum("performance")).get("performance__sum")  # type: ignore
+            academic_performance = (
+                academic_performance_sum / student.academic_performance.count()
+                if academic_performance_sum is not None
+                else None
+            )
+            training_attendance_sum = student.training_attendance.aggregate(Sum("training_attendance")).get("training_attendance__sum")  # type: ignore
+            training_attendance = (
+                training_attendance_sum / student.training_attendance.count()
+                if training_attendance_sum is not None
+                else None
+            )
+            training_performance_sum = student.training_performance.aggregate(Sum("training_performance")).get("training_performance__sum")  # type: ignore
+            training_performance = (
+                training_performance_sum / student.training_performance.count()
+                if training_performance_sum is not None
+                else None
+            )
+            category = categorize(
+                academic_attendance,
+                academic_performance,
+                training_attendance,
+                training_performance,
+            )
+            student.current_category = category
+            student.save()
+        return JsonResponse({"success": "Category calculated successfully"}, status=200)
+    except Exception as e:
+        print(e)
+        JsonResponse({"error": "Error in calculating category"}, status=500)

@@ -23,7 +23,7 @@ interface PlacementData {
   student_data: Array<{
     student__uid: string;
     student__department: string;
-    company__name: string;
+    company_name: string;
     salary: number;
   }>;
   total_placed_students: number;
@@ -151,7 +151,7 @@ const PlacementReport = () => {
                     {student.student__department}
                   </TableCell>
                   <TableCell style={cellStyle}>
-                    {student.company__name}
+                    {student.company_name}
                   </TableCell>
                   <TableCell style={cellStyle}>{student.salary}</TableCell>
                 </TableRow>

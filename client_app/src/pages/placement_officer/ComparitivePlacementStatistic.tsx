@@ -139,7 +139,9 @@ export const ComparativePlacementStatistics = () => {
 
   return (
     <div className="main-content">
-      <Typography variant="h4">Comparative Consent Statistics</Typography>
+      <Typography variant="h4" className="text-orange-600">
+        Comparative Consent Statistics
+      </Typography>
       <Select
         isMulti
         options={departments}
