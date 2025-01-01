@@ -40,29 +40,56 @@ const NoticePreview = React.forwardRef<HTMLDivElement, { formData: FormData }>(
           </p>
         </div>
 
-        <div className="flex justify-between mb-8">
-          <div className="w-1/2">
-            <div className="mb-4">
-              <strong>From:</strong>
-              <p>{formData.sender}</p>
-              <p>{formData.senderAddLine1}</p>
-              <p>{formData.senderAddLine2}</p>
-              <p>{formData.senderAddLine3}</p>
-              <p>{formData.senderAddLine4}</p>
-            </div>
-          </div>
-
-          <div className="w-1/2">
-            <div className="mb-4">
-              <strong>To:</strong>
-              <p>{formData.receiver}</p>
-              <p>{formData.receiverAddLine1}</p>
-              <p>{formData.receiverAddLine2}</p>
-              <p>{formData.receiverAddLine3}</p>
-              <p>{formData.receiverAddLine4}</p>
-            </div>
-          </div>
-        </div>
+        <table className="w-full mb-8">
+          <tbody>
+            <tr>
+              <td className="w-1/2 align-top">
+                <strong>From:</strong>
+                <table>
+                  <tbody className="text-[12px]">
+                    <tr>
+                      <td>{formData.sender}</td>
+                    </tr>
+                    <tr>
+                      <td>{formData.senderAddLine1}</td>
+                    </tr>
+                    <tr>
+                      <td>{formData.senderAddLine2}</td>
+                    </tr>
+                    <tr>
+                      <td>{formData.senderAddLine3}</td>
+                    </tr>
+                    <tr>
+                      <td>{formData.senderAddLine4}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+              <td className="w-1/2 align-top">
+                <strong>To:</strong>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>{formData.receiver}</td>
+                    </tr>
+                    <tr>
+                      <td>{formData.receiverAddLine1}</td>
+                    </tr>
+                    <tr>
+                      <td>{formData.receiverAddLine2}</td>
+                    </tr>
+                    <tr>
+                      <td>{formData.receiverAddLine3}</td>
+                    </tr>
+                    <tr>
+                      <td>{formData.receiverAddLine4}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
         <div className="mb-6">
           <p>
