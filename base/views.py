@@ -10,6 +10,11 @@ from django.utils.html import strip_tags
 from django.core.mail import send_mail
 from django.conf import settings
 import logging
+from django.http import HttpResponse
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -38,17 +43,7 @@ def send_otp(email, otp, subject="OTP Verification"):
 
 def redirect_user(request, user):
     login_user(request, user)
-    user = User.objects.get(email=user.email)
-    role_redirects = {
-        "principal": "/principal/",
-        "department_coordinator": "/department_coordinator/",
-        "program_coordinator": "/program_coordinator/",
-        "student": "/student/",
-        "training_officer": "/training_officer/",
-        "internship_officer": "/internship_officer/",
-        "placement_officer": "/placement_officer/",
-    }
-    return redirect(role_redirects.get(user.role, "/"))
+    return redirect("/")
 
 
 def login(request):
@@ -84,7 +79,7 @@ def login(request):
                     # Send OTP
                     if send_otp(user.email, otp, "Device Verification OTP"):
                         logger.info(f"OTP sent to {user.email} for device verification")
-                        return redirect("verify_otp")
+                        return redirect("http://localhost:8000/auth/verify-otp/")
                     else:
                         messages.error(request, "Failed to send OTP. Please try again.")
                         return render(request, "base/login.html")

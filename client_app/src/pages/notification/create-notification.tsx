@@ -18,9 +18,8 @@ const CreateNotification = () => {
   const [error, setError] = useState("");
   const [year, setYear] = useState<string[]>(["All"]);
   const [branch, setBranch] = useState<string[]>(["All"]);
-  const year_options = ["All", "FE", "SE", "TE", "BE"];
+  const year_options = ["FE", "SE", "TE", "BE"];
   const branch_options = [
-    "All",
     "Computer",
     "IT",
     "EXTC",

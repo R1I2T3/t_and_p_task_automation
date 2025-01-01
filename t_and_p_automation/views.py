@@ -6,12 +6,12 @@ from rest_framework.response import Response as JSONResponse
 from base.models import User, FacultyResponsibility
 from django.contrib.auth import logout
 from student.models import Student
+from django.http import HttpResponseRedirect
 
 
 @login_required
 def index(request):
-    response = redirect_user(request, request.user)
-    return response
+    return HttpResponseRedirect("http://localhost:5173/")
 
 
 @api_view(["GET"])

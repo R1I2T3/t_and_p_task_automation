@@ -1,7 +1,9 @@
 import { Box, Typography } from "@mui/material";
 import Sidebar from "./components/sidebar";
-
-import { Outlet } from "react-router";
+import { useAtomValue } from "jotai";
+import { authAtom } from "@/authAtom";
+import { Outlet, useNavigate } from "react-router";
+import { useEffect } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -22,6 +24,13 @@ ChartJS.register(
 );
 
 const ProgramCoordinatorLayout = () => {
+  const authUser = useAtomValue(authAtom);
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!authUser || authUser.role !== "faculty" || !authUser.program) {
+      navigate("/");
+    }
+  }, []);
   return (
     <div className="tailwind-free-zone">
       <Box sx={{ display: "flex", flexDirection: "row", width: "200vh" }}>

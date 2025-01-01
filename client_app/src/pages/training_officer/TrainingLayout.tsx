@@ -1,8 +1,17 @@
-import React from "react";
+import { useEffect } from "react";
 import Sidebar from "./components/sidebar";
 import { Box, Typography } from "@mui/material";
-import { Outlet } from "react-router";
+import { Outlet, useNavigate } from "react-router";
+import { useAtomValue } from "jotai";
+import { authAtom } from "@/authAtom";
 const TrainingLayout = () => {
+  const authUser = useAtomValue(authAtom);
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!authUser || authUser.role !== "training_officer") {
+      navigate("/");
+    }
+  }, [authUser]);
   return (
     <Box
       sx={{
