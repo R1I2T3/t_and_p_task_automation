@@ -3,11 +3,11 @@ import { Link, Outlet } from "react-router";
 import {
   BarChart,
   User,
-  LogOut,
   Menu,
   MessageCircle,
   FileUser,
   LogOutIcon,
+  User2Icon,
 } from "lucide-react";
 import {
   Sheet,
@@ -16,9 +16,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { logout } from "@/utils";
+import { logout, redirectToProfile } from "@/utils";
 import { useAtomValue } from "jotai";
 import { authAtom } from "@/authAtom";
 const StudentLayout = () => {
@@ -73,36 +72,32 @@ const StudentLayout = () => {
             <SheetTitle className="text-2xl font-bold">Menu</SheetTitle>
           </SheetHeader>
           <div className="flex h-full flex-col justify-between py-6">
-            <nav className="space-y-2 px-4">
+            <nav className="space-y-2 px-4 flex flex-col w-full">
               {menuItems.map((item, index) => (
                 <Link
                   key={index}
                   to={item.href}
-                  className={cn(
-                    "flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors",
-                    "hover:bg-gray-100 hover:text-gray-900",
-                    "focus:bg-gray-100 focus:text-gray-900 focus:outline-none",
-                    "dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-50",
-                    "dark:focus:bg-gray-800 dark:focus:text-gray-50"
-                  )}
+                  className="shadow-xl w-[80%] p-2 text-black no-underline hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white"
                 >
                   <item.icon className="mr-3 h-5 w-5" />
                   {item.label}
                 </Link>
               ))}
-            </nav>
-            <div className="px-4">
-              <Button
-                variant="outline"
-                className="w-full justify-start bg-[#d17a00] text-white"
-                onClick={() => {
-                  // Add logout functionality here
-                }}
+              <button
+                onClick={redirectToProfile}
+                className="shadow-xl w-[80%] p-2 text-black no-underline bg-white hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white flex justify-start"
               >
-                <LogOut className="mr-3 h-5 w-5" />
-                Log out
-              </Button>
-            </div>
+                <User2Icon className="mr-3 h-5 w-5" />
+                Profile
+              </button>
+              <button
+                onClick={logout}
+                className="shadow-xl w-[80%] p-2 text-black no-underline bg-white hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white flex justify-start"
+              >
+                <LogOutIcon className="mr-3 h-5 w-5" />
+                Logout
+              </button>
+            </nav>
           </div>
         </SheetContent>
       </Sheet>
