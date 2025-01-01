@@ -131,18 +131,19 @@ class InternshipAcceptance(models.Model):
         related_name="job_offer_acceptance",
         null=True,
     )
+    year = models.CharField(max_length=100, default="FE")
     company_name = models.CharField(max_length=100, null=True, blank=True)
     offer_letter = models.FileField(upload_to="offer_letters/")
-    type = models.CharField(max_length=100, default="")  # Full-time or Part-time
+    type = models.CharField(
+        max_length=100,
+    )
     salary = models.FloatField(default=0)
-    position = models.CharField(max_length=100, default="")
-    is_verified = models.BooleanField(
-        default=False
-    )  # Changed `isVerified` to snake_case
+    is_verified = models.BooleanField(default=False)
     domain_name = models.CharField(max_length=100, default="")
     total_hours = models.PositiveIntegerField(default=0)
     start_date = models.DateField()
     completion_date = models.DateField()
+    offer_type = models.CharField(max_length=100, default="in_house")
 
     def save(self, *args, **kwargs):
         # Constraint: Full-time for December and May; part-time for other months

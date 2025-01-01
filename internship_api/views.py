@@ -30,6 +30,7 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 from uuid import uuid4
 from student.models import Student
 from base.models import User
+from datetime import datetime
 
 
 @api_view(["POST"])
@@ -206,8 +207,8 @@ def create_notice(request, pk):
 
 
 @api_view(["GET"])
-# @authentication_classes([SessionAuthentication, BasicAuthentication])
-# @permission_classes([IsAuthenticated])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_notice(request, pk):
     try:
         notice = InternshipNotice.objects.get(id=pk)
@@ -261,40 +262,55 @@ def get_all_applied_students(request, pk):
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def create_job_acceptance(request):
-    user = User.objects.get(email=request.user.email)
-    if not user:
-        return JsonResponse(
-            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
-        )
-    student = Student.objects.get(user=user)
-    print(request.data["company_name"])
-    company = None
-    required_fields = ["type", "salary", "position"]
-    for field in required_fields:
-        if field not in request.data:
+    try:
+        user = User.objects.get(email=request.user.email)
+        if not user:
             return JsonResponse(
-                {"error": f"Missing required field: {field}"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
             )
-    if "offer_letter" not in request.FILES:
+        student = Student.objects.get(user=user)
+        data = request.data
+        if not student:
+            return JsonResponse(
+                {"error": "Failed to find student"}, status=status.HTTP_404_NOT_FOUND
+            )
+        start_date_str = data.get("startDate")
+        end_date_str = data.get("endDate")
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+        completion_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+        if data.get("selectOption") == "in_house":
+
+            InternshipAcceptance.objects.create(
+                student=student,
+                year=data.get("year"),
+                domain_name=data.get("domain"),
+                start_date=start_date,
+                completion_date=completion_date,
+            )
+        else:
+            if not request.FILES.get("offerLetter"):
+                return JsonResponse(
+                    {"error": "Offer letter is required"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            InternshipAcceptance.objects.create(
+                student=student,
+                year=data.get("year"),
+                company_name=data.get("companyName"),
+                offer_letter=request.FILES.get("offerLetter"),
+                offer_type=data.get("selectOption"),
+                salary=float(data.get("stipend")),
+                is_verified=False,
+                domain_name=data.get("domain"),
+                start_date=start_date,
+                completion_date=completion_date,
+            )
+        return JsonResponse({"success": "Job application created"})
+    except Exception as e:
+        print(e)
         return JsonResponse(
-            {"error": "Offer letter file is required"},
-            status=status.HTTP_400_BAD_REQUEST,
+            {"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-    job_acceptance = InternshipAcceptance.objects.create(
-        id=uuid4(),
-        student=student,
-        company=None,
-        company_name=request.data[
-            "company_name"
-        ],  # Assuming company has company_name field
-        offer_letter=request.FILES["offer_letter"],
-        type=request.data["type"],
-        salary=float(request.data["salary"]),
-        position=request.data["position"],
-        isVerified=False,  # Default value
-    )
-    return JsonResponse({"success": "Job application created"})
 
 
 # @authentication_classes([SessionAuthentication, BasicAuthentication])
@@ -322,98 +338,3 @@ def get_jobs_by_company_name(request, company_name):
 
     serializer = InternshipAcceptanceSerializer(jobs, many=True)
     return JsonResponse(serializer.data)
-
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import MultiPartParser, FormParser
-from django.conf import settings
-import json
-import os
-
-INTERNSHIP_JSON_PATH = os.path.join("static", "Data", "intern_data_24.json")
-
-
-class InternshipAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-    parser_classes = (MultiPartParser, FormParser)
-
-    def get(self, request):
-        # if request.user.role != "internship_officer":
-        #     return Response(
-        #         {"error": "Unauthorized access"},
-        #         status=status.HTTP_403_FORBIDDEN
-        #     )
-
-        try:
-            with open(INTERNSHIP_JSON_PATH, "r") as file:
-                data = json.load(file)
-        except FileNotFoundError:
-            data = {
-                "branch_data": {},
-                "stipend_data": {},
-                "Compqnies_Offering_Internship": {},
-                "stipend_per_branch": {},
-            }
-
-        # Process branch data
-        branch_data = [
-            {"label": branch, "value": value}
-            for branch, value in data[0]["branch_data"].items()
-        ]
-
-        # Process stipend data
-        stipend_amounts = list(data[0]["stipend_data"].values())
-        total_stipend = sum(stipend_amounts)
-        stipend_data = [
-            {"label": f"Rs {amount}", "value": (amount / total_stipend) * 100}
-            for value, amount in data[0]["stipend_data"].items()
-        ]
-
-        # Process internship securing data
-        students_securing_internship_data = [
-            {
-                "label": "Internships Secured",
-                "value": sum(data[0]["Compqnies_Offering_Internship"].values()),
-            }
-        ]
-
-        # Process stipend per branch data
-        stipend_per_branch_data = [
-            {"label": branch, "value": amount}
-            for branch, amount in data[0]["stipend_per_branch"].items()
-        ]
-
-        # Process internship opportunities data
-        internship_opportunities_data = [
-            {"label": company, "value": count}
-            for company, count in data[0]["Compqnies_Offering_Internship"].items()
-        ]
-
-        response_data = {
-            "branch_data": branch_data,
-            "stipend_data": stipend_data,
-            "students_securing_internship_data": students_securing_internship_data,
-            "stipend_per_branch": stipend_per_branch_data,
-            "internship_opportunities_data": internship_opportunities_data,
-            "internship_bar_labels": list(
-                data[0]["Compqnies_Offering_Internship"].keys()
-            ),
-            "internship_bar_data": list(
-                data[0]["Compqnies_Offering_Internship"].values()
-            ),
-        }
-
-        serializer = InternshipDataSerializer(response_data)
-        return Response(serializer.data)
-
-
-# # urls.py
-# from django.urls import path
-# from .views import InternshipAPIView
-
-# urlpatterns = [
-#     path('api/internship/', InternshipAPIView.as_view(), name='internship-api'),
-# ]
