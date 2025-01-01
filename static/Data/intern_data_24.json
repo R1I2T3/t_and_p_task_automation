@@ -15,10 +15,7 @@
             "ELEX":63,
             "MECH A":62,
             "MECH B":62,
-            "IOT":33,
-            "(Dr. Zahir Aalam)":1,
-            "Dean (TP & IL)":1,
-            "Date:":1
+            "IOT":33
         },
         "Compqnies_Offering_Internship":{
             "Vallinakart":63.0,
@@ -45,7 +42,6 @@
             "870":22000.0
         },
         "stipend_per_branch":{
-            "(Dr. Zahir Aalam)":0.0,
             "AI&ML":7000.0,
             "AIDS":16000.0,
             "CIVIL A":215000.0,

@@ -1,5 +1,6 @@
 from django.db import models
 from uuid import uuid4
+from student.models import Student
 
 # Create your models here.
 
@@ -124,11 +125,11 @@ class InternshipApplication(models.Model):
 
 class InternshipAcceptance(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    # student = models.ForeignKey(
-    #     "Student", on_delete=models.DO_NOTHING, related_name="job_offer_acceptance"
-    # )
-    company = models.ForeignKey(
-        InternshipRegistration, on_delete=models.DO_NOTHING, null=True
+    student = models.ForeignKey(
+        to=Student,
+        on_delete=models.DO_NOTHING,
+        related_name="job_offer_acceptance",
+        null=True,
     )
     company_name = models.CharField(max_length=100, null=True, blank=True)
     offer_letter = models.FileField(upload_to="offer_letters/")
@@ -139,9 +140,7 @@ class InternshipAcceptance(models.Model):
         default=False
     )  # Changed `isVerified` to snake_case
     domain_name = models.CharField(max_length=100, default="")
-    total_hours = models.PositiveIntegerField(
-        default=0
-    )  # Total hours for the internship
+    total_hours = models.PositiveIntegerField(default=0)
     start_date = models.DateField()
     completion_date = models.DateField()
 

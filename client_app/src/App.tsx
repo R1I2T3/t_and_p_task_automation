@@ -16,6 +16,7 @@ import Upload from "./pages/program_coordinator/Upload";
 import Attendance from "./pages/program_coordinator/Attendance";
 import StudentLayout from "./pages/student/student_layout";
 import StudentHome from "./pages/student";
+import InternShipSubmission from "./pages/student/InternShipSubmission";
 import StudentPersonalInfo from "./pages/student/student-personal-info";
 import PlacementRegistration from "./pages/student/PlacementRegistration";
 import InternshipRegistration from "./pages/student/InternshipRegistration";
@@ -102,6 +103,10 @@ const App = () => {
           <Route
             path="internship/registration/:id"
             element={<InternshipRegistration />}
+          />
+          <Route
+            path="internship-submission"
+            element={<InternShipSubmission />}
           />
         </Route>
         <Route path="/faculty_coordinator" element={<FacultyLayout />}>

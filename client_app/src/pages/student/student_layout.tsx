@@ -28,6 +28,11 @@ const StudentLayout = () => {
     { icon: User, label: "Personal Info", href: "/student/info" },
     { icon: FileUser, label: "Resume", href: "/student/resume" },
     { icon: MessageCircle, label: "Notifications", href: "/notifications/" },
+    {
+      icon: FileUser,
+      label: "Internship submission",
+      href: "/student/internship-submission",
+    },
   ];
   const [menuItems, setMenuItems] = React.useState([...defaultItems]);
   useEffect(() => {
@@ -42,7 +47,7 @@ const StudentLayout = () => {
         },
       ]);
     }
-  }, []);
+  }, [auth]);
 
   return (
     <div className="absolute top-0 left-0 w-full min-w-fit">
@@ -59,7 +64,7 @@ const StudentLayout = () => {
             size="icon"
             className="my-3 z-40 rounded-full bg-white shadow-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 "
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5" color="#000000" />
             <span className="sr-only">Open menu</span>
           </Button>
         </SheetTrigger>

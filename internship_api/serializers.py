@@ -102,3 +102,15 @@ class InternshipAcceptanceSerializer(serializers.ModelSerializer):
                     "Daily hours should be less than 4 for a part-time internship."
                 )
         return data
+
+
+class InternshipDataSerializer(serializers.Serializer):
+    branch_data = serializers.ListField(child=serializers.DictField())
+    stipend_data = serializers.ListField(child=serializers.DictField())
+    students_securing_internship_data = serializers.ListField(
+        child=serializers.DictField()
+    )
+    stipend_per_branch = serializers.ListField(child=serializers.DictField())
+    internship_opportunities_data = serializers.ListField(child=serializers.DictField())
+    internship_bar_labels = serializers.ListField(child=serializers.CharField())
+    internship_bar_data = serializers.ListField(child=serializers.IntegerField())
