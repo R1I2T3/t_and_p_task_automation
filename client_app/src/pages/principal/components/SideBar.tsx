@@ -24,23 +24,15 @@ const Sidebar = () => {
             alt="Placement Statistics"
             className="menu-icon"
           />
-          <p>Internship Statistics</p>
+          <p>Training</p>
         </NavLink>
-        <NavLink to="notice" className="menu-item gap-3">
+        <NavLink to="placement" className="menu-item gap-3">
           <NotebookPen />
-          <p>Notice Creation</p>
+          <p>Placement</p>
         </NavLink>
-        <NavLink to="company_register" className="menu-item gap-3">
+        <NavLink to="internship" className="menu-item gap-3">
           <Building2 />
-          <p>Company Registration Form</p>
-        </NavLink>
-        {/* <NavLink to="report" className="menu-item gap-3">
-          <ClipboardMinus />
-          <p>One Page report</p>
-        </NavLink> */}
-        <NavLink to="verify" className="menu-item gap-3">
-          <Verified />
-          <p>Verify</p>
+          <p>Internship</p>
         </NavLink>
         <NavLink to="/notifications/create" className="menu-item gap-3">
           <Send />
