@@ -3,12 +3,16 @@ import "./Sidebar.css";
 import { authAtom } from "@/authAtom";
 import { useAtomValue } from "jotai";
 import { logout, redirectToProfile } from "@/utils";
+import Logo from "@/assets/img/logo.png";
+import MessageIcon from "@/assets/img/Training_Programme_Statistics.png";
+import LogoutIcon from "@/assets/img/logout.png";
+import ProfileIcon from "@/assets/img/user_profile.png";
 const Sidebar = () => {
   const auth = useAtomValue(authAtom);
   return (
     <aside className={`sidebar `}>
       <div className="logo-container">
-        <img src="/img/logo.png" alt="TCET Logo" className="logo" />
+        <img src={Logo} alt="TCET Logo" className="logo" />
 
         <h1 className="title" style={{ color: "#153f74" }}>
           TCET - TNP
@@ -16,30 +20,18 @@ const Sidebar = () => {
       </div>
       <ul className="menu">
         <Link to="/faculty_coordinator" className="menu-item">
-          <img
-            src="/img/Training_Programme_Statistics.png"
-            alt="Student Data"
-            className="menu-icon"
-          />
+          <img src={MessageIcon} alt="Student Data" className="menu-icon" />
           <p>Session Attendance</p>
         </Link>
         {auth?.department && (
           <Link to={"/department_coordinator"} className="menu-item">
-            <img
-              src="/img/Training_Programme_Statistics.png"
-              alt="Student Data"
-              className="menu-icon"
-            />
+            <img src={MessageIcon} alt="Student Data" className="menu-icon" />
             Department
           </Link>
         )}
         {auth?.program && (
           <Link to={"/program_coordinator"} className="menu-item">
-            <img
-              src="/img/Training_Programme_Statistics.png"
-              alt="Student Data"
-              className="menu-icon"
-            />
+            <img src={MessageIcon} alt="Student Data" className="menu-icon" />
             Program
           </Link>
         )}
@@ -50,13 +42,13 @@ const Sidebar = () => {
           className="profile-icon bg-transparent hover:bg-transparent"
           onClick={redirectToProfile}
         >
-          <img src="/img/user_profile.png" alt="Profile" />
+          <img src={ProfileIcon} alt="Profile" />
         </button>
         <button
           className="logout-icon bg-transparent hover:bg-transparent"
           onClick={logout}
         >
-          <img src="/img/logout.png" alt="Logout" />
+          <img src={LogoutIcon} alt="Logout" />
         </button>
       </div>
     </aside>

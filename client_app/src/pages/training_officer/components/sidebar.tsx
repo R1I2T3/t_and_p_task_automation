@@ -3,12 +3,17 @@ import { Link } from "react-router";
 import { Box, Typography, IconButton } from "@mui/material";
 import { styled } from "@mui/system";
 import { logout, redirectToProfile } from "@/utils";
-
+import LogoIcon from "@/assets/img/logo.png";
+import UserProfileIcon from "@/assets/img/user_profile.png";
+import UserLogoutIcon from "@/assets/img/logout.png";
+import { Send } from "lucide-react";
+import ImageIcon from "@/assets/img/image.png";
+import StudentIcon from "@/assets/img/student.png";
 const Sidebar = () => {
   return (
     <SidebarContainer>
       <LogoContainer>
-        <Logo src="/img/logo.png" alt="TCET Logo" />
+        <Logo src={LogoIcon} alt="TCET Logo" />
         <Typography variant="h6" className="title">
           TCET - TNP
         </Typography>
@@ -18,25 +23,22 @@ const Sidebar = () => {
         <MenuItem
           to="/training_officer"
           label="Training Statistics"
-          icon="/img/student.png"
+          icon={StudentIcon}
         />
-        <MenuItem to="notice" label="Notice Generation" icon="/img/image.png" />
+        <MenuItem to="notice" label="Notice Generation" icon={ImageIcon} />
         <MenuItem
           to="/notifications/create"
           label="Notification"
-          icon="/img/Placement_statics.png"
+          icon={<Send />}
         />
-
-        {/* <MenuItem to="/update-attendance" label="Grievance" icon="/img/Fill-Out_smc.png" />
-        <MenuItem to="/upload-file" label="Upload Report" icon="/img/Training_Programme_Statistics.png" /> */}
       </Menu>
 
       <BottomMenu>
         <IconButton component={Link} to="/profile" onClick={redirectToProfile}>
-          <ProfileIcon src="/img/user_profile.png" alt="Profile" />
+          <ProfileIcon src={UserProfileIcon} alt="Profile" />
         </IconButton>
         <IconButton component={Link} to="/logout">
-          <LogoutIcon src="/img/logout.png" alt="Logout" onClick={logout} />
+          <LogoutIcon src={UserLogoutIcon} alt="Logout" onClick={logout} />
         </IconButton>
       </BottomMenu>
     </SidebarContainer>
@@ -95,17 +97,21 @@ const MenuItemLink = styled(Link)(() => ({
 interface MenuItemProps {
   to: string;
   label: string;
-  icon: string;
+  icon: string | React.ReactElement;
 }
 
 const MenuItem: React.FC<MenuItemProps> = ({ to, label, icon }) => (
   <MenuItemLink to={to}>
-    <img
-      src={icon}
-      alt={label}
-      className="menu-icon"
-      style={{ height: "1.5rem", marginRight: "10px" }}
-    />
+    {typeof icon === "string" ? (
+      <img
+        src={icon}
+        alt={label}
+        className="menu-icon"
+        style={{ height: "1.5rem", marginRight: "10px" }}
+      />
+    ) : (
+      <span style={{ marginRight: "10px" }}>{icon}</span>
+    )}
     <Typography>{label}</Typography>
   </MenuItemLink>
 );
