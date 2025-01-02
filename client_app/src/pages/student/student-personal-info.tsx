@@ -21,7 +21,7 @@ const StudentPersonalInfo = () => {
   useEffect(() => {
     const fetchPersonalInfo = async () => {
       try {
-        const response = await fetch("/api/student/info");
+        const response = await fetch("/api/student/info/");
         const data = await response.json();
         console.log(data);
         setLoading(false);
