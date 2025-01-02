@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from "react";
 import {
   Container,
@@ -15,7 +16,7 @@ import { getCookie } from "@/utils";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 const Resume = () => {
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [_isSubmitted, setIsSubmitted] = useState(false);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",

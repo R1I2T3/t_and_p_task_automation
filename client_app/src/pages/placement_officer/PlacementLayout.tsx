@@ -9,7 +9,7 @@ const PlacementLayout = () => {
   const authUser = useAtomValue(authAtom);
   const navigate = useNavigate();
   useEffect(() => {
-    if (!authUser || authUser.role !== "placement_coordinator") {
+    if (!authUser || authUser.role !== "placement_officer") {
       navigate("/");
     }
   }, []);

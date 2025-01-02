@@ -38,7 +38,7 @@ from datetime import datetime
 @permission_classes([IsAuthenticated])
 def create_company_with_offers(request):
     user = User.objects.get(email=request.user.email)
-    if not user or user.role not in ["internship_coordinator", "staff"]:
+    if not user or user.role not in ["internship_officer", "staff"]:
         return JsonResponse(
             {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
         )
@@ -79,11 +79,6 @@ def create_company_with_offers(request):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_company_with_offers(request, pk=None):
-    user = User.objects.get(email=request.user.email)
-    if not user or user.role not in ["internship_coordinator", "staff"]:
-        return JsonResponse(
-            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
-        )
     try:
         if pk:
             # Retrieve a specific company and its offers
@@ -131,7 +126,7 @@ def get_company_with_offers(request, pk=None):
 @permission_classes([IsAuthenticated])
 def get_all_companies(request):
     user = User.objects.get(email=request.user.email)
-    if not user or user.role not in ["internship_coordinator", "staff"]:
+    if not user or user.role not in ["internship_officer", "staff"]:
         return JsonResponse(
             {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
         )
@@ -157,7 +152,7 @@ def get_all_companies(request):
 @permission_classes([IsAuthenticated])
 def create_notice(request, pk):
     user = User.objects.get(email=request.user.email)
-    if not user or user.role not in ["internship_coordinator", "staff"]:
+    if not user or user.role not in ["internship_officer", "staff"]:
         return JsonResponse(
             {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
         )
@@ -267,7 +262,7 @@ def job_application(request, pk):
 @permission_classes([IsAuthenticated])
 def get_all_applied_students(request, pk):
     user = User.objects.get(email=request.user.email)
-    if not user or user.role not in ["internship_coordinator", "staff"]:
+    if not user or user.role not in ["internship_officer", "staff"]:
         return JsonResponse(
             {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
         )
@@ -290,7 +285,7 @@ def get_all_applied_students(request, pk):
 def create_job_acceptance(request):
     try:
         user = User.objects.get(email=request.user.email)
-        if not user:
+        if not user or user.role not in ["internship_officer", "staff"]:
             return JsonResponse(
                 {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
             )
@@ -371,7 +366,7 @@ def get_jobs_by_company_name(request, company_name):
 @permission_classes([IsAuthenticated])
 def get_all_job_acceptances(request):
     user = User.objects.get(email=request.user.email)
-    if not user or user.role not in ["internship_coordinator", "staff"]:
+    if not user or user.role not in ["internship_officer", "staff"]:
         return JsonResponse(
             {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
         )
@@ -399,7 +394,7 @@ def get_all_job_acceptances(request):
 @permission_classes([IsAuthenticated])
 def verify_job(request):
     user = User.objects.get(email=request.user.email)
-    if not user or user.role not in ["internship_coordinator", "staff"]:
+    if not user or user.role not in ["internship_officer", "staff"]:
         return JsonResponse(
             {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
         )

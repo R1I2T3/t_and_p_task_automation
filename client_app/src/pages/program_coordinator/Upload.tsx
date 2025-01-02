@@ -40,7 +40,7 @@ const Upload = () => {
   const [rowsPerPage, setRowsPerPage] = useState(20);
 
   // Handle page change
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
   };
 

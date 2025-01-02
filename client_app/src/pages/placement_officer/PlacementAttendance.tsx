@@ -42,7 +42,7 @@ const columnOptions = [
 ];
 
 export default function PlacementAttendance() {
-  const [formData, setFormData] = useState<
+  const [formData, _setFormData] = useState<
     {
       id: string;
       student: string;
@@ -57,7 +57,7 @@ export default function PlacementAttendance() {
   const [company, setCompany] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, _setSearchQuery] = useState("");
   interface CompanyDataType {
     id: string;
     name: string;
@@ -189,7 +189,7 @@ export default function PlacementAttendance() {
   };
 
   const handleChangePage = (
-    event: React.MouseEvent<HTMLButtonElement> | null,
+    _event: React.MouseEvent<HTMLButtonElement> | null,
     newPage: number
   ) => {
     setPage(newPage);

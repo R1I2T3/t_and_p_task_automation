@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import "../DutyChart.css";
 import Notice from "./components/notice";
 import { Button } from "@mui/material";

@@ -11,8 +11,7 @@ class NotificationListCreate(generics.ListCreateAPIView):
     serializer_class = NotificationSerializer
 
     def create(self, request, *args, **kwargs):
-        print("Request data:", request.data)  # Debug print
-
+        print("Request data:", request.data)
         try:
             # Extract data from request
             title = request.data.get("title")
@@ -24,15 +23,16 @@ class NotificationListCreate(generics.ListCreateAPIView):
             academic_years = [year.strip() for year in academic_years if year.strip()]
             departments = [dept.strip() for dept in departments if dept.strip()]
 
-            print("Processed academic years:", academic_years)  # Debug print
-            print("Processed departments:", departments)  # Debug print
+            print("Processed academic years:", academic_years)
+            print("Processed departments:", departments)
 
-            # Create notification
             notification = Notification.objects.create(
-                title=title, message=message, creator=request.user
+                title=title,
+                message=message,
+                creator=request.user,
+                files=request.FILES.get("files", None),
             )
 
-            # Find recipients
             student_query = Student.objects.all()
 
             if academic_years:
@@ -41,9 +41,8 @@ class NotificationListCreate(generics.ListCreateAPIView):
             if departments:
                 student_query = student_query.filter(department__in=departments)
 
-            # Get users from students and set as recipients
             recipients = [student.user for student in student_query]
-            print(f"Found {len(recipients)} recipients")  # Debug print
+            print(f"Found {len(recipients)} recipients")
 
             if recipients:
                 notification.recipients.set(recipients)

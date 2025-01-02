@@ -1,8 +1,6 @@
-import React from "react";
 import { BranchWiseChart } from "./components/BranchWiseChart";
 import { StipendChart } from "./components/StipendChart";
 import { InternshipOpportunitiesChart } from "./components/InternShipOpportunity";
-import { Briefcase } from "lucide-react";
 
 const internshipData = {
   branch_data: [

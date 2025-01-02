@@ -1,4 +1,3 @@
-import React from "react";
 import { Typography, Grid, Paper, Box } from "@mui/material";
 import { Pie, Bar } from "react-chartjs-2";
 import { Link } from "react-router";

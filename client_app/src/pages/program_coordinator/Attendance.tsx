@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Papa from "papaparse"; // Import papaparse
 import {
   Button,
@@ -29,7 +29,7 @@ const Attendance = () => {
     [key: string]: any;
   }
 
-  const [rawData, setRawData] = useState<AttendanceData[]>([]);
+  const [_rawData, setRawData] = useState<AttendanceData[]>([]);
   const [consolidatedData, setConsolidatedData] = useState<
     ConsolidatedStudent[]
   >([]);

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// InfrastructureBooking.tsx
 import React, { useState, useRef } from "react";
 import { Button } from "@mui/material";
 import { useReactToPrint } from "react-to-print";
@@ -27,7 +25,7 @@ interface FormData {
 
 const InfrastructureBooking = () => {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [content, setContent] = useState("");
+  const [content] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const reactPrintFn = useReactToPrint({ contentRef });
 

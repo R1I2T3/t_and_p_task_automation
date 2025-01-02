@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import Sidebar from "./components/SideBar";
 import { Typography } from "@mui/material";
 import "../placement_officer/placement.css";

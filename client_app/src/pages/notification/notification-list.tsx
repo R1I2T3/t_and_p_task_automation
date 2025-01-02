@@ -9,8 +9,16 @@ import {
   Box,
 } from "@mui/material";
 import axios from "axios";
+
+interface NotificationProps {
+  id: number;
+  title: string;
+  message: string;
+  creator_name: string;
+  created_at: string;
+}
 const NotificationList = () => {
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<NotificationProps[]>([]);
   const navigate = useNavigate();
   useEffect(() => {
     const fetchNotifications = async () => {

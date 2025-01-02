@@ -144,6 +144,7 @@ function Session() {
       fileHeaders: sheetData[0],
       tableData: sheetData.slice(1).map((row) => ({
         fileData: row,
+        // @ts-expect-error: Object is possibly 'null'.
         batch: row[2],
         sessions: [],
       })),
@@ -415,8 +416,7 @@ const SessionTable = ({
   const [page, setPage] = useState(0);
   if (formData.tableData.length === 0) return null;
   const headers = ["Program", "Name", "Year", "UID", "Batch"];
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const sessionHeaders = formData.dates.flatMap((date, dayIndex) =>
+  const sessionHeaders = formData.dates.flatMap((date) =>
     Array.from(
       { length: formData.numSessions },
       (_, sessionIndex) => `${date.date} - Session ${sessionIndex + 1}`

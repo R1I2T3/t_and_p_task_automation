@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router"; // Import Link for routing
 import "./Sidebar.css";
 import { authAtom } from "@/authAtom";

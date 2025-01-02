@@ -1,4 +1,3 @@
-import React from "react";
 import headerImage from "@/assets/tcet header.jpg";
 import copytoimage from "@/assets/pmt-placement_drive_copytoImage.png";
 import "./notice.css";

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Box,
@@ -38,7 +38,7 @@ function FacultyHome() {
   const [selectedProgram, setSelectedProgram] = useState("");
   const [selectedDateSession, setSelectedDateSession] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("");
-  const [batches, setBatches] = useState<string[]>([]);
+  const [_batches, setBatches] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();

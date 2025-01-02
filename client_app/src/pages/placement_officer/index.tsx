@@ -36,7 +36,7 @@ ChartJS.register(
   Legend
 );
 const PlacementStats = () => {
-  const [year, setYear] = useState("BE");
+  const [year] = useState("BE");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [departments, setDepartments] = useState([]);
   interface ConsentData extends ChartDataItem {

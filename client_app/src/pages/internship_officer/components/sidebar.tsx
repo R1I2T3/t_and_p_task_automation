@@ -1,14 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React from "react";
 import { NavLink } from "react-router"; // Import Link for routing
 import "../../placement_officer/components/sidebar.css";
-import {
-  Building2,
-  NotebookPen,
-  ClipboardMinus,
-  Send,
-  Verified,
-} from "lucide-react";
+import { Building2, NotebookPen, Send, Verified } from "lucide-react";
 import { logout, redirectToProfile } from "@/utils";
 const Sidebar = () => {
   return (

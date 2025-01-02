@@ -57,7 +57,7 @@ const PlacementRegistration = () => {
   const navigate = useNavigate();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch(`/api/placement/job_application/create/${id}`, {
+    const res = await fetch(`/api/placement/job_application/create/${id}/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

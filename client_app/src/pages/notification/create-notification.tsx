@@ -11,13 +11,14 @@ import axios from "axios";
 import { getCookie } from "@/utils";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import toast from "react-hot-toast";
 const CreateNotification = () => {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<File | null>(null);
   const [error, setError] = useState("");
-  const [year, setYear] = useState<string[]>(["All"]);
-  const [branch, setBranch] = useState<string[]>(["All"]);
+  const [year, setYear] = useState<string[]>(["FE"]);
+  const [branch, setBranch] = useState<string[]>(["IT"]);
   const year_options = ["FE", "SE", "TE", "BE"];
   const branch_options = [
     "Computer",
@@ -48,6 +49,7 @@ const CreateNotification = () => {
         withCredentials: true,
       });
       console.log("Notification created:", response.data);
+      toast.success("Notification created successfully");
       // Handle successful notification creation
     } catch (error) {
       console.error("Error creating notification:", error);

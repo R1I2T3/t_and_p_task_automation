@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Bar, Pie } from "react-chartjs-2";
 import "chart.js/auto";
 import toast from "react-hot-toast";

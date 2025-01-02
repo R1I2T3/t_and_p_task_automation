@@ -1,4 +1,3 @@
-import React from "react";
 import { MoveLeft } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router";

@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from "react";
 import { Card } from "@/components/ui/card";
 import { Bar } from "react-chartjs-2";
 import "./Charts";

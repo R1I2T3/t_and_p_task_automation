@@ -1,4 +1,4 @@
-import React, { forwardRef } from "react";
+import { forwardRef } from "react";
 import "./notice.css";
 import noticeHeader from "@/assets/tcet header.jpg";
 import copytoimage from "@/assets/pmt-placement_drive_copytoImage.png";

@@ -1,4 +1,3 @@
-import React from "react";
 import { NavLink } from "react-router"; // Import Link for routing
 import "./sidebar.css";
 import {
