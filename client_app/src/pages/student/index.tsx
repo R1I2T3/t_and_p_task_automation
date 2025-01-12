@@ -19,7 +19,7 @@ const StudentHome = () => {
       setError(null);
 
       try {
-        const res = await fetch("/api/student/", {
+        const res = await fetch("/api/student", {
           method: "GET",
           credentials: "include",
           headers: {

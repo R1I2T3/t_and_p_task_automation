@@ -16,7 +16,7 @@ from .views import (
 
 urlpatterns = [
     path("company/register/<str:safe>", company_register),
-    path("company/all/", get_all_companies),
+    path("company/all", get_all_companies),
     path("company/<str:pk>", get_company_with_offers),
     path("notice/create/<str:pk>", create_notice),
     path("notice/get/<str:pk>/", get_notice),

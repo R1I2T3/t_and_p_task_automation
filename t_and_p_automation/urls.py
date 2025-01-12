@@ -16,41 +16,25 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include, re_path
+from django.urls import path, include
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
-from base.views import user_profile, password_update
 
-urlpatterns = (
-    [
-        path("admin/", admin.site.urls),
-        path("api/department_coordinator/", include("department_coordinator.urls")),
-        path("auth/", include("base.urls")),
-        path("api/placement_officer/", include("placement_officer.urls")),
-        path("api/training_officer/", include("training_officer.urls")),
-        path("api/placement/", include("placement_api.urls")),
-        path("api/", views.my_protected_view, name="check-auth"),
-        path("api/notifications/", include("notifications.urls")),
-        path("api/program_coordinator/", include("program_coordinator_api.urls")),
-        path("api/internship/", include("internship_api.urls")),
-        path("api/student/", include("student.urls")),
-        path("api/faculty_coordinator/", include("faculty_coordinator.urls")),
-        path("api/logout/", views.logout_api, name="logout"),
-        path("profile", user_profile, name="user_profile"),
-        path(
-            "profile/update_password",
-            password_update,
-            name="user_profile_update_password",
-        ),
-        path("", views.index),
-        re_path(r"^.*$", views.index),
-        re_path(
-            r"^static/(?P<path>.*)$",
-            views.serve_static,
-            {"document_root": settings.STATIC_ROOT},
-        ),
-    ]
-    + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-)
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("", views.index),
+    path("principal/", include("principal.urls")),
+    path("api/department_coordinator/", include("department_coordinator.urls")),
+    path("", include("base.urls")),
+    path("api/placement_officer/", include("placement_officer.urls")),
+    path("api/training_officer/", include("training_officer.urls")),
+    path("api/placement/", include("placement_api.urls")),
+    path("api/", views.my_protected_view, name="check-auth"),
+    path("api/notifications/", include("notifications.urls")),
+    path("api/program_coordinator/", include("program_coordinator_api.urls")),
+    path("api/internship/", include("internship_api.urls")),
+    path("api/student/", include("student.urls")),
+    path("api/faculty_coordinator/", include("faculty_coordinator.urls")),
+    path("api/logout/", views.logout_api, name="logout"),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
