@@ -39,7 +39,7 @@ const JobVerification = () => {
 
   const fetchJobs = () => {
     axios
-      .get("/api/internship/jobs/verify")
+      .get("/api/internship/jobs/verify/")
       .then((response) => setJobs(response.data))
       .catch((error) => console.error("Error fetching data:", error));
   };

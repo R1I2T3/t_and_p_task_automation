@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from django.db.models import Sum
+from django.http import JsonResponse
 from .models import (
     Student,
     AcademicAttendanceSemester,
@@ -47,7 +48,7 @@ class HomeAPIView(APIView):
             item.semester: item.training_performance for item in training_performance
         }
 
-        return Response(
+        return JsonResponse(
             {
                 "academic_attendance": academic_attendance_dict,
                 "academic_performance": academic_performance_dict,
@@ -103,7 +104,7 @@ class SdPAPIView(APIView):
             training_performance,
         )
 
-        return Response(
+        return JsonResponse(
             {
                 "uid": student.uid,
                 "department": student.department,
