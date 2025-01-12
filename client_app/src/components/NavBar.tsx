@@ -1,7 +1,7 @@
 import { MoveLeft } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router";
-
+import Logo from "@/assets/tcet_logo_2.png";
 const NavBar = ({ title }: { title: string }) => {
   const navigate = useNavigate();
   return (
@@ -15,7 +15,7 @@ const NavBar = ({ title }: { title: string }) => {
         </Button>
         <span className="text-white font-bold text-xl">{title}</span>
       </div>
-      <img src="/tcet_logo_2.png" />
+      <img src={Logo} />
     </div>
   );
 };

@@ -48,7 +48,7 @@ const JobAcceptanceForm = () => {
   const csrfToken = getCookie("csrftoken");
   useEffect(() => {
     axios
-      .get("/api/placement/company/all", {
+      .get("/api/placement/company/all/", {
         headers: {
           "X-CSRFToken": csrfToken || "",
         },

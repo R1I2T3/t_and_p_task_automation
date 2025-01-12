@@ -2,20 +2,20 @@ import { NavLink } from "react-router"; // Import Link for routing
 import "../../placement_officer/components/sidebar.css";
 import { Building2, NotebookPen, Send, Verified } from "lucide-react";
 import { logout, redirectToProfile } from "@/utils";
+import Logo from "@/assets/img/logo.png";
+import Stats from "@/assets/img/Placement_statics.png";
+import ProfileIcon from "@/assets/img/user_profile.png";
+import LogoutIcon from "@/assets/img/logout.png";
 const Sidebar = () => {
   return (
     <aside className="sidebar">
       <div className="logo-container">
-        <img src="/img/logo.png" alt="TCET Logo" className="logo" />
+        <img src={Logo} alt="TCET Logo" className="logo" />
         <h1 className="title">TCET - TNP</h1>
       </div>
       <ul className="menu">
         <NavLink to="" className="menu-item">
-          <img
-            src="/img/Placement_statics.png"
-            alt="Placement Statistics"
-            className="menu-icon"
-          />
+          <img src={Stats} alt="Placement Statistics" className="menu-icon" />
           <p>Internship Statistics</p>
         </NavLink>
         <NavLink to="notice" className="menu-item gap-3">
@@ -44,13 +44,13 @@ const Sidebar = () => {
           className="profile-icon bg-transparent hover:bg-transparent"
           onClick={redirectToProfile}
         >
-          <img src="/img/user_profile.png" alt="Profile" />
+          <img src={ProfileIcon} alt="Profile" />
         </button>
         <button
           className="logout-icon bg-transparent hover:bg-transparent"
           onClick={logout}
         >
-          <img src="/img/logout.png" alt="Logout" />
+          <img src={LogoutIcon} alt="Logout" />
         </button>
       </div>
     </aside>

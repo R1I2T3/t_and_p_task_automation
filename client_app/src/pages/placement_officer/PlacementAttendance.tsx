@@ -96,14 +96,15 @@ export default function PlacementAttendance() {
   const csrftoken = getCookie("csrftoken");
   useEffect(() => {
     axios
-      .get("/api/placement/company/all", {
+      .get("/api/placement/company/all/", {
         headers: {
           "X-CSRFToken": csrftoken || "",
         },
         withCredentials: true, // Ensure cookies are included in the request
       })
       .then((response) => {
-        const formattedCompanies = response.data.map((item: any) => ({
+        console.log(response.data);
+        const formattedCompanies = response?.data?.map((item: any) => ({
           id: item.id,
           name: item.name,
           batch: item.batch,
@@ -265,7 +266,7 @@ export default function PlacementAttendance() {
   const fetchApplicants = async () => {
     try {
       const response = await fetch(
-        `/api/placement/job_application/company/get/${company}`
+        `/api/placement/job_application/company/get/${company}/`
       );
       const data = await response.json();
       setFilteredData(data.students);
