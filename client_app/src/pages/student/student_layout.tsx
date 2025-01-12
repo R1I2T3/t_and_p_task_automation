@@ -20,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import { logout, redirectToProfile } from "@/utils";
 import { useAtomValue } from "jotai";
 import { authAtom } from "@/authAtom";
-import Logo from "@/assets/tcet_logo_2.png";
 const StudentLayout = () => {
   const auth = useAtomValue(authAtom);
   const defaultItems = [
@@ -55,7 +54,7 @@ const StudentLayout = () => {
         <h1 className="text-xl md:text-2xl  font-bold text-white flex h-full">
           Student Dashboard
         </h1>
-        <img src={Logo} />
+        <img src="/tcet_logo_2.png" />
       </header>
       <Sheet>
         <SheetTrigger asChild>

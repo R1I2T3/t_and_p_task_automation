@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "theme",
     "base",
     "student",
+    "principal",
     "department_coordinator",
     "placement_officer",
     "training_officer",
@@ -87,7 +88,7 @@ REST_FRAMEWORK = {
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ["templates", os.path.join(BASE_DIR, "client_app/dist")],
+        "DIRS": ["templates"],
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -174,8 +175,6 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASSWORD")
 STATIC_URL = "static/"
 STATICFILES_DIRS = [
     BASE_DIR / "static",
-    os.path.join(BASE_DIR, "client_app/dist/static"),
-    os.path.join(BASE_DIR, "client_app/public"),
 ]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "api/media/"

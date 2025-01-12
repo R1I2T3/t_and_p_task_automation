@@ -4,18 +4,11 @@ import { Box, Typography, IconButton } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { MessageCircle } from "lucide-react";
 import { logout, redirectToProfile } from "@/utils";
-import LogoIcon from "@/assets/img/logo.png";
-import StudentIcon from "@/assets/img/student.png";
-import Stats from "@/assets/img/Placement_statics.png";
-import ProfileUserIcon from "@/assets/img/user_profile.png";
-import LogoutUserIcon from "@/assets/img/logout.png";
-import ImageIcon from "@/assets/img/image.png";
-import FillOut from "@/assets/img/Fill-Out_smc.png";
 const Sidebar = () => {
   return (
     <SidebarContainer>
       <LogoContainer>
-        <Logo src={LogoIcon} alt="TCET Logo" />
+        <Logo src="/img/logo.png" alt="TCET Logo" />
         <Typography variant="h5" className="title">
           TCET - TNP
         </Typography>
@@ -25,27 +18,27 @@ const Sidebar = () => {
         <MenuItem
           to="/program_coordinator/"
           label="Student Data"
-          icon={StudentIcon}
+          icon="/img/student.png"
         />
         <MenuItem
           to="/program_coordinator/attendance-and-marks"
           label="Attendance and Marks"
-          icon={Stats}
+          icon="/img/Placement_statics.png"
         />
         <MenuItem
           to="/program_coordinator/session-creation"
           label="Session Creation"
-          icon={ImageIcon}
+          icon="/img/image.png"
         />
         <MenuItem
           to="/program_coordinator/update-attendance"
           label="Grievance"
-          icon={FillOut}
+          icon="/img/Fill-Out_smc.png"
         />
         <MenuItem
           to="/program_coordinator/upload-file"
           label="Upload Report"
-          icon={Stats}
+          icon="/img/Training_Programme_Statistics.png"
         />
         <MenuItem
           to="/notifications/create"
@@ -56,10 +49,10 @@ const Sidebar = () => {
 
       <BottomMenu>
         <IconButton component={Link} to="/profile" onClick={redirectToProfile}>
-          <ProfileIcon src={ProfileUserIcon} alt="Profile" />
+          <ProfileIcon src="/img/user_profile.png" alt="Profile" />
         </IconButton>
         <IconButton component={Link} to="/logout" onClick={logout}>
-          <LogoutIcon src={LogoutUserIcon} alt="Logout" />
+          <LogoutIcon src="/img/logout.png" alt="Logout" />
         </IconButton>
       </BottomMenu>
     </SidebarContainer>
