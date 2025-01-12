@@ -1,6 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
-import { Box, MenuItem, Select, FormControl, InputLabel } from "@mui/material";
+import {
+  Box,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Typography,
+} from "@mui/material";
 
 import {
   Chart as ChartJS,
@@ -15,7 +22,7 @@ import {
   LineElement, // Added for Line chart
 } from "chart.js";
 
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import Year2022 from "./components/old/Year2022";
 import Year2023 from "./components/old/Year2023";
 import Year2024 from "./components/old/Year2024";
@@ -56,32 +63,37 @@ export default function Old() {
   };
 
   return (
-    <Box sx={{ padding: 3 }}>
-      <Link
-        to="/placement/Placement_Statistics"
-        className="menu-item"
-        style={{ color: "white" }}
-      >
-        Back to Placement Statistics
-      </Link>
-
-      <FormControl fullWidth sx={{ marginBottom: 3 }}>
-        <InputLabel id="year-select-label">Select Year</InputLabel>
-        <Select
-          labelId="year-select-label"
-          value={selectedYear}
-          onChange={handleYearChange}
-          label="Select Year"
+    <div>
+      <Typography variant="h5">
+        Placement Statistics of {selectedYear}
+      </Typography>
+      <Box sx={{ padding: 3 }}>
+        <Link
+          to="/placement/Placement_Statistics"
+          className="menu-item"
+          style={{ color: "white" }}
         >
-          <MenuItem value="2022">2022</MenuItem>
-          <MenuItem value="2023">2023</MenuItem>
-          <MenuItem value="2024">2024</MenuItem>
-          <MenuItem value="2025">2025</MenuItem>
-        </Select>
-      </FormControl>
+          Back to Placement Statistics
+        </Link>
 
-      {renderYearComponent()}
-    </Box>
+        <FormControl fullWidth sx={{ marginBottom: 3 }}>
+          <InputLabel id="year-select-label">Select Year</InputLabel>
+          <Select
+            labelId="year-select-label"
+            value={selectedYear}
+            onChange={handleYearChange}
+            label="Select Year"
+          >
+            <MenuItem value="2022">2022</MenuItem>
+            <MenuItem value="2023">2023</MenuItem>
+            <MenuItem value="2024">2024</MenuItem>
+            <MenuItem value="2025">2025</MenuItem>
+          </Select>
+        </FormControl>
+
+        {renderYearComponent()}
+      </Box>
+    </div>
   );
 }
 
