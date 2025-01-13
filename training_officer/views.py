@@ -1,8 +1,22 @@
 from django.http import JsonResponse
 from django.db import connection
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+)
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
 
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_avg_data(request, table_name):
+    if not request.user.role == "training_officer":
+        return JsonResponse(
+            {"error": "You are not authorized to access this resource"}, status=403
+        )
     try:
         # Validate table_name to prevent SQL injection
         valid_tables = [
