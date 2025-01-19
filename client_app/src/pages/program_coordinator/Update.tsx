@@ -1,274 +1,521 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import * as XLSX from "xlsx";
 import {
-  Button,
-  TextField,
   Box,
+  Button,
+  CircularProgress,
+  Alert,
   Typography,
+  Select,
+  InputLabel,
+  MenuItem,
+  FormControl,
+  TextField,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
   TableHead,
   TableRow,
-  CircularProgress,
+  TableCell,
+  TableBody,
+  TablePagination,
 } from "@mui/material";
+import { useAtomValue } from "jotai";
+import { authAtom } from "@/authAtom";
 import { getCookie } from "@/utils";
 
-const Update = () => {
-  interface AttendanceRecord {
-    uid: number;
-    name: string;
+interface FormData {
+  programName: string;
+  year: string;
+  numSessions: number;
+  numDays: number;
+  dates: Array<{ day: string; date: string }>;
+  tableData: Array<{
+    fileData: any[];
     batch: string;
-    session: string;
-    present: string;
-  }
+    sessions: Array<string[]>;
+  }>;
+  fileHeaders: string[];
+  semester: string;
+  phase: string;
+}
 
-  const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
-  const [filteredData, setFilteredData] = useState<AttendanceRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  interface LastUpdate {
-    uid: number;
-    session: string;
-    newStatus: string;
-  }
-  const [lastUpdate, setLastUpdate] = useState<LastUpdate | null>(null);
+function Session() {
+  const auth = useAtomValue(authAtom);
+  const [formData, setFormData] = useState<FormData>({
+    programName: auth?.program ?? "",
+    year: "fe",
+    numSessions: 1,
+    numDays: 1,
+    dates: [],
+    tableData: [],
+    fileHeaders: [],
+    semester: "",
+    phase: "",
+  });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(50);
 
-  // Fetch attendance data from the API
+  const SEM_OPTIONS = [
+    "Semester 1",
+    "Semester 2",
+    "Semester 3",
+    "Semester 4",
+    "Semester 5",
+    "Semester 6",
+    "Semester 7",
+    "Semester 8",
+  ];
+
   useEffect(() => {
-    fetch("/api/program_coordinator/attendance/attendance_data/")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setAttendanceData(data);
-        setFilteredData(data); // Initialize filtered data with the full dataset
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching attendance data:", error);
-        setError(error.message);
-        setLoading(false);
-      });
-  }, []);
+    if (auth?.role === "faculty" && auth.program) {
+      setFormData((prevData) => ({
+        ...prevData,
+        programName: auth?.program || "ACT_TECHNICAL",
+      }));
+    }
+  }, [auth]);
 
-  // Handle search input
-  const handleSearch = (e: any) => {
-    const query = e.target.value.toLowerCase();
-    setSearchQuery(query);
-
-    // Filter data based on query matching any column
-    const filtered = attendanceData.filter(
-      (record) =>
-        record.uid.toString().toLowerCase().includes(query) ||
-        record.name.toLowerCase().includes(query) ||
-        record.batch.toLowerCase().includes(query) ||
-        record.present.toString().toLowerCase().includes(query)
-    );
-
-    setFilteredData(filtered);
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
   };
 
-  // Handle attendance update
-  const handleUpdate = (
-    uid: number,
-    session: string,
-    currentStatus: string
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const newStatus = currentStatus === "Present" ? "Absent" : "Present";
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
-    // Update data in the backend
-    fetch("/api/program_coordinator/attendance/update/attendance_data/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": getCookie("csrftoken") || "",
-      },
-      body: JSON.stringify({
-        uid,
-        session,
-        new_status: newStatus,
-      }),
-      credentials: "include",
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+  const getPaginatedData = () => {
+    const startIndex = page * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    return formData.tableData.slice(startIndex, endIndex);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target && e.target.files ? e.target.files[0] : null;
+    if (!file) return;
+
+    const fileExtension = file.name.split(".").pop()?.toLowerCase() ?? "";
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      try {
+        if (fileExtension === "csv") {
+          const csvData = (event.target as FileReader).result;
+          parseCSV(csvData);
+        } else if (["xlsx", "xls"].includes(fileExtension)) {
+          const binaryStr = (event.target as FileReader).result;
+          if (binaryStr instanceof ArrayBuffer) {
+            parseExcel(binaryStr);
+          } else {
+            throw new Error("Failed to read Excel file.");
+          }
+        } else {
+          throw new Error(
+            "Invalid file type. Please upload a CSV or Excel file."
+          );
         }
-        return response.json();
-      })
-      .then((data) => {
-        console.log(data.message);
+      } catch (error: any) {
+        setErrorMessage(error.message);
+      }
+    };
 
-        // Update the local state
-        const updatedData = attendanceData.map((record) =>
-          record.uid === uid && record.session === session
-            ? { ...record, present: newStatus }
-            : record
-        );
+    if (["xlsx", "xls"].includes(fileExtension)) {
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.readAsText(file);
+    }
+  };
 
-        setAttendanceData(updatedData);
-        setFilteredData(updatedData);
+  const parseCSV = (csvData: any) => {
+    const rows = csvData
+      .split("\n")
+      .map((row: any) => row.split(",").map((cell: string) => cell.trim()));
+    const cleanedRows = rows.filter((row: string[]) => row.length > 0);
 
-        // Track the last update
-        setLastUpdate({ uid, session, newStatus });
+    if (cleanedRows.length === 0) {
+      setErrorMessage("The uploaded CSV file is empty.");
+      return;
+    }
 
-        // Show alert with updated information
-        alert(
-          `Attendance Updated Successfully!\nUID: ${uid}\nSession: ${session}\nNew Status: ${newStatus}`
-        );
-      })
-      .catch((error) => {
-        console.error("Error updating attendance:", error);
-      });
+    setFormData((prevData) => ({
+      ...prevData,
+      fileHeaders: cleanedRows[0],
+      tableData: cleanedRows.slice(1).map((row: string[]) => ({
+        fileData: row,
+        batch: row[2],
+        sessions: [],
+      })),
+    }));
+  };
+
+  const parseExcel = (binaryStr: ArrayBuffer) => {
+    const workbook = XLSX.read(binaryStr, { type: "binary" });
+    const sheetName = workbook.SheetNames[0];
+    const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+      header: 1,
+    });
+
+    if (sheetData.length === 0) {
+      setErrorMessage("The uploaded Excel file is empty.");
+      return;
+    }
+
+    setFormData((prevData: any) => ({
+      ...prevData,
+      fileHeaders: sheetData[0],
+      tableData: sheetData.slice(1).map((row) => ({
+        fileData: row,
+        // @ts-expect-error: not known
+        batch: row[2],
+        sessions: [],
+      })),
+    }));
+  };
+
+  const generateDateInputs = () => {
+    if (formData.numDays <= 0 || formData.numSessions <= 0) {
+      setErrorMessage("Please enter valid numbers for days and sessions.");
+      return;
+    }
+    const dateFields = Array.from({ length: formData.numDays }, (_, i) => ({
+      day: `Day ${i + 1}`,
+      date: "",
+    }));
+    setFormData((prevData) => ({ ...prevData, dates: dateFields }));
+  };
+
+  const handleDateChange = (index: number, value: string) => {
+    const updatedDates = [...formData.dates];
+    updatedDates[index].date = value;
+    setFormData((prevData) => ({ ...prevData, dates: updatedDates }));
+  };
+
+  const generateTable = () => {
+    if (formData.tableData.length === 0) {
+      setErrorMessage("Please upload a file first.");
+      return;
+    }
+
+    const updatedTableData = formData.tableData.map((row) => ({
+      ...row,
+      sessions: formData.dates.map(() =>
+        Array.from({ length: formData.numSessions }, () => "")
+      ),
+    }));
+
+    setFormData((prevData) => ({ ...prevData, tableData: updatedTableData }));
+    setPage(0); // Reset to first page when generating new table
+  };
+
+  const handleAttendanceChange = (
+    rowIndex: number,
+    dayIndex: number,
+    sessionIndex: number,
+    value: string
+  ) => {
+    const actualRowIndex = rowIndex + page * rowsPerPage; // Adjust for pagination
+    const updatedTableData = [...formData.tableData];
+    updatedTableData[actualRowIndex].sessions[dayIndex][sessionIndex] = value;
+    setFormData((prevData) => ({ ...prevData, tableData: updatedTableData }));
+  };
+
+  const csrfToken = getCookie("csrftoken");
+  const sendDataToApi = async () => {
+    const {
+      programName,
+      year,
+      numSessions,
+      numDays,
+      dates,
+      fileHeaders,
+      tableData,
+      semester,
+      phase,
+    } = formData;
+
+    if (
+      !programName ||
+      !year ||
+      numSessions <= 0 ||
+      numDays <= 0 ||
+      tableData.length === 0
+    ) {
+      setErrorMessage(
+        "Please fill in all required fields and upload a valid file."
+      );
+      return;
+    }
+
+    if (dates.some((date) => !date.date)) {
+      setErrorMessage("Please enter dates for all days.");
+      return;
+    }
+
+    const requestData = {
+      program_name: programName,
+      year: year,
+      num_sessions: numSessions,
+      num_days: numDays,
+      dates: dates.map((date) => date.date),
+      semester: semester,
+      phase: phase,
+      file_headers: fileHeaders,
+      attendance_data: tableData.map((row) => ({
+        student_data: [row.fileData[0], row.fileData[1], row.batch],
+        sessions: row.sessions,
+      })),
+    };
+
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(
+        "/api/program_coordinator/create-attendance-record/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken || "",
+          },
+          credentials: "include",
+          body: JSON.stringify(requestData),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      alert("Data successfully sent to API!");
+      console.log(data);
+    } catch (error: any) {
+      console.error("Error:", error);
+      setErrorMessage(`Failed to send data to API. Error: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <Box
-      sx={{
-        padding: 4,
-        backgroundColor: "white",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        borderRadius: "20px",
-        boxShadow: 3, // Adding a slight shadow for emphasis
-        margin: "auto",
-        maxWidth: 1000,
-      }}
-    >
-      <Typography
-        variant="h4"
-        sx={{ textAlign: "center", marginBottom: 3, color: "primary.main" }}
-      >
-        Update Attendance
-      </Typography>
-      <Typography variant="body1" align="center" color="textSecondary">
-        View and manage attendance records below:
+    <Box sx={{ p: 3, backgroundColor: "white", borderRadius: "20px" }}>
+      <Typography variant="h4" gutterBottom>
+        Generate Session Table
       </Typography>
 
-      {/* Search bar */}
-      <TextField
-        label="Search by UID, Name, Branch, or Attendance"
-        variant="outlined"
-        value={searchQuery}
-        onChange={handleSearch}
-        sx={{ width: "100%", marginBottom: 3 }}
-      />
+      <Box sx={{ mb: 2 }}>
+        <Button variant="contained" component="label">
+          Upload File
+          <input
+            type="file"
+            hidden
+            onChange={handleFileUpload}
+            accept=".csv,.xlsx,.xls"
+          />
+        </Button>
+        <br />
+        <br />
+      </Box>
 
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", marginTop: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Typography sx={{ color: "error.main" }} variant="body1">
-          Error: {error}
-        </Typography>
-      ) : filteredData.length > 0 ? (
-        <>
-          <TableContainer>
-            <Table
-              sx={{
-                marginTop: 3,
-                marginBottom: 3,
-                border: "1px solid black", // Added black border for table
-              }}
-            >
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "orange" }}>
-                  <TableCell sx={{ border: "1px solid black" }}>UID</TableCell>
-                  <TableCell sx={{ border: "1px solid black" }}>Name</TableCell>
-                  <TableCell sx={{ border: "1px solid black" }}>
-                    Branch
-                  </TableCell>
-                  <TableCell sx={{ border: "1px solid black" }}>
-                    Session
-                  </TableCell>
-                  <TableCell sx={{ border: "1px solid black" }}>
-                    Attendance
-                  </TableCell>
-                  <TableCell sx={{ border: "1px solid black" }}>
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredData.map((record, index) => (
-                  <TableRow
-                    key={index}
-                    sx={{
-                      "&:hover": {
-                        backgroundColor: "#e3f2fd", // Hover effect on row
-                      },
-                    }}
-                  >
-                    <TableCell sx={{ border: "1px solid black" }}>
-                      {record.uid}
-                    </TableCell>
-                    <TableCell sx={{ border: "1px solid black" }}>
-                      {record.name}
-                    </TableCell>
-                    <TableCell sx={{ border: "1px solid black" }}>
-                      {record.batch}
-                    </TableCell>
-                    <TableCell sx={{ border: "1px solid black" }}>
-                      {record.session}
-                    </TableCell>
-                    <TableCell sx={{ border: "1px solid black" }}>
-                      {record.present}
-                    </TableCell>
-                    <TableCell sx={{ border: "1px solid black" }}>
-                      <Button
-                        variant="contained"
-                        onClick={() =>
-                          handleUpdate(
-                            record.uid,
-                            record.session,
-                            record.present
-                          )
-                        }
-                        sx={{
-                          backgroundColor: "success.main",
-                          color: "white",
-                          "&:hover": {
-                            backgroundColor: "success.dark",
-                          },
-                        }}
-                      >
-                        Update
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+      <Box sx={{ mb: 2 }}>
+        <FormControl fullWidth>
+          <InputLabel>Choose a Year</InputLabel>
+          <Select
+            value={formData.year}
+            onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+          >
+            <MenuItem value="fe">First Year</MenuItem>
+            <MenuItem value="se">Second Year</MenuItem>
+            <MenuItem value="te">Third Year</MenuItem>
+            <MenuItem value="be">Final Year</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+      <br />
+      <Box sx={{ mb: 2 }}>
+        <FormControl fullWidth>
+          <InputLabel>Choose a Phase</InputLabel>
+          <Select
+            value={formData.phase}
+            onChange={(e) =>
+              setFormData({ ...formData, phase: e.target.value })
+            }
+          >
+            <MenuItem value="Phase 1">Phase I</MenuItem>
+            <MenuItem value="Phase 2">Phase II</MenuItem>
+            <MenuItem value="Phase 3">Phase III</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+      <br />
+      <Box sx={{ mb: 2 }}>
+        <FormControl fullWidth>
+          <InputLabel>Choose a Semester</InputLabel>
+          <br />
+          <Select
+            value={formData.semester}
+            onChange={(e) =>
+              setFormData({ ...formData, semester: e.target.value })
+            }
+          >
+            {SEM_OPTIONS.map((sem) => (
+              <MenuItem value={sem}>{sem}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
+      <br />
 
-          {/* Display last update */}
-          {lastUpdate && (
-            <Box
-              sx={{ marginTop: 2, padding: 2, backgroundColor: "info.light" }}
-            >
-              <Typography variant="body1">
-                <strong>Last Update:</strong> UID: {lastUpdate.uid}, Session:{" "}
-                {lastUpdate.session}, New Status: {lastUpdate.newStatus}
-              </Typography>
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          label="Number of Days"
+          type="number"
+          fullWidth
+          value={formData.numDays}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              numDays: Math.max(Number(e.target.value), 1),
+            })
+          }
+        />
+      </Box>
+
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          label="Number of Sessions"
+          type="number"
+          fullWidth
+          value={formData.numSessions}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              numSessions: Math.max(Number(e.target.value), 1),
+            })
+          }
+        />
+      </Box>
+
+      <Box sx={{ mb: 2 }}>
+        <Button variant="contained" onClick={generateDateInputs}>
+          Generate Date Inputs
+        </Button>
+      </Box>
+
+      {formData.dates.length > 0 && (
+        <Box sx={{ mb: 2 }}>
+          {formData.dates.map((date, index) => (
+            <Box key={index} sx={{ display: "flex", gap: 2, mb: 1 }}>
+              <Typography>Day {index + 1}</Typography>
+              <TextField
+                label="Date"
+                type="date"
+                fullWidth
+                value={date.date}
+                onChange={(e) => handleDateChange(index, e.target.value)}
+              />
             </Box>
-          )}
-        </>
-      ) : (
-        <Typography variant="body1" align="center">
-          No attendance records found.
-        </Typography>
+          ))}
+        </Box>
       )}
+
+      <Box sx={{ mb: 2 }}>
+        <Button variant="contained" onClick={generateTable}>
+          Generate Table
+        </Button>
+      </Box>
+
+      {formData.tableData.length > 0 && (
+        <Box sx={{ width: "100%", overflow: "auto" }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                {["Program", "Name", "Year", "UID", "Batch", "Phase"]
+                  .concat(
+                    // Format headers as Date - Session X
+                    formData.dates
+                      .map((date) =>
+                        Array.from(
+                          { length: formData.numSessions },
+                          (_, sessionIndex) =>
+                            `${date.date} - Session ${sessionIndex + 1}`
+                        )
+                      )
+                      .flat() // Flatten the array to get a flat list of headers
+                  )
+                  .map((header, index) => (
+                    <TableCell key={index}>{header}</TableCell>
+                  ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {getPaginatedData().map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  <TableCell>{formData.programName}</TableCell>
+                  <TableCell>{row.fileData[1]}</TableCell>
+                  <TableCell>{formData.year}</TableCell>
+                  <TableCell>{row.fileData[0]}</TableCell>
+                  <TableCell>{row.batch}</TableCell>
+                  <TableCell>{formData.phase}</TableCell>
+                  {row.sessions.map((sessionsForDay, dayIndex) =>
+                    sessionsForDay.map((session, sessionIndex) => (
+                      <TableCell key={`${dayIndex}-${sessionIndex}`}>
+                        <TextField
+                          value={session}
+                          onChange={(e) =>
+                            handleAttendanceChange(
+                              rowIndex,
+                              dayIndex,
+                              sessionIndex,
+                              e.target.value
+                            )
+                          }
+                          size="small"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                    ))
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <TablePagination
+            component="div"
+            count={formData.tableData.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[50, 100, 200]}
+          />
+        </Box>
+      )}
+
+      {errorMessage && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {errorMessage}
+        </Alert>
+      )}
+
+      <Box sx={{ mt: 2 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={sendDataToApi}
+          disabled={isLoading}
+        >
+          {isLoading ? <CircularProgress size={24} /> : "Send Data to API"}
+        </Button>
+      </Box>
     </Box>
   );
-};
+}
 
-export default Update;
+export default Session;

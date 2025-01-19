@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
-import Papa from "papaparse"; // Import papaparse
+import Papa from "papaparse";
 import {
   Button,
   Typography,
@@ -13,22 +13,41 @@ import {
   TableRow,
   Paper,
   Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { getCookie } from "@/utils";
 
-const Attendance = () => {
-  interface ConsolidatedStudent {
-    program_name: string;
-    name: string;
-    batch: string;
-    year: string;
-    uid: string;
-    totalPresent?: number;
-    totalAbsent?: number;
-    totalLate?: number;
-    [key: string]: any;
-  }
+interface ConsolidatedStudent {
+  program_name: string;
+  name: string;
+  batch: string;
+  year: string;
+  uid: string;
+  totalPresent?: number;
+  totalAbsent?: number;
+  totalLate?: number;
+  [key: string]: any;
+}
 
+interface AttendanceData {
+  session: string;
+  uid: string;
+  name: string;
+  program_name: string;
+  batch: string;
+  year: string;
+  present: string;
+  late: string;
+}
+
+interface ProgramSessions {
+  [key: string]: Set<string>;
+}
+
+const Attendance = () => {
   const [_rawData, setRawData] = useState<AttendanceData[]>([]);
   const [consolidatedData, setConsolidatedData] = useState<
     ConsolidatedStudent[]
@@ -36,9 +55,17 @@ const Attendance = () => {
   const [branchConsolidatedData, setBranchConsolidatedData] = useState<any[]>(
     []
   );
-  const [sessions, setSessions] = useState(new Set());
+  const [programSessions, setProgramSessions] = useState<ProgramSessions>({});
+  const [programNames, setProgramNames] = useState<string[]>([]);
+  const [selectedProgram, setSelectedProgram] = useState<string>("all");
+  const [filteredConsolidatedData, setFilteredConsolidatedData] = useState<
+    ConsolidatedStudent[]
+  >([]);
+  const [filteredBranchData, setFilteredBranchData] = useState<any[]>([]);
+  const [currentSessions, setCurrentSessions] = useState<Set<string>>(
+    new Set()
+  );
 
-  // Fetch attendance data from Flask API
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -48,7 +75,14 @@ const Attendance = () => {
         const data = await response.json();
         setRawData(data);
 
-        // Generate tables after fetching the data
+        // Generate tables and extract program names
+        const sessions = groupSessionsByProgram(data);
+        setProgramSessions(sessions);
+        const uniquePrograms = [
+          ...new Set(data.map((item: AttendanceData) => item.program_name)),
+        ] as string[];
+        setProgramNames(uniquePrograms);
+
         generateTables(data);
       } catch (error) {
         console.error("Error fetching attendance data:", error);
@@ -58,16 +92,45 @@ const Attendance = () => {
     fetchData();
   }, []);
 
-  interface AttendanceData {
-    session: string;
-    uid: string;
-    name: string;
-    program_name: string;
-    batch: string;
-    year: string;
-    present: string;
-    late: string;
-  }
+  useEffect(() => {
+    if (selectedProgram === "all") {
+      setFilteredConsolidatedData(consolidatedData);
+      setFilteredBranchData(branchConsolidatedData);
+      // Combine all sessions when "All Programs" is selected
+      const allSessions = new Set<string>();
+      Object.values(programSessions).forEach((sessions) => {
+        sessions.forEach((session) => allSessions.add(session));
+      });
+      setCurrentSessions(allSessions);
+    } else {
+      setFilteredConsolidatedData(
+        consolidatedData.filter((item) => item.program_name === selectedProgram)
+      );
+      setFilteredBranchData(
+        branchConsolidatedData.filter(
+          (item) => item.program_name === selectedProgram
+        )
+      );
+      // Set program-specific sessions
+      setCurrentSessions(programSessions[selectedProgram] || new Set());
+    }
+  }, [
+    selectedProgram,
+    consolidatedData,
+    branchConsolidatedData,
+    programSessions,
+  ]);
+
+  const groupSessionsByProgram = (data: AttendanceData[]): ProgramSessions => {
+    const sessions: ProgramSessions = {};
+    data.forEach((item) => {
+      if (!sessions[item.program_name]) {
+        sessions[item.program_name] = new Set();
+      }
+      sessions[item.program_name].add(item.session);
+    });
+    return sessions;
+  };
 
   const generateTables = (data: AttendanceData[]) => {
     if (data.length === 0) {
@@ -75,9 +138,8 @@ const Attendance = () => {
       return;
     }
 
-    const newSessions = new Set();
-    data.forEach((item) => newSessions.add(item.session));
-    setSessions(newSessions);
+    const sessions = groupSessionsByProgram(data);
+    setProgramSessions(sessions);
 
     const consolidated = consolidateAttendanceData(data);
     setConsolidatedData(consolidated);
@@ -86,9 +148,9 @@ const Attendance = () => {
     setBranchConsolidatedData(batchConsolidated);
   };
 
-  const consolidateAttendanceData = (data: any) => {
+  const consolidateAttendanceData = (data: AttendanceData[]) => {
     const consolidated: any[] = [];
-    data.forEach((item: any) => {
+    data.forEach((item) => {
       const student = consolidated.find(
         (s) => s.uid === item.uid && s.program_name === item.program_name
       );
@@ -120,10 +182,10 @@ const Attendance = () => {
     return consolidated;
   };
 
-  const consolidateAttendanceByBatch = (data: any) => {
+  const consolidateAttendanceByBatch = (data: AttendanceData[]) => {
     const batchConsolidated: any[] = [];
 
-    data.forEach((item: any) => {
+    data.forEach((item) => {
       const batch = batchConsolidated.find(
         (b) =>
           b.batch === item.batch &&
@@ -193,7 +255,7 @@ const Attendance = () => {
       "Batch",
       "Program Name",
       "Year",
-      ...Array.from(sessions),
+      ...Array.from(currentSessions),
       "Total Students",
       "Total Present",
       "Total Absent",
@@ -201,10 +263,10 @@ const Attendance = () => {
     ];
     csvData.push(headers);
 
-    branchConsolidatedData.forEach((item) => {
+    filteredBranchData.forEach((item) => {
       const row = [item.batch, item.program_name, item.year];
 
-      Array.from(sessions).forEach((session: any) => {
+      Array.from(currentSessions).forEach((session: any) => {
         const sessionData = item[session] || {};
         row.push(
           `Present: ${sessionData.Present || 0}, Absent: ${
@@ -244,7 +306,7 @@ const Attendance = () => {
     ];
     csvData.push(headers);
 
-    consolidatedData.forEach((item) => {
+    filteredConsolidatedData.forEach((item) => {
       const totalSessions = (item.totalPresent || 0) + (item.totalAbsent || 0);
       const attendancePercentage =
         totalSessions > 0
@@ -276,20 +338,19 @@ const Attendance = () => {
 
   const saveToDatabase = async () => {
     try {
-      const sessionWiseData = branchConsolidatedData.flatMap((item) =>
-        Array.from(sessions).map((session) => {
-          // @ts-expect-error: Object is possibly 'undefined'.
+      const sessionWiseData = filteredBranchData.flatMap((item) =>
+        Array.from(currentSessions).map((session) => {
           const sessionData = item[session] || {};
           return {
             batch: item.batch,
             program_name: item.program_name,
             year: item.year,
-            session: session, // Dynamically assign the session name
-            totalPresent: sessionData.Present || 0, // Total present for this session
-            totalAbsent: sessionData.Absent || 0, // Total absent for this session
-            totalLate: sessionData.Late || 0, // Total late for this session
+            session: session,
+            totalPresent: sessionData.Present || 0,
+            totalAbsent: sessionData.Absent || 0,
+            totalLate: sessionData.Late || 0,
             totalStudents:
-              (sessionData.Present || 0) + (sessionData.Absent || 0), // Total students for this session
+              (sessionData.Present || 0) + (sessionData.Absent || 0),
           };
         })
       );
@@ -318,6 +379,10 @@ const Attendance = () => {
     }
   };
 
+  const handleProgramChange = (event: any) => {
+    setSelectedProgram(event.target.value);
+  };
+
   return (
     <Box
       sx={{
@@ -336,6 +401,23 @@ const Attendance = () => {
       >
         Attendance Table Generator
       </Typography>
+
+      <FormControl sx={{ minWidth: 200, mb: 3 }}>
+        <InputLabel id="program-select-label">Select Program</InputLabel>
+        <Select
+          labelId="program-select-label"
+          value={selectedProgram}
+          label="Select Program"
+          onChange={handleProgramChange}
+        >
+          <MenuItem value="all">All Programs</MenuItem>
+          {programNames.map((program) => (
+            <MenuItem key={program} value={program}>
+              {program}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
 
       <TableContainer
         component={Paper}
@@ -357,7 +439,7 @@ const Attendance = () => {
               <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
                 Year
               </TableCell>
-              {Array.from(sessions).map((session) => (
+              {Array.from(currentSessions).map((session) => (
                 <TableCell
                   key={String(session)}
                   sx={{ color: "#fff", fontWeight: "bold" }}
@@ -380,7 +462,7 @@ const Attendance = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {branchConsolidatedData.map((item, index) => (
+            {filteredBranchData.map((item, index) => (
               <TableRow
                 key={index}
                 sx={{
@@ -391,7 +473,7 @@ const Attendance = () => {
                 <TableCell>{item.batch}</TableCell>
                 <TableCell>{item.program_name}</TableCell>
                 <TableCell>{item.year}</TableCell>
-                {Array.from(sessions).map((session: any) => {
+                {Array.from(currentSessions).map((session: any) => {
                   const sessionData = item[session] || {};
                   return (
                     <TableCell key={session}>
@@ -496,7 +578,7 @@ const Attendance = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {consolidatedData.map((item, index) => {
+            {filteredConsolidatedData.map((item, index) => {
               const totalSessions =
                 (item.totalPresent || 0) + (item.totalAbsent || 0);
               const attendancePercentage =
@@ -534,6 +616,7 @@ const Attendance = () => {
           display: "flex",
           justifyContent: "center",
           gap: 2,
+          marginBottom: 4,
         }}
       >
         <Button

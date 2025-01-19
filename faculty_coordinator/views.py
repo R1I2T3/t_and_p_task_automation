@@ -1,4 +1,3 @@
-# attendance/views.py
 from django.http import JsonResponse
 from django.db import connection
 from datetime import datetime
@@ -52,36 +51,50 @@ import json
 @permission_classes([IsAuthenticated])
 def save_attendance(request):
     user = User.objects.get(email=request.user)
+
+    # Check if the user is a faculty member
     if user.role != "faculty":
         return JsonResponse({"error": "Permission denied"}, status=403)
+
     try:
+        # Get the attendance records from the request data
         attendance_records = request.data.get("students", [])
+
+        # Check if there are attendance records provided
         if not attendance_records:
             return JsonResponse({"error": "No attendance data provided"}, status=400)
 
+        # Iterate over each attendance record
         for record in attendance_records:
+            # Prepare the SQL query for inserting/updating attendance data
             query = """
                 INSERT INTO attendance_data (
-                    program_name, session, uid, name, year, batch, present, late, timestamp,semester
+                    program_name, session, uid, name, year, batch, present, late, timestamp, semester, phase
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,%s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE
                     present = VALUES(present),
                     late = VALUES(late),
-                    timestamp = VALUES(timestamp);
+                    timestamp = VALUES(timestamp),
+                    phase = VALUES(phase);  -- Ensure the phase is updated as well
             """
+
+            # Get the necessary parameters for the query, including the phase
             params = (
-                record.get("ProgramName"),
-                record.get("Session"),
-                record.get("UID"),
-                record.get("Name"),
-                record.get("Year"),
-                record.get("Batch"),
-                record.get("Present", "Absent"),
-                record.get("Late", "Not Late"),
-                datetime.now(),
-                record.get("semester"),
+                record.get("ProgramName"),  # program_name
+                record.get("Session"),  # session
+                record.get("UID"),  # uid
+                record.get("Name"),  # name
+                record.get("Year"),  # year
+                record.get("Batch"),  # batch
+                record.get("Present", "Absent"),  # present (default to "Absent")
+                record.get("Late", "Not Late"),  # late (default to "Not Late")
+                datetime.now(),  # timestamp
+                record.get("semester"),  # semester
+                record.get("Phase"),  # phase (newly added field)
             )
+
+            # Execute the query to insert/update the attendance data
             execute_query(query, params, fetch_all=False)
 
         return JsonResponse(

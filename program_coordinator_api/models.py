@@ -16,6 +16,7 @@ class AttendanceData(models.Model):
     semester = models.CharField(
         max_length=100, default="SEMESTER 1", choices=SEM_OPTIONS
     )
+    phase = models.CharField(null=True, max_length=100)
 
     class Meta:
         db_table = "attendance_data"
@@ -93,6 +94,7 @@ class AttendanceRecord(models.Model):
     semester = models.CharField(
         max_length=100, choices=SEM_OPTIONS, default="SEMESTER 1"
     )
+    phase = models.CharField(null=True, max_length=100)
 
     class Meta:
         db_table = "attendance_attendancerecord"
