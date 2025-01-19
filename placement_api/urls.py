@@ -24,7 +24,7 @@ urlpatterns = [
     path("job_application/get/<str:uid>/", get_student_application),
     path("job_application/company/get/<str:pk>/", get_all_applied_students),
     path("job_acceptance/create/", create_job_acceptance),
-    path("jobs/verify/", get_all_job_acceptances, name="job-acceptance"),
+    path("jobs/verify", get_all_job_acceptances, name="job-acceptance"),
     path("jobs/verify/selected/", verify_job, name="verify-job"),
     path("attendance/save/", SaveAttendance.as_view(), name="save_to_database"),
 ]

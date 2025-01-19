@@ -342,8 +342,9 @@ def upload_data(request):
             with connection.cursor() as cursor:
                 for student in students:
                     UID = student.get("UID")
-                    student_db = Student.objects.get(uid=UID)
-                    if student_db:
+                    student_db_array = Student.objects.filter(uid=UID)
+                    if len(student_db_array) == 1:
+                        student_db = student_db_array[0]
                         TrainingAttendanceSemester.objects.update_or_create(
                             student=student_db,
                             semester=student.get("semester"),
