@@ -25,6 +25,7 @@ import Sidebar from "./components/Sidebar";
 
 interface ProgramData {
   program_name: string;
+  year: string; // Adding year property
   dates: string[] | string;
   num_sessions: number;
   student_data: Array<{
@@ -37,11 +38,13 @@ function FacultyHome() {
   const [data, setData] = useState<ProgramData[]>([]);
   const [programs, setPrograms] = useState<string[]>([]);
   const [phases, setPhases] = useState<string[]>([]); // State for Phases
+  const [years, setYears] = useState<string[]>([]); // State for Years
   const [selectedProgram, setSelectedProgram] = useState("");
   const [selectedPhase, setSelectedPhase] = useState(""); // State for selected phase
   const [selectedDateSession, setSelectedDateSession] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("");
   const [_batches, setBatches] = useState<string[]>([]);
+  const [selectedYear, setSelectedYear] = useState(""); // State for selected year
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
@@ -58,6 +61,12 @@ function FacultyHome() {
           ),
         ] as string[];
         setPrograms(uniquePrograms);
+
+        // Extract unique years
+        const uniqueYears = [
+          ...new Set(response.data.map((item: ProgramData) => item.year)),
+        ] as string[];
+        setYears(uniqueYears);
 
         const allBatches = response.data.flatMap((item: ProgramData) => {
           const batches: any[] = [];
@@ -103,6 +112,16 @@ function FacultyHome() {
     setSelectedDateSession("");
     setSelectedBatch("");
     setSelectedPhase("");
+    setSelectedYear(""); // Reset the year selection
+  };
+
+  const handleYearChange = (event: any) => {
+    const selectedYear = event.target.value;
+    setSelectedYear(selectedYear);
+
+    // Optionally reset dependent fields if year changes
+    setSelectedPhase(""); // Reset phase when year is changed
+    setSelectedDateSession(""); // Reset date/session when year is changed
   };
 
   const handlePhaseChange = (event: any) => {
@@ -122,6 +141,7 @@ function FacultyHome() {
           dateSession: selectedDateSession,
           batch: selectedBatch,
           phase: selectedPhase,
+          year: selectedYear, // Passing selected year
         },
       });
     } else {
@@ -133,9 +153,13 @@ function FacultyHome() {
     ? data.filter((item) => item.program_name === selectedProgram)
     : data;
 
-  const filteredPhaseData = selectedPhase
-    ? filteredData.filter((item) => item.phase === selectedPhase)
+  const filteredYearData = selectedYear
+    ? filteredData.filter((item) => item.year === selectedYear)
     : filteredData;
+
+  const filteredPhaseData = selectedPhase
+    ? filteredYearData.filter((item) => item.phase === selectedPhase)
+    : filteredYearData;
 
   const dateSessionOptions = filteredPhaseData.flatMap((item) => {
     let dates = [];
@@ -259,6 +283,49 @@ function FacultyHome() {
                       {programs.map((program, index) => (
                         <MenuItem key={program || index} value={program}>
                           {program}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  {/* Year Select Dropdown */}
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    disabled={!selectedProgram}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                        "&:hover fieldset": {
+                          borderColor: "#fb8c00",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "#f57c00",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#f57c00",
+                      },
+                    }}
+                  >
+                    <InputLabel id="year-label">
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <SchoolIcon fontSize="small" />
+                        Select Year
+                      </Box>
+                    </InputLabel>
+                    <Select
+                      labelId="year-label"
+                      value={selectedYear}
+                      onChange={handleYearChange}
+                      label="Select Year"
+                    >
+                      <MenuItem value="">None</MenuItem>
+                      {years.map((year, index) => (
+                        <MenuItem key={year || index} value={year}>
+                          {year}
                         </MenuItem>
                       ))}
                     </Select>
