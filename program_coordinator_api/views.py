@@ -54,6 +54,16 @@ def get_attendance_data(request, table_name):
         )
 
 
+import logging
+from django.db import connection, IntegrityError, DatabaseError
+from django.http import JsonResponse
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+
+# Setup logger
+logger = logging.getLogger(__name__)
+
 @api_view(["POST"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
@@ -67,6 +77,7 @@ def save_branch_attendance(request, table_name):
             ]  # Add valid table names here
             if table_name not in valid_tables:
                 return JsonResponse({"error": "Invalid table name"}, status=400)
+            
             branch_data = request.data.get("branchData")
             if not branch_data:
                 return JsonResponse({"error": "No data provided"}, status=400)
@@ -80,32 +91,40 @@ def save_branch_attendance(request, table_name):
                 total_absent = batch.get("totalAbsent", 0)
                 total_late = batch.get("totalLate", 0)
 
+                # Validate each session in batch
                 for session, session_data in batch.items():
-                    if session not in [
-                        "batch",
-                        "program_name",
-                        "year",
-                        "totalStudents",
-                        "totalPresent",
-                        "totalAbsent",
-                        "totalLate",
-                    ]:
-                        # Insert or update batch attendance via raw SQL
-                        query = f"""
-                            INSERT INTO {table_name} (batch, session, program_name, year, total_students, total_present, total_absent, total_late)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                            ON DUPLICATE KEY UPDATE
-                                total_students = VALUES(total_students),
-                                total_present = VALUES(total_present),
-                                total_absent = VALUES(total_absent),
-                                total_late = VALUES(total_late)
-                        """
+                    # Skip non-session fields
+                    if session in ["batch", "program_name", "year", "totalStudents", "totalPresent", "totalAbsent", "totalLate"]:
+                        continue
+                    
+                    # Ensure session data has a 'date'
+                    if 'date' not in session_data:
+                        logger.warning(f"Date is missing for session {session} in batch {batch_name}")
+                        return JsonResponse({"error": f"Date is missing for session {session}"}, status=400)
+
+                    # Get the date from session data
+                    session_date = session_data.get('date')
+
+                    # Format the session as "date - session"
+                    session_name = f"{session_date} - {session}"
+
+                    # Insert or update batch attendance via raw SQL
+                    query = f"""
+                        INSERT INTO {table_name} (batch, session, program_name, year, total_students, total_present, total_absent, total_late)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        ON DUPLICATE KEY UPDATE
+                            total_students = VALUES(total_students),
+                            total_present = VALUES(total_present),
+                            total_absent = VALUES(total_absent),
+                            total_late = VALUES(total_late)
+                    """
+                    try:
                         with connection.cursor() as cursor:
                             cursor.execute(
                                 query,
                                 (
                                     batch_name,
-                                    session,
+                                    session_name,  # Use the formatted session name
                                     program_name,
                                     year,
                                     total_students,
@@ -114,6 +133,15 @@ def save_branch_attendance(request, table_name):
                                     total_late,
                                 ),
                             )
+                    except IntegrityError as e:
+                        logger.error(f"Integrity error while saving data for batch {batch_name}, session {session_name}: {str(e)}")
+                        return JsonResponse({"error": f"Database Integrity Error: {str(e)}"}, status=500)
+                    except DatabaseError as e:
+                        logger.error(f"Database error while saving data for batch {batch_name}, session {session_name}: {str(e)}")
+                        return JsonResponse({"error": f"Database Error: {str(e)}"}, status=500)
+                    except Exception as e:
+                        logger.error(f"Error executing query for batch {batch_name}, session {session_name}: {str(e)}")
+                        return JsonResponse({"error": f"Error executing query: {str(e)}"}, status=500)
 
             return JsonResponse(
                 {
@@ -123,9 +151,10 @@ def save_branch_attendance(request, table_name):
             )
 
         except Exception as e:
-            return JsonResponse(
-                {"error": f"Failed to save batch-wise attendance: {str(e)}"}, status=500
-            )
+            # Log unexpected errors
+            logger.exception(f"Unexpected error occurred while saving batch attendance: {str(e)}")
+            return JsonResponse({"error": f"Failed to save batch-wise attendance: {str(e)}"}, status=500)
+
 
 
 # Route 3: Fetch average attendance and training performance by Branch_Div (using raw SQL with dynamic table names)
@@ -221,9 +250,11 @@ class CreateAttendanceRecord(APIView):
                 {"error": "Faculty is not assigned to any program"},
                 status=status.HTTP_403_FORBIDDEN,
             )
+
         # Validate required fields
         print(data)
         required_fields = [
+            "phase",
             "semester",
             "year",
             "num_sessions",
@@ -268,6 +299,7 @@ class CreateAttendanceRecord(APIView):
         year = data["year"]
         num_sessions = data["num_sessions"]
         semester = data["semester"]
+        phase = data["phase"]
         num_days = data["num_days"]
         dates = json.dumps(data["dates"])  # Convert list to JSON string
         file_headers = json.dumps(data["file_headers"])  # Convert list to JSON string
@@ -277,8 +309,10 @@ class CreateAttendanceRecord(APIView):
 
         # Create raw SQL insert query
         query = """
-            INSERT INTO attendance_attendancerecord (program_name, year, num_sessions, num_days, dates, file_headers, student_data,semester)
-            VALUES (%s, %s, %s, %s, %s, %s, %s,%s)
+            INSERT INTO attendance_attendancerecord (
+                program_name, year, num_sessions, num_days, dates, file_headers, student_data, semester, phase
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
 
         # Execute the query using Django's connection cursor
@@ -294,6 +328,7 @@ class CreateAttendanceRecord(APIView):
                     file_headers,
                     student_data,
                     semester,
+                    phase,  # Include phase in the query
                 ],
             )
 
@@ -308,6 +343,7 @@ class CreateAttendanceRecord(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
 
 
 # route 6
@@ -342,11 +378,11 @@ def upload_data(request):
             with connection.cursor() as cursor:
                 for student in students:
                     UID = student.get("UID")
-                    student_db_array = Student.objects.filter(uid=UID)
-                    if len(student_db_array) == 1:
-                        student_db = student_db_array[0]
+                    student_db = Student.objects.filter(uid=UID)
+                    if len(student_db):
+                        studentDB = student_db[0]
                         TrainingAttendanceSemester.objects.update_or_create(
-                            student=student_db,
+                            student=studentDB,
                             semester=student.get("semester"),
                             program=faculty.program,
                             defaults={
@@ -356,7 +392,7 @@ def upload_data(request):
                             },
                         )
                         TrainingPerformanceSemester.objects.update_or_create(
-                            student=student_db,
+                            student=studentDB,
                             semester=student.get("semester"),
                             program=faculty.program,
                             defaults={

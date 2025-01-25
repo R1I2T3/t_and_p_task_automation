@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import axios from "axios";
 import {
@@ -28,14 +28,17 @@ interface ProgramData {
   dates: string[] | string;
   num_sessions: number;
   student_data: Array<{
-    student_data?: any[];
+    student_data?: any[]; // Adjust type as needed
   }>;
+  phase?: string; // Assuming phase is part of the program data
 }
 
 function FacultyHome() {
   const [data, setData] = useState<ProgramData[]>([]);
   const [programs, setPrograms] = useState<string[]>([]);
+  const [phases, setPhases] = useState<string[]>([]); // State for Phases
   const [selectedProgram, setSelectedProgram] = useState("");
+  const [selectedPhase, setSelectedPhase] = useState(""); // State for selected phase
   const [selectedDateSession, setSelectedDateSession] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("");
   const [_batches, setBatches] = useState<string[]>([]);
@@ -44,16 +47,18 @@ function FacultyHome() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios
-      .get("/api/faculty_coordinator/data")
-      .then((response) => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get("/api/faculty_coordinator/data");
         setData(response.data);
+
         const uniquePrograms = [
           ...new Set(
             response.data.map((item: ProgramData) => item.program_name)
           ),
         ] as string[];
         setPrograms(uniquePrograms);
+
         const allBatches = response.data.flatMap((item: ProgramData) => {
           const batches: any[] = [];
           if (Array.isArray(item.student_data)) {
@@ -70,17 +75,39 @@ function FacultyHome() {
         });
         setBatches([...new Set(allBatches)] as string[]);
         setLoading(false);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching data:", error);
         setLoading(false);
-      });
+        alert(
+          "An error occurred while fetching the data. Please try again later."
+        );
+      }
+    };
+
+    fetchData();
   }, []);
 
   const handleProgramChange = (event: any) => {
-    setSelectedProgram(event.target.value);
+    const selectedProgram = event.target.value;
+    setSelectedProgram(selectedProgram);
+
+    // Filter phases based on the selected program
+    const programPhases = data
+      .filter((item) => item.program_name === selectedProgram)
+      .map((item) => item.phase)
+      .filter((phase): phase is string => phase !== undefined);
+
+    setPhases([...new Set(programPhases)]);
+
+    // Reset dependent fields
     setSelectedDateSession("");
     setSelectedBatch("");
+    setSelectedPhase("");
+  };
+
+  const handlePhaseChange = (event: any) => {
+    setSelectedPhase(event.target.value);
+    setSelectedDateSession(""); // Optionally reset session on phase change
   };
 
   const handleDateSessionChange = (event: any) => {
@@ -94,6 +121,7 @@ function FacultyHome() {
           program: selectedProgram,
           dateSession: selectedDateSession,
           batch: selectedBatch,
+          phase: selectedPhase,
         },
       });
     } else {
@@ -104,7 +132,12 @@ function FacultyHome() {
   const filteredData = selectedProgram
     ? data.filter((item) => item.program_name === selectedProgram)
     : data;
-  const dateSessionOptions = filteredData.flatMap((item) => {
+
+  const filteredPhaseData = selectedPhase
+    ? filteredData.filter((item) => item.phase === selectedPhase)
+    : filteredData;
+
+  const dateSessionOptions = filteredPhaseData.flatMap((item) => {
     let dates = [];
     try {
       if (item.dates && typeof item.dates === "string") {
@@ -150,7 +183,7 @@ function FacultyHome() {
       <Box
         sx={{
           flexGrow: 1,
-          ml: "250px", // Match sidebar width
+          ml: "250px",
           p: 3,
           display: "flex",
           justifyContent: "center",
@@ -189,6 +222,7 @@ function FacultyHome() {
             ) : (
               <Fade in={!loading}>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  {/* Program Select Dropdown */}
                   <FormControl
                     fullWidth
                     variant="outlined"
@@ -230,6 +264,50 @@ function FacultyHome() {
                     </Select>
                   </FormControl>
 
+                  {/* Phase Select Dropdown */}
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    disabled={!selectedProgram}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                        "&:hover fieldset": {
+                          borderColor: "#fb8c00",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "#f57c00",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#f57c00",
+                      },
+                    }}
+                  >
+                    <InputLabel id="phase-label">
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <SchoolIcon fontSize="small" />
+                        Select Phase
+                      </Box>
+                    </InputLabel>
+                    <Select
+                      labelId="phase-label"
+                      value={selectedPhase}
+                      onChange={handlePhaseChange}
+                      label="Select Phase"
+                    >
+                      <MenuItem value="">None</MenuItem>
+                      {phases.map((phase, index) => (
+                        <MenuItem key={phase || index} value={phase}>
+                          {phase}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  {/* Date and Session Select Dropdown */}
                   <FormControl
                     fullWidth
                     variant="outlined"
@@ -281,6 +359,7 @@ function FacultyHome() {
                     </Select>
                   </FormControl>
 
+                  {/* Submit Button */}
                   <Button
                     variant="contained"
                     fullWidth
