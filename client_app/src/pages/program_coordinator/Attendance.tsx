@@ -1,6 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from "react";
+import { getCookie } from "@/utils";
 import {
   Button,
   Typography,
@@ -16,9 +17,10 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  SelectChangeEvent,
 } from "@mui/material";
 import * as XLSX from "xlsx"; // Import xlsx
-import { getCookie } from "@/utils";
+
 const Attendance = () => {
   interface ConsolidatedStudent {
     program_name: string;
@@ -56,7 +58,7 @@ const Attendance = () => {
         const uniquePrograms = Array.from(
           new Set(data.map((item: any) => item.program_name))
         );
-        // @ts-expect-error - Ignore error for now
+        // @ts-expect-error: this
         setPrograms(uniquePrograms);
 
         generateTables(data);
@@ -95,10 +97,7 @@ const Attendance = () => {
     const batchConsolidated = consolidateAttendanceByBatch(data);
     setBranchConsolidatedData(batchConsolidated);
   };
-
-  const handleProgramChange = (
-    event: React.ChangeEvent<{ value: unknown }>
-  ) => {
+  const handleProgramChange = (event: SelectChangeEvent<string>) => {
     const programName = event.target.value as string;
     setSelectedProgram(programName);
     filterDataByProgram(programName);
@@ -228,7 +227,7 @@ const Attendance = () => {
     try {
       const sessionWiseData = branchConsolidatedData.flatMap((item) =>
         Array.from(sessions).map((session) => {
-          // @ts-expect-error - Ignore error for now
+          // @ts-expect-error: this is
           const sessionData = item[session] || {};
 
           return {
@@ -283,7 +282,49 @@ const Attendance = () => {
 
   // Download Excel file
   const downloadExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(branchConsolidatedData);
+    if (branchConsolidatedData.length === 0) {
+      alert("No data available to download.");
+      return;
+    }
+
+    // Extract session dates dynamically
+    const allSessions = Array.from(sessions).sort(); // Ensure consistent ordering
+    const headers = [
+      "Batch",
+      "Program Name",
+      "Year",
+      ...allSessions.map((session) => `${session}`),
+      "Total Students",
+      "Total Present",
+      "Total Absent",
+      "Total Late",
+    ];
+
+    // Format data to match table structure
+    const excelData = branchConsolidatedData.map((item) => {
+      const rowData: any = {
+        Batch: item.batch,
+        "Program Name": item.program_name,
+        Year: item.year,
+        "Total Students": item.totalStudents,
+        "Total Present": item.totalPresent,
+        "Total Absent": item.totalAbsent,
+        "Total Late": item.totalLate,
+      };
+
+      allSessions.forEach((session) => {
+        // @ts-expect-error: types
+        const sessionData = item[session] || { Present: 0, Absent: 0 };
+        rowData[
+          `${session}`
+        ] = `Present: ${sessionData.Present}, Absent: ${sessionData.Absent}`;
+      });
+
+      return rowData;
+    });
+
+    // Convert to worksheet and save file
+    const ws = XLSX.utils.json_to_sheet(excelData, { header: headers });
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Attendance");
     XLSX.writeFile(wb, "attendance_data.xlsx");
@@ -313,7 +354,6 @@ const Attendance = () => {
         <InputLabel>Program Name</InputLabel>
         <Select
           value={selectedProgram}
-          // @ts-expect-error - Ignore error for now
           onChange={handleProgramChange}
           label="Program Name"
         >

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -43,6 +42,7 @@ function FacultyHome() {
   const [selectedPhase, setSelectedPhase] = useState(""); // State for selected phase
   const [selectedDateSession, setSelectedDateSession] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_batches, setBatches] = useState<string[]>([]);
   const [selectedYear, setSelectedYear] = useState(""); // State for selected year
   const [loading, setLoading] = useState(true);
@@ -177,11 +177,20 @@ function FacultyHome() {
       return [];
     }
 
-    return dates.flatMap((date, index) =>
-      Array.from({ length: item.num_sessions }, (_, i) => {
-        const sessionKey = `${date} - Session ${i + 1}`;
-        return { key: `${sessionKey}-${index}`, value: sessionKey };
-      })
+    const currentDate = new Date(); // Get the current date
+    return dates.flatMap(
+      (date, index) =>
+        Array.from({ length: item.num_sessions }, (_, i) => {
+          const sessionDate = new Date(date); // Convert session date string to Date object
+          sessionDate.setDate(sessionDate.getDate() + i); // Adjust date for session
+
+          // Only include future or present sessions
+          if (sessionDate <= currentDate) {
+            const sessionKey = `${date} - Session ${i + 1}`;
+            return { key: `${sessionKey}-${index}`, value: sessionKey };
+          }
+          return null;
+        }).filter(Boolean) // Filter out null values (past sessions)
     );
   });
 
@@ -416,10 +425,10 @@ function FacultyHome() {
                       ) : (
                         dateSessionOptions.map((option, index) => (
                           <MenuItem
-                            key={option.key || index}
-                            value={option.value}
+                            key={option?.key || index}
+                            value={option?.value}
                           >
-                            {option.value}
+                            {option?.value}
                           </MenuItem>
                         ))
                       )}
