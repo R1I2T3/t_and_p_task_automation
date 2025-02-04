@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
@@ -10,7 +11,7 @@ function TablePage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { program, dateSession } = location.state || {};
+  const { program, dateSession, year } = location.state || {};
 
   interface DataItem {
     program_name: string;
@@ -56,9 +57,8 @@ function TablePage() {
               )
             )
           )
-        );
+        ) as string[];
         setPhase(programData[0].phase);
-        // @ts-expect-error : uniqueBatches is an array of strings
         setBatches(uniqueBatches);
       })
       .catch((error) => console.error("Error fetching data:", error));
@@ -283,14 +283,16 @@ function TablePage() {
   const filteredByBatch = selectedBatch
     ? filteredSessionData.flatMap((row) =>
         JSON.parse(row?.student_data || "[]")
-          .filter((student: any) => student.student_data[2] === selectedBatch)
+          .filter(
+            (student: any) =>
+              student.student_data[2] === selectedBatch && row?.year === year
+          )
           .map((student: any) => ({ ...student, year: row?.year }))
       )
     : filteredSessionData.flatMap((row) =>
-        JSON.parse(row?.student_data || "[]").map((student: any) => ({
-          ...student,
-          year: row?.year,
-        }))
+        JSON.parse(row?.student_data || "[]")
+          .filter((_student: any) => row?.year === year)
+          .map((student: any) => ({ ...student, year: row?.year }))
       );
 
   return (
@@ -300,7 +302,9 @@ function TablePage() {
         <main>
           <h1>Program: {program}</h1>
           <h2>Session: {dateSession}</h2>
-          <h2>Phase: {phase}</h2>
+          {/* <h2>Phase: {phase}</h2> */}
+          <h2>Year: {year}</h2>
+
           <div>
             <label>Select Batch: </label>
             <select
