@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -42,7 +43,6 @@ function FacultyHome() {
   const [selectedPhase, setSelectedPhase] = useState(""); // State for selected phase
   const [selectedDateSession, setSelectedDateSession] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_batches, setBatches] = useState<string[]>([]);
   const [selectedYear, setSelectedYear] = useState(""); // State for selected year
   const [loading, setLoading] = useState(true);
@@ -100,28 +100,39 @@ function FacultyHome() {
     const selectedProgram = event.target.value;
     setSelectedProgram(selectedProgram);
 
-    // Filter phases based on the selected program
-    const programPhases = data
+    // Filter years based on the selected program
+    const programYears = data
       .filter((item) => item.program_name === selectedProgram)
-      .map((item) => item.phase)
-      .filter((phase): phase is string => phase !== undefined);
+      .map((item) => item.year)
+      .filter((year): year is string => year !== undefined);
 
-    setPhases([...new Set(programPhases)]);
+    setYears([...new Set(programYears)]); // Ensure unique years
 
     // Reset dependent fields
+    setSelectedYear("");
+    setSelectedPhase("");
     setSelectedDateSession("");
     setSelectedBatch("");
-    setSelectedPhase("");
-    setSelectedYear(""); // Reset the year selection
   };
 
   const handleYearChange = (event: any) => {
     const selectedYear = event.target.value;
     setSelectedYear(selectedYear);
 
-    // Optionally reset dependent fields if year changes
-    setSelectedPhase(""); // Reset phase when year is changed
-    setSelectedDateSession(""); // Reset date/session when year is changed
+    // Filter phases based on the selected program and year
+    const programPhases = data
+      .filter(
+        (item) =>
+          item.program_name === selectedProgram && item.year === selectedYear
+      )
+      .map((item) => item.phase)
+      .filter((phase): phase is string => phase !== undefined);
+
+    setPhases([...new Set(programPhases)]);
+
+    // Reset dependent fields
+    setSelectedPhase("");
+    setSelectedDateSession("");
   };
 
   const handlePhaseChange = (event: any) => {
@@ -344,7 +355,7 @@ function FacultyHome() {
                   <FormControl
                     fullWidth
                     variant="outlined"
-                    disabled={!selectedProgram}
+                    disabled={!selectedProgram || !selectedYear}
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 2,
@@ -387,7 +398,9 @@ function FacultyHome() {
                   <FormControl
                     fullWidth
                     variant="outlined"
-                    disabled={!selectedProgram}
+                    disabled={
+                      !selectedProgram || !selectedYear || !selectedPhase
+                    }
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 2,
