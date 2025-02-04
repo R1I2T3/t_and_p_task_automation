@@ -18,6 +18,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
 
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_top_companies_with_offers(request):
     try:
         top_companies = list(
@@ -32,6 +35,9 @@ def get_top_companies_with_offers(request):
     return JsonResponse({"top_companies": top_companies})
 
 
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def extract_year_from_uid(uid):
     """Extract batch year from UID."""
     try:
@@ -40,12 +46,17 @@ def extract_year_from_uid(uid):
         return None
 
 
-# Returns the current year
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_current_year():
     """Get the current year."""
     return datetime.now().year
 
 
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def statistic(request, year=None):
     year = year or get_current_year()
     batch_year_suffix = str(year)[-2:]
@@ -68,6 +79,9 @@ def statistic(request, year=None):
     return JsonResponse(context)
 
 
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def filter_by_department(request, department, year=None):
     year = year or get_current_year()
     batch_year_suffix = str(year)[-2:]
@@ -84,6 +98,9 @@ def filter_by_department(request, department, year=None):
     return JsonResponse({"filtered_data": json.dumps(filtered_data)})
 
 
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_unique_departments(request, year=None):
     year = year or get_current_year()
     batch_year_suffix = str(year)[-2:]
@@ -98,6 +115,9 @@ def get_unique_departments(request, year=None):
     return JsonResponse({"unique_departments": unique_departments})
 
 
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_category(request, year=None):
     year = year or get_current_year()
     batch_year_suffix = str(year)[-2:]
@@ -114,6 +134,9 @@ def get_category(request, year=None):
     return JsonResponse({"category": category})
 
 
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_category_by_department(request, department, year=None):
     year = year or get_current_year()
     batch_year_suffix = str(year)[-2:]
@@ -129,6 +152,9 @@ def get_category_by_department(request, department, year=None):
     return JsonResponse({"category": category})
 
 
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_all_companies(request):
     try:
         companies = list(
@@ -140,6 +166,9 @@ def get_all_companies(request):
     return JsonResponse({"companies": companies})
 
 
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_offers_by_department(request, department, year=None):
     year = year or get_current_year()
     batch_year_suffix = str(year)[-2:]
@@ -159,6 +188,9 @@ def get_offers_by_department(request, department, year=None):
     return JsonResponse({"offers": offers})
 
 
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def get_data_by_year(request, year):
     try:
         batch_year_suffix = str(year)[-2:]
@@ -171,6 +203,9 @@ def get_data_by_year(request, year):
     return JsonResponse({"data": student_data})
 
 
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
 def consolidated(request):
     try:
         acceptances = jobAcceptance.objects.all()

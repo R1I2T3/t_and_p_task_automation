@@ -48,7 +48,7 @@ const JobAcceptanceForm = () => {
   const csrfToken = getCookie("csrftoken");
   useEffect(() => {
     axios
-      .get("/api/placement/company/all/", {
+      .get("/api/placement/company/all", {
         headers: {
           "X-CSRFToken": csrfToken || "",
         },
@@ -174,12 +174,12 @@ const JobAcceptanceForm = () => {
               <FormControlLabel
                 value="inHouse"
                 control={<Radio color="primary" disabled={isSubmitted} />}
-                label="In-house"
+                label="On-campus"
               />
               <FormControlLabel
                 value="outHouse"
                 control={<Radio color="primary" disabled={isSubmitted} />}
-                label="Out-house"
+                label="Off-campus"
               />
             </RadioGroup>
 

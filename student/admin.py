@@ -15,7 +15,7 @@ from .resources import StudentResource
 class StudentAdmin(ImportExportModelAdmin, ModelAdmin):
     import_form_class = ImportForm
     export_form_class = ExportForm
-
+    search_fields = ["uid", "user__full_name", "user__email"]
     list_display = [
         "uid",
         "department",

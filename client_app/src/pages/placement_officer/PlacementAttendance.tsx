@@ -96,7 +96,7 @@ export default function PlacementAttendance() {
   const csrftoken = getCookie("csrftoken");
   useEffect(() => {
     axios
-      .get("/api/placement/company/all/", {
+      .get("/api/placement/company/all", {
         headers: {
           "X-CSRFToken": csrftoken || "",
         },

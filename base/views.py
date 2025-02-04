@@ -60,9 +60,19 @@ def login(request):
             device_id = request.COOKIES.get("device_id", str(uuid.uuid4()))
 
             try:
-                device = UserDevice.objects.get_or_create(
-                    device_id=device_id, user=user, defaults={"is_verified": False}
-                )[0]
+                # Check if device exists with any user
+                existing_device = UserDevice.objects.filter(device_id=device_id).first()
+
+                if existing_device:
+                    # Update the device with new user
+                    existing_device.user = user
+                    existing_device.save()
+                    device = existing_device
+                else:
+                    # Create new device for user
+                    device = UserDevice.objects.create(
+                        device_id=device_id, user=user, is_verified=False
+                    )
 
                 if not device.is_verified:
                     # Generate and store OTP
@@ -91,7 +101,6 @@ def login(request):
             except Exception as e:
                 logger.error(f"Login error for user {email}: {str(e)}")
                 messages.error(request, "An error occurred. Please try again.")
-
         else:
             messages.error(request, "Invalid email or password.")
 

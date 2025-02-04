@@ -110,7 +110,7 @@ from unfold.contrib.import_export.forms import (
 class FacultyAdmin(ImportExportModelAdmin, ModelAdmin):
     import_form_class = ImportForm
     export_form_class = ExportForm
-
+    search_fields = ["user__email", "user__full_name"]
     list_display = [
         # "uid",
         "department",
