@@ -77,7 +77,7 @@ def login(request):
                 if not device.is_verified:
                     # Generate and store OTP
                     otp_secret = pyotp.random_base32()
-                    totp = pyotp.TOTP(otp_secret, interval=300)  # 5 minute validity
+                    totp = pyotp.TOTP(otp_secret, interval=3000)  
                     otp = totp.now()
 
                     # Store in session
