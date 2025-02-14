@@ -45,7 +45,6 @@ def redirect_user(request, user):
     login_user(request, user)
     return redirect("/")
 
-
 def login(request):
     if request.method == "POST":
         email = request.POST.get("email")
@@ -96,7 +95,6 @@ def login(request):
             messages.error(request, "Invalid email or password.")
 
     return render(request, "base/login.html")
-
 
 def verify_otp(request):
     if request.method == "POST":

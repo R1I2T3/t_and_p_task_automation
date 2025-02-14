@@ -285,7 +285,7 @@ def get_all_applied_students(request, pk):
 def create_job_acceptance(request):
     try:
         user = User.objects.get(email=request.user.email)
-        if not user or user.role not in ["internship_officer", "staff"]:
+        if not user:
             return JsonResponse(
                 {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
             )
@@ -300,13 +300,14 @@ def create_job_acceptance(request):
         start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
         completion_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
         if data.get("selectOption") == "in_house":
-
+            print("In house")
             InternshipAcceptance.objects.create(
                 student=student,
                 year=data.get("year"),
                 domain_name=data.get("domain"),
                 start_date=start_date,
                 completion_date=completion_date,
+                company_name="Thakur College of Enginerring and Technology",
             )
         else:
             if not request.FILES.get("offerLetter"):
@@ -385,7 +386,6 @@ def get_all_job_acceptances(request):
             )
             job_data["uid"] = student_obj.uid
         data.append(job_data)
-
     return JsonResponse(data, safe=False)
 
 

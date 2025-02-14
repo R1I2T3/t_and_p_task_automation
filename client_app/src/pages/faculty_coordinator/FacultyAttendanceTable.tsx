@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
@@ -10,7 +11,8 @@ function TablePage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { program, dateSession } = location.state || {};
+  const { program, dateSession, year } = location.state || {};
+
   interface DataItem {
     program_name: string;
     student_data: string;
@@ -19,6 +21,7 @@ function TablePage() {
     year: string;
     semester: string;
   }
+  const [phase, setPhase] = useState(false);
   const [data, setData] = useState<DataItem[]>([]);
   interface AttendanceRecord {
     UID: string;
@@ -27,11 +30,12 @@ function TablePage() {
     Present: boolean;
     Late: boolean;
   }
+
   const [attendanceData, setAttendanceData] = useState<
     Record<string, AttendanceRecord>
   >({});
   const [selectedBatch, setSelectedBatch] = useState("");
-  const [batches, setBatches] = useState([]);
+  const [batches, setBatches] = useState<string[]>([]);
 
   // Fetch data and populate batches
   useEffect(() => {
@@ -42,7 +46,6 @@ function TablePage() {
       .then((response) => {
         setData(response.data);
 
-        console.log(response.data);
         const programData = response.data.filter(
           (item: any) => item.program_name === program
         );
@@ -54,8 +57,8 @@ function TablePage() {
               )
             )
           )
-        );
-        // @ts-expect-error: Type 'string[]' is not assignable to type 'never[]'
+        ) as string[];
+        setPhase(programData[0].phase);
         setBatches(uniqueBatches);
       })
       .catch((error) => console.error("Error fetching data:", error));
@@ -181,6 +184,7 @@ function TablePage() {
         Batch: student.Batch,
         Present: presentStatus,
         Late: lateStatus,
+        Phase: phase, // Add the phase here
         semester: data[0].semester,
       };
     });
@@ -279,14 +283,16 @@ function TablePage() {
   const filteredByBatch = selectedBatch
     ? filteredSessionData.flatMap((row) =>
         JSON.parse(row?.student_data || "[]")
-          .filter((student: any) => student.student_data[2] === selectedBatch)
+          .filter(
+            (student: any) =>
+              student.student_data[2] === selectedBatch && row?.year === year
+          )
           .map((student: any) => ({ ...student, year: row?.year }))
       )
     : filteredSessionData.flatMap((row) =>
-        JSON.parse(row?.student_data || "[]").map((student: any) => ({
-          ...student,
-          year: row?.year,
-        }))
+        JSON.parse(row?.student_data || "[]")
+          .filter((_student: any) => row?.year === year)
+          .map((student: any) => ({ ...student, year: row?.year }))
       );
 
   return (
@@ -296,6 +302,8 @@ function TablePage() {
         <main>
           <h1>Program: {program}</h1>
           <h2>Session: {dateSession}</h2>
+          {/* <h2>Phase: {phase}</h2> */}
+          <h2>Year: {year}</h2>
 
           <div>
             <label>Select Batch: </label>
@@ -328,12 +336,6 @@ function TablePage() {
               <option value="deselect">Deselect All</option>
             </select>
             <br />
-            {/* <label>Select All Late: </label>
-            <select onChange={(e) => handleSelectAllChange('Late', e.target.value)}>
-              <option value="">-- Select Option --</option>
-              <option value="select">Select All</option>
-              <option value="deselect">Deselect All</option>
-            </select> */}
           </div>
           <br />
 
@@ -343,11 +345,8 @@ function TablePage() {
             <table>
               <thead>
                 <tr>
-                  <th>Program</th>
-                  <th>Session</th>
                   <th>UID</th>
                   <th>Name</th>
-                  <th>Year</th>
                   <th>Batch</th>
                   <th>Present</th>
                   <th>Late</th>
@@ -359,11 +358,8 @@ function TablePage() {
                   const attendance = attendanceData[studentKey] || {};
                   return (
                     <tr key={index}>
-                      <td>{program}</td>
-                      <td>{dateSession}</td>
                       <td>{student.student_data[0]}</td>
                       <td>{student.student_data[1]}</td>
-                      <td>{student.year}</td>
                       <td>{student.student_data[2]}</td>
                       <td>
                         <input

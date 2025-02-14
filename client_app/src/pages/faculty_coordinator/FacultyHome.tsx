@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import axios from "axios";
 import {
@@ -25,35 +25,49 @@ import Sidebar from "./components/Sidebar";
 
 interface ProgramData {
   program_name: string;
+  year: string; // Adding year property
   dates: string[] | string;
   num_sessions: number;
   student_data: Array<{
-    student_data?: any[];
+    student_data?: any[]; // Adjust type as needed
   }>;
+  phase?: string; // Assuming phase is part of the program data
 }
 
 function FacultyHome() {
   const [data, setData] = useState<ProgramData[]>([]);
   const [programs, setPrograms] = useState<string[]>([]);
+  const [phases, setPhases] = useState<string[]>([]); // State for Phases
+  const [years, setYears] = useState<string[]>([]); // State for Years
   const [selectedProgram, setSelectedProgram] = useState("");
+  const [selectedPhase, setSelectedPhase] = useState(""); // State for selected phase
   const [selectedDateSession, setSelectedDateSession] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("");
   const [_batches, setBatches] = useState<string[]>([]);
+  const [selectedYear, setSelectedYear] = useState(""); // State for selected year
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios
-      .get("/api/faculty_coordinator/data")
-      .then((response) => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get("/api/faculty_coordinator/data");
         setData(response.data);
+
         const uniquePrograms = [
           ...new Set(
             response.data.map((item: ProgramData) => item.program_name)
           ),
         ] as string[];
         setPrograms(uniquePrograms);
+
+        // Extract unique years
+        const uniqueYears = [
+          ...new Set(response.data.map((item: ProgramData) => item.year)),
+        ] as string[];
+        setYears(uniqueYears);
+
         const allBatches = response.data.flatMap((item: ProgramData) => {
           const batches: any[] = [];
           if (Array.isArray(item.student_data)) {
@@ -70,17 +84,60 @@ function FacultyHome() {
         });
         setBatches([...new Set(allBatches)] as string[]);
         setLoading(false);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching data:", error);
         setLoading(false);
-      });
+        alert(
+          "An error occurred while fetching the data. Please try again later."
+        );
+      }
+    };
+
+    fetchData();
   }, []);
 
   const handleProgramChange = (event: any) => {
-    setSelectedProgram(event.target.value);
+    const selectedProgram = event.target.value;
+    setSelectedProgram(selectedProgram);
+
+    // Filter years based on the selected program
+    const programYears = data
+      .filter((item) => item.program_name === selectedProgram)
+      .map((item) => item.year)
+      .filter((year): year is string => year !== undefined);
+
+    setYears([...new Set(programYears)]); // Ensure unique years
+
+    // Reset dependent fields
+    setSelectedYear("");
+    setSelectedPhase("");
     setSelectedDateSession("");
     setSelectedBatch("");
+  };
+
+  const handleYearChange = (event: any) => {
+    const selectedYear = event.target.value;
+    setSelectedYear(selectedYear);
+
+    // Filter phases based on the selected program and year
+    const programPhases = data
+      .filter(
+        (item) =>
+          item.program_name === selectedProgram && item.year === selectedYear
+      )
+      .map((item) => item.phase)
+      .filter((phase): phase is string => phase !== undefined);
+
+    setPhases([...new Set(programPhases)]);
+
+    // Reset dependent fields
+    setSelectedPhase("");
+    setSelectedDateSession("");
+  };
+
+  const handlePhaseChange = (event: any) => {
+    setSelectedPhase(event.target.value);
+    setSelectedDateSession(""); // Optionally reset session on phase change
   };
 
   const handleDateSessionChange = (event: any) => {
@@ -94,6 +151,8 @@ function FacultyHome() {
           program: selectedProgram,
           dateSession: selectedDateSession,
           batch: selectedBatch,
+          phase: selectedPhase,
+          year: selectedYear, // Passing selected year
         },
       });
     } else {
@@ -104,7 +163,16 @@ function FacultyHome() {
   const filteredData = selectedProgram
     ? data.filter((item) => item.program_name === selectedProgram)
     : data;
-  const dateSessionOptions = filteredData.flatMap((item) => {
+
+  const filteredYearData = selectedYear
+    ? filteredData.filter((item) => item.year === selectedYear)
+    : filteredData;
+
+  const filteredPhaseData = selectedPhase
+    ? filteredYearData.filter((item) => item.phase === selectedPhase)
+    : filteredYearData;
+
+  const dateSessionOptions = filteredPhaseData.flatMap((item) => {
     let dates = [];
     try {
       if (item.dates && typeof item.dates === "string") {
@@ -120,11 +188,20 @@ function FacultyHome() {
       return [];
     }
 
-    return dates.flatMap((date, index) =>
-      Array.from({ length: item.num_sessions }, (_, i) => {
-        const sessionKey = `${date} - Session ${i + 1}`;
-        return { key: `${sessionKey}-${index}`, value: sessionKey };
-      })
+    const currentDate = new Date(); // Get the current date
+    return dates.flatMap(
+      (date, index) =>
+        Array.from({ length: item.num_sessions }, (_, i) => {
+          const sessionDate = new Date(date); // Convert session date string to Date object
+          sessionDate.setDate(sessionDate.getDate() + i); // Adjust date for session
+
+          // Only include future or present sessions
+          if (sessionDate <= currentDate) {
+            const sessionKey = `${date} - Session ${i + 1}`;
+            return { key: `${sessionKey}-${index}`, value: sessionKey };
+          }
+          return null;
+        }).filter(Boolean) // Filter out null values (past sessions)
     );
   });
 
@@ -150,7 +227,7 @@ function FacultyHome() {
       <Box
         sx={{
           flexGrow: 1,
-          ml: "250px", // Match sidebar width
+          ml: "250px",
           p: 3,
           display: "flex",
           justifyContent: "center",
@@ -189,6 +266,7 @@ function FacultyHome() {
             ) : (
               <Fade in={!loading}>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  {/* Program Select Dropdown */}
                   <FormControl
                     fullWidth
                     variant="outlined"
@@ -230,10 +308,99 @@ function FacultyHome() {
                     </Select>
                   </FormControl>
 
+                  {/* Year Select Dropdown */}
                   <FormControl
                     fullWidth
                     variant="outlined"
                     disabled={!selectedProgram}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                        "&:hover fieldset": {
+                          borderColor: "#fb8c00",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "#f57c00",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#f57c00",
+                      },
+                    }}
+                  >
+                    <InputLabel id="year-label">
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <SchoolIcon fontSize="small" />
+                        Select Year
+                      </Box>
+                    </InputLabel>
+                    <Select
+                      labelId="year-label"
+                      value={selectedYear}
+                      onChange={handleYearChange}
+                      label="Select Year"
+                    >
+                      <MenuItem value="">None</MenuItem>
+                      {years.map((year, index) => (
+                        <MenuItem key={year || index} value={year}>
+                          {year}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  {/* Phase Select Dropdown */}
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    disabled={!selectedProgram || !selectedYear}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                        "&:hover fieldset": {
+                          borderColor: "#fb8c00",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "#f57c00",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#f57c00",
+                      },
+                    }}
+                  >
+                    <InputLabel id="phase-label">
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <SchoolIcon fontSize="small" />
+                        Select Phase
+                      </Box>
+                    </InputLabel>
+                    <Select
+                      labelId="phase-label"
+                      value={selectedPhase}
+                      onChange={handlePhaseChange}
+                      label="Select Phase"
+                    >
+                      <MenuItem value="">None</MenuItem>
+                      {phases.map((phase, index) => (
+                        <MenuItem key={phase || index} value={phase}>
+                          {phase}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  {/* Date and Session Select Dropdown */}
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    disabled={
+                      !selectedProgram || !selectedYear || !selectedPhase
+                    }
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 2,
@@ -271,16 +438,17 @@ function FacultyHome() {
                       ) : (
                         dateSessionOptions.map((option, index) => (
                           <MenuItem
-                            key={option.key || index}
-                            value={option.value}
+                            key={option?.key || index}
+                            value={option?.value}
                           >
-                            {option.value}
+                            {option?.value}
                           </MenuItem>
                         ))
                       )}
                     </Select>
                   </FormControl>
 
+                  {/* Submit Button */}
                   <Button
                     variant="contained"
                     fullWidth
