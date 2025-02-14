@@ -44,12 +44,7 @@ urlpatterns = (
             name="user_profile_update_password",
         ),
         path("", views.index),
-        re_path(r"^.*$", views.index),
-        re_path(
-            r"^static/(?P<path>.*)$",
-            views.serve_static,
-            {"document_root": settings.STATIC_ROOT},
-        ),
+        re_path(r"^(?!static/|media/).*$", views.index),
     ]
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

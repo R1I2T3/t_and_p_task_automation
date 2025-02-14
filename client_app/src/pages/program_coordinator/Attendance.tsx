@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
-import Papa from "papaparse"; // Import papaparse
 import {
   Button,
   Typography,
@@ -13,9 +12,13 @@ import {
   TableRow,
   Paper,
   Box,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
+import * as XLSX from "xlsx"; // Import xlsx
 import { getCookie } from "@/utils";
-
 const Attendance = () => {
   interface ConsolidatedStudent {
     program_name: string;
@@ -30,15 +33,17 @@ const Attendance = () => {
   }
 
   const [_rawData, setRawData] = useState<AttendanceData[]>([]);
-  const [consolidatedData, setConsolidatedData] = useState<
+  const [_consolidatedData, setConsolidatedData] = useState<
     ConsolidatedStudent[]
   >([]);
   const [branchConsolidatedData, setBranchConsolidatedData] = useState<any[]>(
     []
   );
   const [sessions, setSessions] = useState(new Set());
+  const [programs, setPrograms] = useState<string[]>([]);
+  const [selectedProgram, setSelectedProgram] = useState<string>("");
+  const [sessionDates, setSessionDates] = useState<string[]>([]);
 
-  // Fetch attendance data from Flask API
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -48,7 +53,12 @@ const Attendance = () => {
         const data = await response.json();
         setRawData(data);
 
-        // Generate tables after fetching the data
+        const uniquePrograms = Array.from(
+          new Set(data.map((item: any) => item.program_name))
+        );
+        // @ts-expect-error: This
+        setPrograms(uniquePrograms);
+
         generateTables(data);
       } catch (error) {
         console.error("Error fetching attendance data:", error);
@@ -84,6 +94,33 @@ const Attendance = () => {
 
     const batchConsolidated = consolidateAttendanceByBatch(data);
     setBranchConsolidatedData(batchConsolidated);
+  };
+
+  const handleProgramChange = (
+    event: React.ChangeEvent<{ value: unknown }>
+  ) => {
+    const programName = event.target.value as string;
+    setSelectedProgram(programName);
+    filterDataByProgram(programName);
+    setSessionDates(getSessionDatesForProgram(programName));
+  };
+
+  const filterDataByProgram = (programName: string) => {
+    const filteredData = _rawData.filter(
+      (item) => item.program_name === programName
+    );
+    generateTables(filteredData);
+  };
+
+  const getSessionDatesForProgram = (programName: string) => {
+    const sessionsForProgram = Array.from(
+      new Set(
+        _rawData
+          .filter((item) => item.program_name === programName)
+          .map((item) => item.session)
+      )
+    );
+    return sessionsForProgram;
   };
 
   const consolidateAttendanceData = (data: any) => {
@@ -187,109 +224,23 @@ const Attendance = () => {
     return batchConsolidated;
   };
 
-  const downloadCSV = () => {
-    const csvData = [];
-    const headers = [
-      "Batch",
-      "Program Name",
-      "Year",
-      ...Array.from(sessions),
-      "Total Students",
-      "Total Present",
-      "Total Absent",
-      "Total Late",
-    ];
-    csvData.push(headers);
-
-    branchConsolidatedData.forEach((item) => {
-      const row = [item.batch, item.program_name, item.year];
-
-      Array.from(sessions).forEach((session: any) => {
-        const sessionData = item[session] || {};
-        row.push(
-          `Present: ${sessionData.Present || 0}, Absent: ${
-            sessionData.Absent || 0
-          }`
-        );
-      });
-
-      row.push(item.totalStudents);
-      row.push(item.totalPresent);
-      row.push(item.totalAbsent);
-      row.push(item.totalLate);
-
-      csvData.push(row);
-    });
-
-    const csv = Papa.unparse(csvData);
-    const blob = new Blob([csv], { type: "text/csv" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "batch_wise_attendance.csv";
-    link.click();
-  };
-
-  const downloadIndividualCSV = () => {
-    const csvData = [];
-    const headers = [
-      "UID",
-      "Name",
-      "Program Name",
-      "Batch",
-      "Year",
-      "Total Present",
-      "Total Absent",
-      "Total Late",
-      "% Attendance",
-    ];
-    csvData.push(headers);
-
-    consolidatedData.forEach((item) => {
-      const totalSessions = (item.totalPresent || 0) + (item.totalAbsent || 0);
-      const attendancePercentage =
-        totalSessions > 0
-          ? ((item.totalPresent || 0) / totalSessions) * 100
-          : 0;
-
-      const row = [
-        item.uid,
-        item.name,
-        item.program_name,
-        item.batch,
-        item.year,
-        item.totalPresent,
-        item.totalAbsent,
-        item.totalLate,
-        attendancePercentage.toFixed(2),
-      ];
-
-      csvData.push(row);
-    });
-
-    const csv = Papa.unparse(csvData);
-    const blob = new Blob([csv], { type: "text/csv" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "individual_attendance_details.csv";
-    link.click();
-  };
-
   const saveToDatabase = async () => {
     try {
       const sessionWiseData = branchConsolidatedData.flatMap((item) =>
         Array.from(sessions).map((session) => {
-          // @ts-expect-error: Object is possibly 'undefined'.
+          // @ts-expect-error: This
           const sessionData = item[session] || {};
+
           return {
             batch: item.batch,
             program_name: item.program_name,
             year: item.year,
-            session: session, // Dynamically assign the session name
-            totalPresent: sessionData.Present || 0, // Total present for this session
-            totalAbsent: sessionData.Absent || 0, // Total absent for this session
-            totalLate: sessionData.Late || 0, // Total late for this session
+            session: session,
+            totalPresent: sessionData.Present || 0,
+            totalAbsent: sessionData.Absent || 0,
+            totalLate: sessionData.Late || 0,
             totalStudents:
-              (sessionData.Present || 0) + (sessionData.Absent || 0), // Total students for this session
+              (sessionData.Present || 0) + (sessionData.Absent || 0),
           };
         })
       );
@@ -306,16 +257,69 @@ const Attendance = () => {
         }
       );
 
-      const result = await response.json();
-      if (result.success) {
-        alert("Data saved successfully!");
-      } else {
-        alert("Error saving data!");
+      if (!response.ok) {
+        console.error("Response not OK:", response.status, response.statusText);
+        alert(`Error saving data! Status: ${response.status}`);
+        return;
+      }
+
+      const text = await response.text();
+      try {
+        const result = JSON.parse(text);
+        if (result.success) {
+          alert("Data saved successfully!");
+        } else {
+          alert("Error saving data!");
+        }
+      } catch (error) {
+        console.error("Error parsing JSON response:", error, text);
+        alert("Error saving data: Invalid server response.");
       }
     } catch (error) {
       console.error("Error saving data to database:", error);
       alert("Error saving data!");
     }
+  };
+
+  // Download Excel file
+  const downloadExcel = () => {
+    if (branchConsolidatedData.length === 0) {
+      alert("No data available to download.");
+      return;
+    }
+
+    // Extract session dates dynamically
+    const allSessions = Array.from(sessions).sort(); // Ensure consistent ordering
+
+    // Create dynamic headers for each session with separate Present and Absent columns
+
+    // Format data to match table structure
+    const excelData = branchConsolidatedData.map((item) => {
+      const rowData: any = {
+        Batch: item.batch,
+        "Program Name": item.program_name,
+        Year: item.year,
+        // "Total Students": item.totalStudents,
+        // "Total Present": item.totalPresent,
+        // "Total Absent": item.totalAbsent,
+        // "Total Late": item.totalLate
+      };
+
+      allSessions.forEach((session) => {
+        // @ts-expect-error : This
+        const sessionData = item[session] || { Present: 0, Absent: 0 };
+        rowData[`${session} - Present`] = sessionData.Present || 0;
+        rowData[`${session} - Absent`] = sessionData.Absent || 0;
+      });
+
+      return rowData;
+    });
+
+    // Convert to worksheet and save file
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+    XLSX.writeFile(wb, "attendance_data.xlsx");
   };
 
   return (
@@ -337,6 +341,24 @@ const Attendance = () => {
         Attendance Table Generator
       </Typography>
 
+      {/* Dropdown for Program Name */}
+      <FormControl sx={{ mb: 3, width: 200 }}>
+        <InputLabel>Program Name</InputLabel>
+        <Select
+          value={selectedProgram}
+          // @ts-expect-error: This
+          onChange={handleProgramChange}
+          label="Program Name"
+        >
+          {programs.map((program) => (
+            <MenuItem key={program} value={program}>
+              {program}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      {/* Table for Batch-wise Attendance */}
       <TableContainer
         component={Paper}
         sx={{
@@ -357,12 +379,12 @@ const Attendance = () => {
               <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
                 Year
               </TableCell>
-              {Array.from(sessions).map((session) => (
+              {sessionDates.map((session) => (
                 <TableCell
-                  key={String(session)}
+                  key={session}
                   sx={{ color: "#fff", fontWeight: "bold" }}
                 >
-                  {String(session)}
+                  {session}
                 </TableCell>
               ))}
               <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
@@ -381,17 +403,11 @@ const Attendance = () => {
           </TableHead>
           <TableBody>
             {branchConsolidatedData.map((item, index) => (
-              <TableRow
-                key={index}
-                sx={{
-                  "&:nth-of-type(odd)": { backgroundColor: "#f9f9f9" },
-                  "&:hover": { backgroundColor: "#e3f2fd" },
-                }}
-              >
+              <TableRow key={index}>
                 <TableCell>{item.batch}</TableCell>
                 <TableCell>{item.program_name}</TableCell>
                 <TableCell>{item.year}</TableCell>
-                {Array.from(sessions).map((session: any) => {
+                {sessionDates.map((session) => {
                   const sessionData = item[session] || {};
                   return (
                     <TableCell key={session}>
@@ -411,27 +427,8 @@ const Attendance = () => {
         </Table>
       </TableContainer>
 
-      <Box
-        sx={{
-          marginTop: 4,
-          display: "flex",
-          justifyContent: "center",
-          gap: 2,
-        }}
-      >
-        <Button
-          onClick={downloadCSV}
-          variant="contained"
-          color="primary"
-          sx={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            fontWeight: "bold",
-            "&:hover": { backgroundColor: "orange", color: "black" },
-          }}
-        >
-          Download CSV (Batch-wise)
-        </Button>
+      {/* Save to Database Button */}
+      <Box sx={{ marginTop: 4, display: "flex", justifyContent: "center" }}>
         <Button
           onClick={saveToDatabase}
           variant="contained"
@@ -447,99 +444,12 @@ const Attendance = () => {
         </Button>
       </Box>
 
-      <Typography
-        variant="h5"
-        sx={{ mt: 5, fontWeight: "bold", color: "black", textAlign: "center" }}
-      >
-        Individual Attendance Details
-      </Typography>
-
-      <TableContainer
-        component={Paper}
-        sx={{
-          maxWidth: "90%",
-          mt: 3,
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-          borderRadius: "8px",
-        }}
-      >
-        <Table>
-          <TableHead sx={{ backgroundColor: "orange" }}>
-            <TableRow>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
-                UID
-              </TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
-                Name
-              </TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
-                Program Name
-              </TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
-                Batch
-              </TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
-                Year
-              </TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
-                Total Present
-              </TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
-                Total Absent
-              </TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
-                Total Late
-              </TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
-                % Attendance
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {consolidatedData.map((item, index) => {
-              const totalSessions =
-                (item.totalPresent || 0) + (item.totalAbsent || 0);
-              const attendancePercentage =
-                totalSessions > 0
-                  ? ((item.totalPresent || 0) / totalSessions) * 100
-                  : 0;
-
-              return (
-                <TableRow
-                  key={index}
-                  sx={{
-                    "&:nth-of-type(odd)": { backgroundColor: "#f9f9f9" },
-                    "&:hover": { backgroundColor: "#e3f2fd" },
-                  }}
-                >
-                  <TableCell>{item.uid}</TableCell>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.program_name}</TableCell>
-                  <TableCell>{item.batch}</TableCell>
-                  <TableCell>{item.year}</TableCell>
-                  <TableCell>{item.totalPresent}</TableCell>
-                  <TableCell>{item.totalAbsent}</TableCell>
-                  <TableCell>{item.totalLate}</TableCell>
-                  <TableCell>{attendancePercentage.toFixed(2)}%</TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <Box
-        sx={{
-          marginTop: 4,
-          display: "flex",
-          justifyContent: "center",
-          gap: 2,
-        }}
-      >
+      {/* Download Excel Button */}
+      <Box sx={{ marginTop: 2, display: "flex", justifyContent: "center" }}>
         <Button
-          onClick={downloadIndividualCSV}
+          onClick={downloadExcel}
           variant="contained"
-          color="secondary"
+          color="primary"
           sx={{
             padding: "10px 20px",
             fontSize: "16px",
@@ -547,7 +457,7 @@ const Attendance = () => {
             "&:hover": { backgroundColor: "orange", color: "black" },
           }}
         >
-          Download CSV (Individual Details)
+          Download Excel
         </Button>
       </Box>
     </Box>

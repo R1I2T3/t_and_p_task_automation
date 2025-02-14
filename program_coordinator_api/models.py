@@ -93,6 +93,9 @@ class AttendanceRecord(models.Model):
     semester = models.CharField(
         max_length=100, choices=SEM_OPTIONS, default="SEMESTER 1"
     )
+    phase = models.CharField(
+        max_length=100, choices=[('Phase 1', 'Phase 1'), ('Phase 2', 'Phase 2'), ('Phase 3', 'Phase 3')], default="Phase 1"
+    )
 
     class Meta:
         db_table = "attendance_attendancerecord"

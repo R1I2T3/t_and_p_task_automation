@@ -140,17 +140,7 @@ const App = () => {
               </div>
             }
           />
-          <Route
-            path="/placement_officer/2024"
-            element={
-              <div>
-                <Typography variant="h5">
-                  Placement Statistics of 2024
-                </Typography>
-                <Old />
-              </div>
-            }
-          />
+          <Route path="/placement_officer/2024" element={<Old />} />
         </Route>
         <Route path="/training_officer" element={<TrainingLayout />}>
           <Route index element={<TrainingStats />} />

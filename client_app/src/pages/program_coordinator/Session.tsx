@@ -17,6 +17,7 @@ import {
   TableBody,
   CircularProgress,
   Alert,
+  TablePagination,
 } from "@mui/material";
 import { useAtomValue } from "jotai";
 import { authAtom } from "@/authAtom";
@@ -35,6 +36,7 @@ interface FormData {
   }>;
   fileHeaders: string[];
   semester: string;
+  phase: string;
 }
 
 function Session() {
@@ -48,9 +50,13 @@ function Session() {
     tableData: [],
     fileHeaders: [],
     semester: "",
+    phase: "",
   });
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(50);
+
   const SEM_OPTIONS = [
     "Semester 1",
     "Semester 2",
@@ -61,6 +67,7 @@ function Session() {
     "Semester 7",
     "Semester 8",
   ];
+
   useEffect(() => {
     if (auth?.role === "faculty" && auth.program) {
       setFormData((prevData) => ({
@@ -69,6 +76,24 @@ function Session() {
       }));
     }
   }, [auth]);
+
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const getPaginatedData = () => {
+    const startIndex = page * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    return formData.tableData.slice(startIndex, endIndex);
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target && e.target.files ? e.target.files[0] : null;
     if (!file) return;
@@ -144,7 +169,7 @@ function Session() {
       fileHeaders: sheetData[0],
       tableData: sheetData.slice(1).map((row) => ({
         fileData: row,
-        // @ts-expect-error: Object is possibly 'null'.
+        // @ts-expect-error : Type mismatch
         batch: row[2],
         sessions: [],
       })),
@@ -183,6 +208,7 @@ function Session() {
     }));
 
     setFormData((prevData) => ({ ...prevData, tableData: updatedTableData }));
+    setPage(0); // Reset to first page when generating new table
   };
 
   const handleAttendanceChange = (
@@ -191,10 +217,12 @@ function Session() {
     sessionIndex: number,
     value: string
   ) => {
+    const actualRowIndex = rowIndex + page * rowsPerPage; // Adjust for pagination
     const updatedTableData = [...formData.tableData];
-    updatedTableData[rowIndex].sessions[dayIndex][sessionIndex] = value;
+    updatedTableData[actualRowIndex].sessions[dayIndex][sessionIndex] = value;
     setFormData((prevData) => ({ ...prevData, tableData: updatedTableData }));
   };
+
   const csrfToken = getCookie("csrftoken");
   const sendDataToApi = async () => {
     const {
@@ -206,6 +234,7 @@ function Session() {
       fileHeaders,
       tableData,
       semester,
+      phase,
     } = formData;
 
     if (
@@ -233,13 +262,10 @@ function Session() {
       num_days: numDays,
       dates: dates.map((date) => date.date),
       semester: semester,
+      phase: phase,
       file_headers: fileHeaders,
       attendance_data: tableData.map((row) => ({
-        student_data: [
-          row.fileData[0], // UID
-          row.fileData[1], // Name
-          row.batch, // Batch
-        ],
+        student_data: [row.fileData[0], row.fileData[1], row.batch],
         sessions: row.sessions,
       })),
     };
@@ -300,7 +326,6 @@ function Session() {
       <Box sx={{ mb: 2 }}>
         <FormControl fullWidth>
           <InputLabel>Choose a Year</InputLabel>
-          <br />
           <Select
             value={formData.year}
             onChange={(e) => setFormData({ ...formData, year: e.target.value })}
@@ -309,6 +334,23 @@ function Session() {
             <MenuItem value="se">Second Year</MenuItem>
             <MenuItem value="te">Third Year</MenuItem>
             <MenuItem value="be">Final Year</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+      <br />
+      <Box sx={{ mb: 2 }}>
+        <FormControl fullWidth>
+          <InputLabel>Choose a Phase</InputLabel>
+          <Select
+            value={formData.phase}
+            onChange={(e) =>
+              setFormData({ ...formData, phase: e.target.value })
+            }
+          >
+            <MenuItem value="Phase 1">Phase I</MenuItem>
+            <MenuItem value="Phase 2">Phase II</MenuItem>
+            <MenuItem value="Phase 3">Phase III</MenuItem>
+            <MenuItem value="Not Applicable">Not Applicable</MenuItem>
           </Select>
         </FormControl>
       </Box>
@@ -330,24 +372,34 @@ function Session() {
         </FormControl>
       </Box>
       <br />
-      <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+
+      <Box sx={{ mb: 2 }}>
         <TextField
           label="Number of Days"
           type="number"
+          fullWidth
           value={formData.numDays}
           onChange={(e) =>
-            setFormData({ ...formData, numDays: parseInt(e.target.value) })
+            setFormData({
+              ...formData,
+              numDays: Math.max(Number(e.target.value), 1),
+            })
           }
-          fullWidth
         />
+      </Box>
+
+      <Box sx={{ mb: 2 }}>
         <TextField
           label="Number of Sessions"
           type="number"
+          fullWidth
           value={formData.numSessions}
           onChange={(e) =>
-            setFormData({ ...formData, numSessions: parseInt(e.target.value) })
+            setFormData({
+              ...formData,
+              numSessions: Math.max(Number(e.target.value), 1),
+            })
           }
-          fullWidth
         />
       </Box>
 
@@ -360,13 +412,12 @@ function Session() {
       {formData.dates.length > 0 && (
         <Box sx={{ mb: 2 }}>
           {formData.dates.map((date, index) => (
-            <Box
-              sx={{ display: "flex", alignItems: "center", mb: 1 }}
-              key={index}
-            >
-              <Typography sx={{ mr: 2 }}>{date.day}:</Typography>
+            <Box key={index} sx={{ display: "flex", gap: 2, mb: 1 }}>
+              <Typography>Day {index + 1}</Typography>
               <TextField
+                label="Date"
                 type="date"
+                fullWidth
                 value={date.date}
                 onChange={(e) => handleDateChange(index, e.target.value)}
               />
@@ -381,110 +432,91 @@ function Session() {
         </Button>
       </Box>
 
-      <SessionTable
-        formData={formData}
-        handleAttendanceChange={handleAttendanceChange}
-      />
-
-      <Box sx={{ mt: 3 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={sendDataToApi}
-          disabled={isLoading}
-        >
-          {isLoading ? <CircularProgress size={24} /> : "Send to API"}
-        </Button>
-      </Box>
+      {formData.tableData.length > 0 && (
+        <Box sx={{ width: "100%", overflow: "auto" }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                {["Program", "Name", "Year", "UID", "Batch", "Phase"]
+                  .concat(
+                    // Format headers as Date - Session X
+                    formData.dates
+                      .map((date) =>
+                        Array.from(
+                          { length: formData.numSessions },
+                          (_, sessionIndex) =>
+                            `${date.date} - Session ${sessionIndex + 1}`
+                        )
+                      )
+                      .flat() // Flatten the array to get a flat list of headers
+                  )
+                  .map((header, index) => (
+                    <TableCell key={index}>{header}</TableCell>
+                  ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {getPaginatedData().map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  <TableCell>{formData.programName}</TableCell>
+                  <TableCell>{row.fileData[1]}</TableCell>
+                  <TableCell>{formData.year}</TableCell>
+                  <TableCell>{row.fileData[0]}</TableCell>
+                  <TableCell>{row.batch}</TableCell>
+                  <TableCell>{formData.phase}</TableCell>
+                  {row.sessions.map((sessionsForDay, dayIndex) =>
+                    sessionsForDay.map((session, sessionIndex) => (
+                      <TableCell key={`${dayIndex}-${sessionIndex}`}>
+                        <TextField
+                          value={session}
+                          onChange={(e) =>
+                            handleAttendanceChange(
+                              rowIndex,
+                              dayIndex,
+                              sessionIndex,
+                              e.target.value
+                            )
+                          }
+                          size="small"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                    ))
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <TablePagination
+            component="div"
+            count={formData.tableData.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[50, 100, 200]}
+          />
+        </Box>
+      )}
 
       {errorMessage && (
         <Alert severity="error" sx={{ mt: 2 }}>
           {errorMessage}
         </Alert>
       )}
+
+      <Box sx={{ mt: 2 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={sendDataToApi}
+          disabled={isLoading}
+        >
+          {isLoading ? <CircularProgress size={24} /> : "Send Data to API"}
+        </Button>
+      </Box>
     </Box>
   );
 }
 
-const SessionTable = ({
-  formData,
-  handleAttendanceChange,
-}: {
-  formData: FormData;
-  handleAttendanceChange: any;
-}) => {
-  const [page, setPage] = useState(0);
-  if (formData.tableData.length === 0) return null;
-  const headers = ["Program", "Name", "Year", "UID", "Batch"];
-  const sessionHeaders = formData.dates.flatMap((date) =>
-    Array.from(
-      { length: formData.numSessions },
-      (_, sessionIndex) => `${date.date} - Session ${sessionIndex + 1}`
-    )
-  );
-  console.log(formData.programName);
-
-  return (
-    <>
-      <Table>
-        <TableHead>
-          <TableRow>
-            {headers.concat(sessionHeaders).map((header, index) => (
-              <TableCell key={index}>{header}</TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {formData.tableData
-            .slice(page * 20, page * 20 + 20)
-            .map((row, rowIndex) => (
-              <TableRow key={rowIndex}>
-                <TableCell>{formData.programName}</TableCell>
-                <TableCell>{row.fileData[1]}</TableCell>
-                <TableCell>{formData.year}</TableCell>
-                <TableCell>{row.fileData[0]}</TableCell>
-                <TableCell>{row.batch}</TableCell>
-                {row.sessions.map((sessionsForDay, dayIndex) =>
-                  sessionsForDay.map((session, sessionIndex) => (
-                    <TableCell key={`${dayIndex}-${sessionIndex}`}>
-                      <TextField
-                        value={session}
-                        onChange={(e) =>
-                          handleAttendanceChange(
-                            rowIndex + page * 20,
-                            dayIndex,
-                            sessionIndex,
-                            e.target.value
-                          )
-                        }
-                        size="small"
-                        variant="outlined"
-                      />
-                    </TableCell>
-                  ))
-                )}
-              </TableRow>
-            ))}
-        </TableBody>
-      </Table>
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-        <Button
-          disabled={page === 0}
-          onClick={() => setPage((prev) => prev - 1)}
-        >
-          Previous
-        </Button>
-        <Typography sx={{ mx: 2, lineHeight: "32px" }}>
-          Page {page + 1} of {Math.ceil(formData.tableData.length / 20)}
-        </Typography>
-        <Button
-          disabled={page >= Math.ceil(formData.tableData.length / 20) - 1}
-          onClick={() => setPage((prev) => prev + 1)}
-        >
-          Next
-        </Button>
-      </Box>
-    </>
-  );
-};
 export default Session;

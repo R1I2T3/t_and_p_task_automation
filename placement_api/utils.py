@@ -11,8 +11,8 @@ def is_student_eligible(criteria, student):
         return False
     if criteria.min_cgpa and criteria.min_cgpa > student.cgpa:
         return False
-    if criteria.min_attendance and criteria.min_attendance > student.attendance:
-        return False
+    # if criteria.min_attendance and criteria.min_attendance > student.attendance:
+    #     return False
 
     # Boolean checks
     # if criteria.is_kt is not None and criteria.is_kt != student.is_kt:
