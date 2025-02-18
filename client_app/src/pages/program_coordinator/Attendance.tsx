@@ -43,6 +43,8 @@ const Attendance = () => {
   const [programs, setPrograms] = useState<string[]>([]);
   const [selectedProgram, setSelectedProgram] = useState<string>("");
   const [sessionDates, setSessionDates] = useState<string[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string>("");
+  const [years, setYears] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,11 +55,16 @@ const Attendance = () => {
         const data = await response.json();
         setRawData(data);
 
+        // Get unique programs and years
         const uniquePrograms = Array.from(
           new Set(data.map((item: any) => item.program_name))
-        );
-        // @ts-expect-error: This
+        ) as string[];
+        const uniqueYears = Array.from(
+          new Set(data.map((item: any) => item.year))
+        ) as string[];
+
         setPrograms(uniquePrograms);
+        setYears(uniqueYears);
 
         generateTables(data);
       } catch (error) {
@@ -96,31 +103,58 @@ const Attendance = () => {
     setBranchConsolidatedData(batchConsolidated);
   };
 
-  const handleProgramChange = (
-    event: React.ChangeEvent<{ value: unknown }>
-  ) => {
-    const programName = event.target.value as string;
+  // const handleProgramChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+  //   const programName = event.target.value as string;
+  //   setSelectedProgram(programName);
+  //   filterDataByProgram(programName);
+  //   setSessionDates(getSessionDatesForProgram(programName));
+  // };
+  const handleYearChange = (event: any) => {
+    const year = event.target.value;
+    setSelectedYear(year);
+    filterData(selectedProgram, year);
+  };
+
+  const handleProgramChange = (event: any) => {
+    const programName = event.target.value;
     setSelectedProgram(programName);
-    filterDataByProgram(programName);
-    setSessionDates(getSessionDatesForProgram(programName));
+    filterData(programName, selectedYear);
   };
 
-  const filterDataByProgram = (programName: string) => {
-    const filteredData = _rawData.filter(
-      (item) => item.program_name === programName
-    );
+  // const filterDataByProgram = (programName: string) => {
+  //   const filteredData = _rawData.filter(
+  //     (item) => item.program_name === programName
+  //   );
+  //   generateTables(filteredData);
+  // };
+
+  // const getSessionDatesForProgram = (programName: string) => {
+  //   const sessionsForProgram = Array.from(
+  //     new Set(
+  //       _rawData
+  //         .filter((item) => item.program_name === programName)
+  //         .map((item) => item.session)
+  //     )
+  //   );
+  //   return sessionsForProgram;
+  // };
+  const filterData = (programName: string, year: string) => {
+    let filteredData = _rawData;
+
+    if (programName) {
+      filteredData = filteredData.filter(
+        (item) => item.program_name === programName
+      );
+    }
+
+    if (year) {
+      filteredData = filteredData.filter((item) => item.year === year);
+    }
+
     generateTables(filteredData);
-  };
-
-  const getSessionDatesForProgram = (programName: string) => {
-    const sessionsForProgram = Array.from(
-      new Set(
-        _rawData
-          .filter((item) => item.program_name === programName)
-          .map((item) => item.session)
-      )
+    setSessionDates(
+      Array.from(new Set(filteredData.map((item) => item.session)))
     );
-    return sessionsForProgram;
   };
 
   const consolidateAttendanceData = (data: any) => {
@@ -228,7 +262,7 @@ const Attendance = () => {
     try {
       const sessionWiseData = branchConsolidatedData.flatMap((item) =>
         Array.from(sessions).map((session) => {
-          // @ts-expect-error: This
+          // @ts-expect-error : TS doesn't recognize dynamic keys
           const sessionData = item[session] || {};
 
           return {
@@ -292,6 +326,21 @@ const Attendance = () => {
     const allSessions = Array.from(sessions).sort(); // Ensure consistent ordering
 
     // Create dynamic headers for each session with separate Present and Absent columns
+    // const sessionHeaders = allSessions.flatMap((session) => [
+    //   `${session} - Present`,
+    //   `${session} - Absent`,
+    // ]);
+
+    // const headers = [
+    //   "Batch",
+    //   "Program Name",
+    //   "Year",
+    //   ...sessionHeaders,
+    //   "Total Students",
+    //   "Total Present",
+    //   "Total Absent",
+    //   "Total Late",
+    // ];
 
     // Format data to match table structure
     const excelData = branchConsolidatedData.map((item) => {
@@ -299,14 +348,14 @@ const Attendance = () => {
         Batch: item.batch,
         "Program Name": item.program_name,
         Year: item.year,
-        // "Total Students": item.totalStudents,
+        "Total Students": item.totalStudents,
         // "Total Present": item.totalPresent,
         // "Total Absent": item.totalAbsent,
         // "Total Late": item.totalLate
       };
 
       allSessions.forEach((session) => {
-        // @ts-expect-error : This
+        // @ts-expect-error : TS doesn't recognize dynamic keys
         const sessionData = item[session] || { Present: 0, Absent: 0 };
         rowData[`${session} - Present`] = sessionData.Present || 0;
         rowData[`${session} - Absent`] = sessionData.Absent || 0;
@@ -346,13 +395,23 @@ const Attendance = () => {
         <InputLabel>Program Name</InputLabel>
         <Select
           value={selectedProgram}
-          // @ts-expect-error: This
           onChange={handleProgramChange}
           label="Program Name"
         >
           {programs.map((program) => (
             <MenuItem key={program} value={program}>
               {program}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      <FormControl sx={{ width: 200 }}>
+        <InputLabel>Year</InputLabel>
+        <Select value={selectedYear} onChange={handleYearChange} label="Year">
+          <MenuItem value="">All Years</MenuItem>
+          {years.map((year) => (
+            <MenuItem key={year} value={year}>
+              {year}
             </MenuItem>
           ))}
         </Select>
@@ -379,6 +438,9 @@ const Attendance = () => {
               <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
                 Year
               </TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
+                Total Students
+              </TableCell>
               {sessionDates.map((session) => (
                 <TableCell
                   key={session}
@@ -387,18 +449,10 @@ const Attendance = () => {
                   {session}
                 </TableCell>
               ))}
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
-                Total Students
-              </TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
-                Total Present
-              </TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
-                Total Absent
-              </TableCell>
-              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
-                Total Late
-              </TableCell>
+
+              {/* <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Total Present</TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Total Absent</TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Total Late</TableCell> */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -407,6 +461,7 @@ const Attendance = () => {
                 <TableCell>{item.batch}</TableCell>
                 <TableCell>{item.program_name}</TableCell>
                 <TableCell>{item.year}</TableCell>
+                <TableCell>{item.totalStudents}</TableCell>
                 {sessionDates.map((session) => {
                   const sessionData = item[session] || {};
                   return (
@@ -417,10 +472,10 @@ const Attendance = () => {
                     </TableCell>
                   );
                 })}
-                <TableCell>{item.totalStudents}</TableCell>
-                <TableCell>{item.totalPresent}</TableCell>
+
+                {/* <TableCell>{item.totalPresent}</TableCell>
                 <TableCell>{item.totalAbsent}</TableCell>
-                <TableCell>{item.totalLate}</TableCell>
+                <TableCell>{item.totalLate}</TableCell> */}
               </TableRow>
             ))}
           </TableBody>
