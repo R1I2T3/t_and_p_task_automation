@@ -25,26 +25,26 @@ import Sidebar from "./components/Sidebar";
 
 interface ProgramData {
   program_name: string;
-  year: string; // Adding year property
+  year: string;
   dates: string[] | string;
   num_sessions: number;
   student_data: Array<{
-    student_data?: any[]; // Adjust type as needed
+    student_data?: any[];
   }>;
-  phase?: string; // Assuming phase is part of the program data
+  phase?: string;
 }
 
 function FacultyHome() {
   const [data, setData] = useState<ProgramData[]>([]);
   const [programs, setPrograms] = useState<string[]>([]);
-  const [phases, setPhases] = useState<string[]>([]); // State for Phases
-  const [years, setYears] = useState<string[]>([]); // State for Years
+  const [phases, setPhases] = useState<string[]>([]);
+  const [years, setYears] = useState<string[]>([]);
   const [selectedProgram, setSelectedProgram] = useState("");
-  const [selectedPhase, setSelectedPhase] = useState(""); // State for selected phase
+  const [selectedPhase, setSelectedPhase] = useState("");
   const [selectedDateSession, setSelectedDateSession] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("");
   const [_batches, setBatches] = useState<string[]>([]);
-  const [selectedYear, setSelectedYear] = useState(""); // State for selected year
+  const [selectedYear, setSelectedYear] = useState("");
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
@@ -106,7 +106,7 @@ function FacultyHome() {
       .map((item) => item.year)
       .filter((year): year is string => year !== undefined);
 
-    setYears([...new Set(programYears)]); // Ensure unique years
+    setYears([...new Set(programYears)]);
 
     // Reset dependent fields
     setSelectedYear("");
@@ -137,7 +137,7 @@ function FacultyHome() {
 
   const handlePhaseChange = (event: any) => {
     setSelectedPhase(event.target.value);
-    setSelectedDateSession(""); // Optionally reset session on phase change
+    setSelectedDateSession("");
   };
 
   const handleDateSessionChange = (event: any) => {
@@ -152,7 +152,7 @@ function FacultyHome() {
           dateSession: selectedDateSession,
           batch: selectedBatch,
           phase: selectedPhase,
-          year: selectedYear, // Passing selected year
+          year: selectedYear,
         },
       });
     } else {
@@ -172,6 +172,7 @@ function FacultyHome() {
     ? filteredYearData.filter((item) => item.phase === selectedPhase)
     : filteredYearData;
 
+  // Updated logic for dateSessionOptions to include all sessions for each date
   const dateSessionOptions = filteredPhaseData.flatMap((item) => {
     let dates = [];
     try {
@@ -188,21 +189,26 @@ function FacultyHome() {
       return [];
     }
 
-    const currentDate = new Date(); // Get the current date
-    return dates.flatMap(
-      (date, index) =>
-        Array.from({ length: item.num_sessions }, (_, i) => {
-          const sessionDate = new Date(date); // Convert session date string to Date object
-          sessionDate.setDate(sessionDate.getDate() + i); // Adjust date for session
+    // Get today's date in YYYY-MM-DD format for comparison
+    const today = new Date();
+    // const todayDateString = today.toISOString().split("T")[0]; // This gives YYYY-MM-DD format
 
-          // Only include future or present sessions
-          if (sessionDate <= currentDate) {
-            const sessionKey = `${date} - Session ${i + 1}`;
-            return { key: `${sessionKey}-${index}`, value: sessionKey };
-          }
-          return null;
-        }).filter(Boolean) // Filter out null values (past sessions)
-    );
+    return dates.flatMap((date, dateIndex) => {
+      // Skip dates that are in the future
+      if (new Date(date) > today) {
+        return [];
+      }
+
+      // Generate a session for each number up to num_sessions
+      return Array.from({ length: item.num_sessions }, (_, sessionIndex) => {
+        const sessionNumber = sessionIndex + 1;
+        const sessionKey = `${date} - Session ${sessionNumber}`;
+        return {
+          key: `${date}-session-${sessionNumber}-${dateIndex}`,
+          value: sessionKey,
+        };
+      });
+    });
   });
 
   return (
@@ -438,10 +444,10 @@ function FacultyHome() {
                       ) : (
                         dateSessionOptions.map((option, index) => (
                           <MenuItem
-                            key={option?.key || index}
-                            value={option?.value}
+                            key={option.key || index}
+                            value={option.value}
                           >
-                            {option?.value}
+                            {option.value}
                           </MenuItem>
                         ))
                       )}
