@@ -11,7 +11,9 @@ from rest_framework.decorators import (
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from base.models import User
+from base.models import User, FacultyResponsibility
+from student.models import Student, AcademicAttendanceSemester
+from django.db.models import Avg
 
 
 def execute_query(query, params=None, fetch_all=True):
@@ -27,93 +29,61 @@ def execute_query(query, params=None, fetch_all=True):
 
 
 @api_view(["GET"])
-@authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_program_data(request):
-    user = User.objects.get(email=request.user)
-    if user.role != "faculty":
-        return JsonResponse({"error": "Permission denied"}, status=403)
-    try:
-        query = "SELECT * FROM attendance_attendancerecord"
-        data = execute_query(query)
-        return JsonResponse(data, safe=False, status=200)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    # Restrict data to the faculty coordinator's department
+    faculty = FacultyResponsibility.objects.get(user=request.user)
+    if not faculty.department:
+        return JsonResponse({"error": "Faculty is not assigned to any department"}, status=403)
 
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from datetime import datetime
-import json
+    students = Student.objects.filter(department=faculty.department)
+    data = {
+        "total_students": students.count(),
+        "academic_years": list(students.values("academic_year").distinct()),
+    }
+    return JsonResponse(data, safe=False, status=200)
 
 
 @api_view(["POST"])
-@authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def save_attendance(request):
-    user = User.objects.get(email=request.user)
-    if user.role != "faculty":
-        return JsonResponse({"error": "Permission denied"}, status=403)
-    try:
-        attendance_records = request.data.get("students", [])
-        if not attendance_records:
-            return JsonResponse({"error": "No attendance data provided"}, status=400)
+    # Restrict attendance saving to the faculty coordinator's department
+    faculty = FacultyResponsibility.objects.get(user=request.user)
+    if not faculty.department:
+        return JsonResponse({"error": "Faculty is not assigned to any department"}, status=403)
 
-        for record in attendance_records:
-            query = """
-                INSERT INTO attendance_data (
-                    program_name, session, uid, name, year, batch, present, late, timestamp,semester
-                )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,%s)
-                ON DUPLICATE KEY UPDATE
-                    present = VALUES(present),
-                    late = VALUES(late),
-                    timestamp = VALUES(timestamp);
-            """
-            params = (
-                record.get("ProgramName"),
-                record.get("Session"),
-                record.get("UID"),
-                record.get("Name"),
-                record.get("Year"),
-                record.get("Batch"),
-                record.get("Present", "Absent"),
-                record.get("Late", "Not Late"),
-                datetime.now(),
-                record.get("semester"),
+    attendance_data = request.data.get("attendance", [])
+    for record in attendance_data:
+        student = Student.objects.filter(uid=record["uid"], department=faculty.department).first()
+        if student:
+            AcademicAttendanceSemester.objects.update_or_create(
+                student=student,
+                semester=record["semester"],
+                defaults={"attendance": record["attendance"]},
             )
-            execute_query(query, params, fetch_all=False)
-
-        return JsonResponse(
-            {"message": "Attendance data saved successfully"}, status=200
-        )
-    except Exception as e:
-        print(e)
-        return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"message": "Attendance saved successfully"}, status=200)
 
 
 @api_view(["GET"])
-@authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_attendance(request):
-    """Fetch saved attendance records."""
-    if request.user.role != "faculty":
-        return JsonResponse({"error": "Permission denied"}, status=403)
-    try:
-        query = "SELECT * FROM attendance_attendancerecord"
-        data = execute_query(query)
-        return JsonResponse(data, safe=False, status=200)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    # Restrict attendance data to the faculty coordinator's department
+    faculty = FacultyResponsibility.objects.get(user=request.user)
+    if not faculty.department:
+        return JsonResponse({"error": "Faculty is not assigned to any department"}, status=403)
+
+    attendance = AcademicAttendanceSemester.objects.filter(student__department=faculty.department)
+    data = list(attendance.values("student__uid", "semester", "attendance"))
+    return JsonResponse(data, safe=False, status=200)
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def reset_attendance(request):
-    """Reset the attendance table."""
-    try:
-        query = "TRUNCATE TABLE attendance_attendancerecord"
-        execute_query(query, fetch_all=False)
-        return JsonResponse(
-            {"message": "Attendance table reset successfully"}, status=200
-        )
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    # Restrict attendance reset to the faculty coordinator's department
+    faculty = FacultyResponsibility.objects.get(user=request.user)
+    if not faculty.department:
+        return JsonResponse({"error": "Faculty is not assigned to any department"}, status=403)
+
+    AcademicAttendanceSemester.objects.filter(student__department=faculty.department).delete()
+    return JsonResponse({"message": "Attendance reset successfully"}, status=200)
