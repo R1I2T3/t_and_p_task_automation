@@ -25,6 +25,11 @@ from student.models import (
 @permission_classes([IsAuthenticated])
 def get_attendance_data(request, table_name):
     try:
+        user = request.user
+        faculty_responsibility = FacultyResponsibility.objects.filter(user=user).first()
+        if not faculty_responsibility:
+            return JsonResponse({"error": "Faculty responsibility not assigned"}, status=403)
+
         # Validate table_name to prevent SQL injection
         valid_tables = [
             "attendance_data",
@@ -37,10 +42,11 @@ def get_attendance_data(request, table_name):
         query = f"""
             SELECT batch, late, name, present, program_name, session, timestamp, uid, year
             FROM {table_name}
+            WHERE department = %s
         """
 
         with connection.cursor() as cursor:
-            cursor.execute(query)
+            cursor.execute(query, [faculty_responsibility.department])
             rows = cursor.fetchall()
             # Convert the rows into a list of dictionaries
             columns = [col[0] for col in cursor.description]
@@ -167,6 +173,11 @@ from django.db import connection
 @permission_classes([IsAuthenticated])
 def get_avg_data(request, table_name):
     try:
+        user = request.user
+        faculty_responsibility = FacultyResponsibility.objects.filter(user=user).first()
+        if not faculty_responsibility:
+            return JsonResponse({"error": "Faculty responsibility not assigned"}, status=403)
+
         # Validate table_name to prevent SQL injection
         valid_tables = [
             "program1",
@@ -178,15 +189,16 @@ def get_avg_data(request, table_name):
         # Construct query to fetch average attendance and performance by Branch_Div with dynamic table name
         query = f"""
             SELECT Branch_Div,
-           Year,
-           AVG(training_attendance) AS avg_attendance,
-           AVG(training_performance) AS avg_performance
-    FROM {table_name}
-    GROUP BY Branch_Div, Year
+                   Year,
+                   AVG(training_attendance) AS avg_attendance,
+                   AVG(training_performance) AS avg_performance
+            FROM {table_name}
+            WHERE department = %s
+            GROUP BY Branch_Div, Year
         """
 
         with connection.cursor() as cursor:
-            cursor.execute(query)
+            cursor.execute(query, [faculty_responsibility.department])
             rows = cursor.fetchall()
             # Convert the rows into a list of dictionaries
             columns = [col[0] for col in cursor.description]
@@ -195,7 +207,6 @@ def get_avg_data(request, table_name):
         return JsonResponse(result, safe=False)
 
     except Exception as e:
-        print(e)
         return JsonResponse(
             {"error": f"Failed to fetch average data: {str(e)}"}, status=500
         )

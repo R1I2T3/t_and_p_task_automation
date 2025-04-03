@@ -34,7 +34,6 @@ class DepartmentCoordinatorViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsDepartmentCoordinator]
 
     def get_department_coordinator(self):
-        # Fetch the department coordinator's responsibility
         return FacultyResponsibility.objects.get(user=self.request.user)
 
     def list(self, request):
@@ -44,19 +43,21 @@ class DepartmentCoordinatorViewSet(viewsets.ViewSet):
                 {"error": "Department Coordinator not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
-        # Filter students by the coordinator's department
-        students = Student.objects.filter(department=department_coordinator.department)
+        students = Student.objects.select_related("user").filter(
+            department__startswith=department_coordinator.department
+        )
 
         if request.query_params.get("year"):
-            students = students.filter(academic_year=request.query_params.get("year"))
+            students = students.filter(
+                academic_year=request.query_params.get("year")
+            )
 
         stats = {
-            "total_students": students.count(),
-            "fe_count": students.filter(academic_year="FE").count(),
-            "se_count": students.filter(academic_year="SE").count(),
-            "te_count": students.filter(academic_year="TE").count(),
-            "be_count": students.filter(academic_year="BE").count(),
+            "total_students": len(students),
+            "fe_count": len(students.filter(academic_year="FE")),
+            "se_count": len(students.filter(academic_year="SE")),
+            "te_count": len(students.filter(academic_year="TE")),
+            "be_count": len(students.filter(academic_year="BE")),
         }
 
         serializer = DepartmentStatsSerializer(stats)
@@ -70,50 +71,107 @@ class DepartmentCoordinatorViewSet(viewsets.ViewSet):
                 {"error": "Department Coordinator not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
-        # Filter data by the coordinator's department
-        academic_attendance = AcademicAttendanceSemester.objects.filter(
-            student__department=department_coordinator.department
-        ).values("student__academic_year").annotate(
-            avg_attendance=Avg(Cast("attendance", FloatField()))
+        # Filter averages by department
+        average_academic_attendance = (
+            AcademicAttendanceSemester.objects.select_related("student")
+            .filter(student__department__startswith=department_coordinator.department)
+            .values("student__academic_year")
+            .annotate(avg_attendance=Avg(Cast("attendance", FloatField())))
+            .order_by("student__academic_year")
+        )
+        average_academic_performance = (
+            AcademicPerformanceSemester.objects.select_related("student")
+            .filter(student__department__startswith=department_coordinator.department)
+            .values("student__academic_year")
+            .annotate(avg_performance=Avg(Cast("performance", FloatField())))
+            .order_by("student__academic_year")
         )
 
-        academic_performance = AcademicPerformanceSemester.objects.filter(
-            student__department=department_coordinator.department
-        ).values("student__academic_year").annotate(
-            avg_performance=Avg(Cast("performance", FloatField()))
+        average_training_attendance = (
+            TrainingAttendanceSemester.objects.select_related("student")
+            .filter(student__department__startswith=department_coordinator.department)
+            .values("student__academic_year")
+            .annotate(avg_attendance=Avg(Cast("training_attendance", FloatField())))
+            .order_by("student__academic_year")
         )
 
-        training_attendance = TrainingAttendanceSemester.objects.filter(
-            student__department=department_coordinator.department
-        ).values("student__academic_year").annotate(
-            avg_attendance=Avg(Cast("training_attendance", FloatField()))
+        average_training_performance = (
+            TrainingPerformanceSemester.objects.select_related("student")
+            .filter(student__department__startswith=department_coordinator.department)
+            .values("student__academic_year")
+            .annotate(avg_performance=Avg(Cast("training_performance", FloatField())))
+            .order_by("student__academic_year")
         )
 
-        training_performance = TrainingPerformanceSemester.objects.filter(
-            student__department=department_coordinator.department
-        ).values("student__academic_year").annotate(
-            avg_performance=Avg(Cast("training_performance", FloatField()))
-        )
-
+        # Convert to dictionaries
         stats_data = {
             "academic_attendance": {
                 entry["student__academic_year"]: round(entry["avg_attendance"], 2)
-                for entry in academic_attendance
+                for entry in average_academic_attendance
             },
             "academic_performance": {
                 entry["student__academic_year"]: round(entry["avg_performance"], 2)
-                for entry in academic_performance
+                for entry in average_academic_performance
             },
             "training_attendance": {
                 entry["student__academic_year"]: round(entry["avg_attendance"], 2)
-                for entry in training_attendance
+                for entry in average_training_attendance
             },
             "training_performance": {
                 entry["student__academic_year"]: round(entry["avg_performance"], 2)
-                for entry in training_performance
+                for entry in average_training_performance
             },
         }
+
+        # Add internship and placement data
+        try:
+            with open(INTERNSHIP_JSON_PATH, "r") as f:
+                internship_data = json.load(f)
+                branch_data = internship_data[0]["branch_data"]
+                stipend_data = internship_data[0]["stipend_per_branch"]
+
+                stats_data["internship"] = {
+                    "branches": {
+                        k: v
+                        for k, v in branch_data.items()
+                        if k.lower().startswith(
+                            department_coordinator.department.lower()
+                        )
+                    },
+                    "stipends": {
+                        k: v
+                        for k, v in stipend_data.items()
+                        if k.lower().startswith(
+                            department_coordinator.department.lower()
+                        )
+                    },
+                }
+
+            with open(JSON_FILE_PATH_PLACEMENT, "r") as f:
+                placement_data = json.load(f)
+                stats_data["placement"] = {
+                    "2023": {
+                        k: v
+                        for k, v in placement_data[0]["branch_comparison"][
+                            "2023"
+                        ].items()
+                        if k.lower().startswith(
+                            department_coordinator.department.lower()
+                        )
+                    },
+                    "2024": {
+                        k: v
+                        for k, v in placement_data[0]["branch_comparison"][
+                            "2024"
+                        ].items()
+                        if k.lower().startswith(
+                            department_coordinator.department.lower()
+                        )
+                    },
+                }
+        except Exception as e:
+            stats_data["internship"] = {}
+            stats_data["placement"] = {}
 
         return Response(stats_data)
 
@@ -173,10 +231,12 @@ class AttendanceViewSet(viewsets.ViewSet):
             df = importExcelAndReturnJSON(request.FILES.get("file_performance"))
             for record in df:
                 student = Student.objects.get(uid=record["uid"].strip())
-                AcademicPerformanceSemester.objects.update_or_create(
-                    semester=record["semester"],
-                    student=student,
-                    defaults={"performance": record["performance"]},
+                semester_record, created = (
+                    AcademicPerformanceSemester.objects.update_or_create(
+                        semester=record["semester"],
+                        student=student,
+                        defaults={"performance": record["performance"]},
+                    )
                 )
                 average_performance = AcademicPerformanceSemester.objects.filter(
                     student=student
