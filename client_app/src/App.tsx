@@ -53,6 +53,9 @@ import JobAcceptance from "./pages/student/JobAcceptance";
 import PrincipalLayout from "./pages/principal/PrincipalLayout";
 import StaffLayout from "./pages/staff/StaffLayout";
 import StaffNotice from "./pages/staff/StaffNotice";
+import CreateResource from "./pages/resources/create-resource";
+import ResourceList from "./pages/resources/resource-list";
+import ResourceDetail from "./pages/resources/resource-details";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -99,6 +102,9 @@ const App = () => {
           <Route path="resume" element={<Resume />} />
           <Route path="resume-preview" element={<ResumePreview />} />
           <Route path="job-acceptance" element={<JobAcceptance />} />
+          <Route path="resources" element={<ResourceList/>} />
+          <Route path="resources/:id" element={<ResourceDetail />} />
+
           <Route
             path="placement/registration/:id"
             element={<PlacementRegistration />}
@@ -113,9 +119,10 @@ const App = () => {
           />
         </Route>
         <Route path="/faculty_coordinator" element={<FacultyLayout />}>
-          <Route index element={<FacultyHome />} />
-          <Route path="attendance" element={<FacultyTablePage />} />
-        </Route>
+  <Route index element={<FacultyHome />} />
+  <Route path="attendance" element={<FacultyTablePage />} />
+  <Route path="resource/create" element={<CreateResource />} />
+</Route>
         <Route path="/department_coordinator" element={<DepartmentParent />}>
           <Route index element={<DepartmentDashboard />} />
           <Route path="stats" element={<DepartmentStats />} />
