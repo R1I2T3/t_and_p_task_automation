@@ -26,11 +26,9 @@ class OffersSerializer(serializers.ModelSerializer):
 
 
 class PlacementNoticeSerializer(serializers.ModelSerializer):
-    company = (
-        CompanyRegistrationSerializer()
-    )  # Nested serialization for related company
-    offers = OffersSerializer(many=True, read_only=True)
-    company_offers = serializers.SerializerMethodField()
+    company = serializers.PrimaryKeyRelatedField(queryset=CompanyRegistration.objects.all())  # Use ID for saving
+    offers = OffersSerializer(many=True, read_only=True)  # Read-only offers
+    company_offers = serializers.SerializerMethodField()  # Custom method to fetch offers
 
     class Meta:
         model = placementNotice

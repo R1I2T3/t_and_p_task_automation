@@ -95,38 +95,22 @@ def get_all_companies(request):
 @permission_classes([IsAuthenticated])
 def create_notice(request, pk):
     try:
-        company = CompanyRegistration.objects.get(id=pk)
-        data = request.data
-        print(company)
-        if not company:
+        company = CompanyRegistration.objects.get(id=pk)  # Ensure company exists
+        
+        data = request.data.copy()  # Create a mutable copy
+        data["company"] = company.id  # Assign only the company ID (not object)
+        
+        # Use serializer to validate and save data
+        notice_serializer = PlacementNoticeSerializer(data=data)
+        if notice_serializer.is_valid():
+            notice = notice_serializer.save()  # Save data to DB
+        else:
             return JsonResponse(
-                {"error": "Company not found."}, status=status.HTTP_404_NOT_FOUND
+                notice_serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
 
-        notice_data = data
-        notice_data["company"] = company
-        notice_data = {
-            "srNo": data.get("srNo", ""),
-            "date": data.get("date", ""),
-            "to": data.get("to", ""),
-            "subject": data.get("subject", ""),
-            "Intro": data.get("intro", ""),
-            "Eligibility_Criteria": data.get("eligibility_criteria", ""),
-            "About_Company": data.get("about", ""),
-            "Location": data.get("location", ""),
-            "Documents_to_Carry": data.get("document to cary", ""),
-            "Walk_in_interview": data.get("Walk_in_interview", ""),
-            "Company_registration_Link": data.get("Company_registration_Link", ""),
-            "College_registration_Link": data.get("College_registration_Link", ""),
-            "Note": data.get("Note", ""),
-            "From": data.get("From", ""),
-            "From_designation": data.get("From_designation", ""),
-            "CompanyId": pk,
-        }
-        # Prepare tableData from related offers (assuming a related field 'offers' exists)
-        offers = Offers.objects.filter(
-            company=company
-        )  # Adjust as per your related name
+        # Retrieve related offers
+        offers = Offers.objects.filter(company=company)
         table_data = [
             {
                 "type": offer.type,
@@ -136,20 +120,36 @@ def create_notice(request, pk):
             for offer in offers
         ]
 
-        # Construct response data
-        response_data = {
-            **notice_data,
-            "tableData": table_data,
+        # Construct only the necessary response data
+        notice_data = {
+            "company": company.id,  # Pass only ID, not the object
+            "srNo": data.get("srNo", ""),
+            "date": data.get("date", ""),
+            "to": data.get("to", ""),
+            "subject": data.get("subject", ""),
+            "intro": data.get("intro", ""),  # Fix key case
+            "eligibility_criteria": data.get("eligibility_criteria", ""),  # Fix key case
+            "about": data.get("about", ""),  # Fix key case
+            "location": data.get("location", ""),
+            "Documents_to_Carry": data.get("Documents_to_Carry", ""),
+            "Walk_in_interview": data.get("Walk_in_interview", ""),
+            "Company_registration_Link": data.get("Company_registration_Link", ""),
+            "College_registration_Link": data.get("College_registration_Link", ""),
+            "Note": data.get("Note", ""),
+            "From": data.get("From", ""),
+            "From_designation": data.get("From_designation", ""),
+            "companyId": pk,
+            "tableData": table_data,  # Include tableData
         }
 
         return JsonResponse(
-            {"message": "Notice created successfully", "data": response_data},
+            {"message": "Notice successfully created", "data": notice_data},
             status=status.HTTP_201_CREATED,
         )
 
     except CompanyRegistration.DoesNotExist:
         return JsonResponse(
-            {"error": "Company not found."}, status=status.HTTP_404_NOT_FOUND
+            {"error": "Company not found."}, status=status.HTTP_404_BAD_REQUEST
         )
 
     except Exception as e:
@@ -157,7 +157,6 @@ def create_notice(request, pk):
         return JsonResponse(
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
 
 @api_view(["POST"])
 @authentication_classes([SessionAuthentication])
