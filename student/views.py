@@ -16,9 +16,24 @@ from .serializers import (
     TrainingAttendanceSemesterSerializer,
     StudentSerializer,
     ResumeSerializer,
+    SessionAttendanceSerializer,
 )
+
+from program_coordinator_api.models import AttendanceData  # Import model from another app
 from .utils import categorize
 
+class SessionAttendanceAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            student = Student.objects.get(user=request.user)  # Get student object
+            attendance_data = AttendanceData.objects.filter(uid=student.uid)  # Fetch attendance data
+            
+            serializer = SessionAttendanceSerializer(attendance_data, many=True)  # Serialize data
+            return Response(serializer.data)  # Return JSON response
+        except Student.DoesNotExist:
+            return Response({"error": "Student not found"}, status=404)
 
 class HomeAPIView(APIView):
     permission_classes = [IsAuthenticated]

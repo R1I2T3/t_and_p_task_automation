@@ -5,13 +5,12 @@ import copytoimage from "@/assets/pmt-placement_drive_copytoImage.png";
 import { BASE_URL } from "@/constant";
 export type NoticeData = {
   srNo: string;
-  date: string;
   to: string;
   subject: string;
-  Intro: string;
-  Eligibility_Criteria: string;
-  About_Company: string;
-  Location: string;
+  date: string;
+  intro: string;
+  eligibility_criteria: string;
+  about: string;
   Documents_to_Carry: string;
   Walk_in_interview: string;
   Company_registration_Link: string;
@@ -25,6 +24,7 @@ export type NoticeData = {
     salary: string;
     position: string;
   }>;
+  location: string;
 };
 
 const Notice = forwardRef<
@@ -32,6 +32,8 @@ const Notice = forwardRef<
   { formData: NoticeData; isPlacement: boolean }
 >(({ formData, isPlacement = true }, ref) => {
   console.log(formData.tableData);
+  console.log("Form Data:", formData);
+console.log("Documents to Carry:", formData.Documents_to_Carry);
   return (
     <div className="body">
       <div className="main-notice" ref={ref}>
@@ -53,17 +55,17 @@ const Notice = forwardRef<
             <strong>Subject:</strong> {formData.subject}
           </p>
           <p>
-            <strong>Intro:</strong> {formData.Intro}
+            <strong>Intro:</strong> {formData.intro}
           </p>
           <p>
             <strong>Eligibility Criteria:</strong>
-            {formData.Eligibility_Criteria}
+            {formData.eligibility_criteria}
           </p>
           <p>
-            <strong>About Company:</strong> {formData.About_Company}
+            <strong>About Company:</strong> {formData.about}
           </p>
           <p>
-            <strong>Location:</strong> {formData.Location}
+            <strong>Location:</strong> {formData.location}
           </p>
           <table>
             <thead>
@@ -84,8 +86,8 @@ const Notice = forwardRef<
             </tbody>
           </table>
           <p>
-            <strong>Documents to Carry:</strong> {formData.Documents_to_Carry}
-          </p>
+  <strong>Documents to Carry:</strong> {formData.Documents_to_Carry || "N/A"}
+</p>
           <p>
             <strong>Walk-in Interview:</strong> {formData.Walk_in_interview}
           </p>
