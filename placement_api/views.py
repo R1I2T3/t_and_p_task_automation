@@ -29,6 +29,81 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 from uuid import uuid4
 from .utils import is_student_eligible
 
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_notice_id(request):
+    try:
+        sr_no = request.data.get("srNo")
+        company_id = request.data.get("company")
+
+        if not sr_no or not company_id:
+            return JsonResponse(
+                {"error": "srNo and company are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Log the input data
+        print(f"Fetching notice ID for srNo: {sr_no}, companyId: {company_id}")
+
+        # Query the database
+        notice = placementNotice.objects.filter(srNo=sr_no, company__id=company_id).first()
+
+        # Log the query result
+        if notice:
+            print(f"Notice found - ID: {notice.id}")
+            return JsonResponse({"id": str(notice.id)}, status=status.HTTP_200_OK)
+        else:
+            print("Notice not found.")
+            return JsonResponse(
+                {"error": "Notice not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+    except Exception as e:
+        print(f"Error in get_notice_id: {str(e)}")
+        return JsonResponse(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["DELETE"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_notice(request, notice_id):
+    try:
+        # Fetch all notices
+        notices = placementNotice.objects.all()
+        print(f"Total notices fetched: {len(notices)}")
+
+        # Find the notice to delete
+        notice_to_delete = next((notice for notice in notices if str(notice.id) == notice_id), None)
+
+        if not notice_to_delete:
+            print(f"No notice found with ID: {notice_id}")
+            return JsonResponse({"error": "Notice not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Delete the notice
+        notice_to_delete.delete()
+        print(f"Notice with ID {notice_id} deleted successfully.")
+        return JsonResponse({"message": "Notice deleted successfully."}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(f"Error in delete_notice: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_notices(request):
+    try:
+        notices = placementNotice.objects.all()
+        data = PlacementNoticeSerializer(notices, many=True).data
+        return JsonResponse({"notices": data}, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(f"Error in get_all_notices: {str(e)}")
+        return JsonResponse(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
@@ -95,38 +170,22 @@ def get_all_companies(request):
 @permission_classes([IsAuthenticated])
 def create_notice(request, pk):
     try:
-        company = CompanyRegistration.objects.get(id=pk)
-        data = request.data
-        print(company)
-        if not company:
+        company = CompanyRegistration.objects.get(id=pk)  # Ensure company exists
+        
+        data = request.data.copy()  # Create a mutable copy
+        data["company"] = company.id  # Assign only the company ID (not object)
+        
+        # Use serializer to validate and save data
+        notice_serializer = PlacementNoticeSerializer(data=data)
+        if notice_serializer.is_valid():
+            notice = notice_serializer.save()  # Save data to DB
+        else:
             return JsonResponse(
-                {"error": "Company not found."}, status=status.HTTP_404_NOT_FOUND
+                notice_serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
 
-        notice_data = data
-        notice_data["company"] = company
-        notice_data = {
-            "srNo": data.get("srNo", ""),
-            "date": data.get("date", ""),
-            "to": data.get("to", ""),
-            "subject": data.get("subject", ""),
-            "Intro": data.get("intro", ""),
-            "Eligibility_Criteria": data.get("eligibility_criteria", ""),
-            "About_Company": data.get("about", ""),
-            "Location": data.get("location", ""),
-            "Documents_to_Carry": data.get("document to cary", ""),
-            "Walk_in_interview": data.get("Walk_in_interview", ""),
-            "Company_registration_Link": data.get("Company_registration_Link", ""),
-            "College_registration_Link": data.get("College_registration_Link", ""),
-            "Note": data.get("Note", ""),
-            "From": data.get("From", ""),
-            "From_designation": data.get("From_designation", ""),
-            "CompanyId": pk,
-        }
-        # Prepare tableData from related offers (assuming a related field 'offers' exists)
-        offers = Offers.objects.filter(
-            company=company
-        )  # Adjust as per your related name
+        # Retrieve related offers
+        offers = Offers.objects.filter(company=company)
         table_data = [
             {
                 "type": offer.type,
@@ -136,28 +195,43 @@ def create_notice(request, pk):
             for offer in offers
         ]
 
-        # Construct response data
-        response_data = {
-            **notice_data,
-            "tableData": table_data,
+        # Construct only the necessary response data
+        notice_data = {
+            "id": str(notice.id),  # Add the notice ID to the response
+            "company": company.id,  # Pass only ID, not the object
+            "srNo": data.get("srNo", ""),
+            "date": data.get("date", ""),
+            "to": data.get("to", ""),
+            "subject": data.get("subject", ""),
+            "intro": data.get("intro", ""),  # Fix key case
+            "eligibility_criteria": data.get("eligibility_criteria", ""),  # Fix key case
+            "about": data.get("about", ""),  # Fix key case
+            "location": data.get("location", ""),
+            "Documents_to_Carry": data.get("Documents_to_Carry", ""),
+            "Walk_in_interview": data.get("Walk_in_interview", ""),
+            "Company_registration_Link": data.get("Company_registration_Link", ""),
+            "College_registration_Link": data.get("College_registration_Link", ""),
+            "Note": data.get("Note", ""),
+            "From": data.get("From", ""),
+            "From_designation": data.get("From_designation", ""),
+            "companyId": pk,
+            "tableData": table_data,  # Include tableData
         }
 
         return JsonResponse(
-            {"message": "Notice created successfully", "data": response_data},
+            {"message": "Notice successfully created", "data": notice_data},
             status=status.HTTP_201_CREATED,
         )
 
     except CompanyRegistration.DoesNotExist:
         return JsonResponse(
-            {"error": "Company not found."}, status=status.HTTP_404_NOT_FOUND
+            {"error": "Company not found."}, status=status.HTTP_404_BAD_REQUEST
         )
-
     except Exception as e:
         print(e)
         return JsonResponse(
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
 
 @api_view(["POST"])
 @authentication_classes([SessionAuthentication])
