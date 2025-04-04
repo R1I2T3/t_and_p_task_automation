@@ -24,34 +24,51 @@ from student.models import (
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_attendance_data(request, table_name):
-    try:
-        # Validate table_name to prevent SQL injection
-        valid_tables = [
-            "attendance_data",
-            "another_table",
-        ]  # Add valid table names here
-        if table_name not in valid_tables:
-            return JsonResponse({"error": "Invalid table name"}, status=400)
+    user = request.user
+    if user.role == "faculty":  # Restrict only for faculty users
+        try:
+            faculty_responsibility = FacultyResponsibility.objects.filter(user=user).first()
+            if not faculty_responsibility:
+                return JsonResponse({"error": "Faculty responsibility not assigned"}, status=403)
 
-        # Construct query with dynamic table name
-        query = f"""
-            SELECT batch, late, name, present, program_name, session, timestamp, uid, year
-            FROM {table_name}
-        """
+            # Validate table_name to prevent SQL injection
+            valid_tables = [
+                "attendance_data",
+                "another_table",
+            ]  # Add valid table names here
+            if table_name not in valid_tables:
+                return JsonResponse({"error": "Invalid table name"}, status=400)
 
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            rows = cursor.fetchall()
-            # Convert the rows into a list of dictionaries
-            columns = [col[0] for col in cursor.description]
-            result = [dict(zip(columns, row)) for row in rows]
+            # Construct query with dynamic table name
+            query = f"""
+                SELECT batch, late, name, present, program_name, session, timestamp, uid, year
+                FROM {table_name}
+                WHERE department = %s
+            """
 
-        return JsonResponse(result, safe=False)
+            with connection.cursor() as cursor:
+                cursor.execute(query, [faculty_responsibility.department])
+                rows = cursor.fetchall()
+                # Convert the rows into a list of dictionaries
+                columns = [col[0] for col in cursor.description]
+                result = [dict(zip(columns, row)) for row in rows]
 
-    except Exception as e:
-        return JsonResponse(
-            {"error": f"Failed to fetch attendance data: {str(e)}"}, status=500
-        )
+            return JsonResponse(result, safe=False)
+        except Exception as e:
+            return JsonResponse(
+                {"error": f"Failed to fetch attendance data: {str(e)}"}, status=500
+            )
+    # Allow other roles to access data without restrictions
+    query = f"""
+        SELECT batch, late, name, present, program_name, session, timestamp, uid, year
+        FROM {table_name}
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        columns = [col[0] for col in cursor.description]
+        result = [dict(zip(columns, row)) for row in rows]
+    return JsonResponse(result, safe=False)
 
 
 import logging
@@ -68,93 +85,190 @@ logger = logging.getLogger(__name__)
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def save_branch_attendance(request, table_name):
-    if request.method == "POST":
+    user = request.user
+    if user.role == "faculty":  # Restrict only for faculty users
         try:
-            # Validate table_name to prevent SQL injection
-            valid_tables = [
-                "batch_attendance",
-                "another_batch_table",
-            ]  # Add valid table names here
-            if table_name not in valid_tables:
-                return JsonResponse({"error": "Invalid table name"}, status=400)
-            
-            branch_data = request.data.get("branchData")
-            if not branch_data:
-                return JsonResponse({"error": "No data provided"}, status=400)
+            faculty_responsibility = FacultyResponsibility.objects.filter(user=user).first()
+            if not faculty_responsibility:
+                return JsonResponse({"error": "Faculty responsibility not assigned"}, status=403)
 
-            for batch in branch_data:
-                batch_name = batch["batch"]
-                program_name = batch["program_name"]
-                year = batch["year"]
-                total_students = batch.get("totalStudents", 0)
-                total_present = batch.get("totalPresent", 0)
-                total_absent = batch.get("totalAbsent", 0)
-                total_late = batch.get("totalLate", 0)
-
-                # Validate each session in batch
-                for session, session_data in batch.items():
-                    # Skip non-session fields
-                    if session in ["batch", "program_name", "year", "totalStudents", "totalPresent", "totalAbsent", "totalLate"]:
-                        continue
+            if request.method == "POST":
+                try:
+                    # Validate table_name to prevent SQL injection
+                    valid_tables = [
+                        "batch_attendance",
+                        "another_batch_table",
+                    ]  # Add valid table names here
+                    if table_name not in valid_tables:
+                        return JsonResponse({"error": "Invalid table name"}, status=400)
                     
-                    # Ensure session data has a 'date'
-                    if 'date' not in session_data:
-                        logger.warning(f"Date is missing for session {session} in batch {batch_name}")
-                        return JsonResponse({"error": f"Date is missing for session {session}"}, status=400)
+                    branch_data = request.data.get("branchData")
+                    if not branch_data:
+                        return JsonResponse({"error": "No data provided"}, status=400)
 
-                    # Get the date from session data
-                    session_date = session_data.get('date')
+                    for batch in branch_data:
+                        batch_name = batch["batch"]
+                        program_name = batch["program_name"]
+                        year = batch["year"]
+                        total_students = batch.get("totalStudents", 0)
+                        total_present = batch.get("totalPresent", 0)
+                        total_absent = batch.get("totalAbsent", 0)
+                        total_late = batch.get("totalLate", 0)
 
-                    # Format the session as "date - session"
-                    session_name = f"{session_date} - {session}"
+                        # Validate each session in batch
+                        for session, session_data in batch.items():
+                            # Skip non-session fields
+                            if session in ["batch", "program_name", "year", "totalStudents", "totalPresent", "totalAbsent", "totalLate"]:
+                                continue
+                            
+                            # Ensure session data has a 'date'
+                            if 'date' not in session_data:
+                                logger.warning(f"Date is missing for session {session} in batch {batch_name}")
+                                return JsonResponse({"error": f"Date is missing for session {session}"}, status=400)
 
-                    # Insert or update batch attendance via raw SQL
-                    query = f"""
-                        INSERT INTO {table_name} (batch, session, program_name, year, total_students, total_present, total_absent, total_late)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                        ON DUPLICATE KEY UPDATE
-                            total_students = VALUES(total_students),
-                            total_present = VALUES(total_present),
-                            total_absent = VALUES(total_absent),
-                            total_late = VALUES(total_late)
-                    """
-                    try:
-                        with connection.cursor() as cursor:
-                            cursor.execute(
-                                query,
-                                (
-                                    batch_name,
-                                    session_name,  # Use the formatted session name
-                                    program_name,
-                                    year,
-                                    total_students,
-                                    total_present,
-                                    total_absent,
-                                    total_late,
-                                ),
-                            )
-                    except IntegrityError as e:
-                        logger.error(f"Integrity error while saving data for batch {batch_name}, session {session_name}: {str(e)}")
-                        return JsonResponse({"error": f"Database Integrity Error: {str(e)}"}, status=500)
-                    except DatabaseError as e:
-                        logger.error(f"Database error while saving data for batch {batch_name}, session {session_name}: {str(e)}")
-                        return JsonResponse({"error": f"Database Error: {str(e)}"}, status=500)
-                    except Exception as e:
-                        logger.error(f"Error executing query for batch {batch_name}, session {session_name}: {str(e)}")
-                        return JsonResponse({"error": f"Error executing query: {str(e)}"}, status=500)
+                            # Get the date from session data
+                            session_date = session_data.get('date')
 
-            return JsonResponse(
-                {
-                    "success": True,
-                    "message": "Batch-wise attendance saved successfully!",
-                }
-            )
+                            # Format the session as "date - session"
+                            session_name = f"{session_date} - {session}"
 
+                            # Insert or update batch attendance via raw SQL
+                            query = f"""
+                                INSERT INTO {table_name} (batch, session, program_name, year, total_students, total_present, total_absent, total_late, department)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                ON DUPLICATE KEY UPDATE
+                                    total_students = VALUES(total_students),
+                                    total_present = VALUES(total_present),
+                                    total_absent = VALUES(total_absent),
+                                    total_late = VALUES(total_late)
+                            """
+                            try:
+                                with connection.cursor() as cursor:
+                                    cursor.execute(
+                                        query,
+                                        (
+                                            batch_name,
+                                            session_name,  # Use the formatted session name
+                                            program_name,
+                                            year,
+                                            total_students,
+                                            total_present,
+                                            total_absent,
+                                            total_late,
+                                            faculty_responsibility.department,  # Add department restriction
+                                        ),
+                                    )
+                            except IntegrityError as e:
+                                logger.error(f"Integrity error while saving data for batch {batch_name}, session {session_name}: {str(e)}")
+                                return JsonResponse({"error": f"Database Integrity Error: {str(e)}"}, status=500)
+                            except DatabaseError as e:
+                                logger.error(f"Database error while saving data for batch {batch_name}, session {session_name}: {str(e)}")
+                                return JsonResponse({"error": f"Database Error: {str(e)}"}, status=500)
+                            except Exception as e:
+                                logger.error(f"Error executing query for batch {batch_name}, session {session_name}: {str(e)}")
+                                return JsonResponse({"error": f"Error executing query: {str(e)}"}, status=500)
+
+                    return JsonResponse(
+                        {
+                            "success": True,
+                            "message": "Batch-wise attendance saved successfully!",
+                        }
+                    )
+
+                except Exception as e:
+                    # Log unexpected errors
+                    logger.exception(f"Unexpected error occurred while saving batch attendance: {str(e)}")
+                    return JsonResponse({"error": f"Failed to save batch-wise attendance: {str(e)}"}, status=500)
         except Exception as e:
-            # Log unexpected errors
-            logger.exception(f"Unexpected error occurred while saving batch attendance: {str(e)}")
-            return JsonResponse({"error": f"Failed to save batch-wise attendance: {str(e)}"}, status=500)
+            return JsonResponse({"error": f"Failed to save branch attendance: {str(e)}"}, status=500)
+    else:
+        # Allow other roles to access data without restrictions
+        if request.method == "POST":
+            try:
+                # Validate table_name to prevent SQL injection
+                valid_tables = [
+                    "batch_attendance",
+                    "another_batch_table",
+                ]  # Add valid table names here
+                if table_name not in valid_tables:
+                    return JsonResponse({"error": "Invalid table name"}, status=400)
+                
+                branch_data = request.data.get("branchData")
+                if not branch_data:
+                    return JsonResponse({"error": "No data provided"}, status=400)
 
+                for batch in branch_data:
+                    batch_name = batch["batch"]
+                    program_name = batch["program_name"]
+                    year = batch["year"]
+                    total_students = batch.get("totalStudents", 0)
+                    total_present = batch.get("totalPresent", 0)
+                    total_absent = batch.get("totalAbsent", 0)
+                    total_late = batch.get("totalLate", 0)
+
+                    # Validate each session in batch
+                    for session, session_data in batch.items():
+                        # Skip non-session fields
+                        if session in ["batch", "program_name", "year", "totalStudents", "totalPresent", "totalAbsent", "totalLate"]:
+                            continue
+                        
+                        # Ensure session data has a 'date'
+                        if 'date' not in session_data:
+                            logger.warning(f"Date is missing for session {session} in batch {batch_name}")
+                            return JsonResponse({"error": f"Date is missing for session {session}"}, status=400)
+
+                        # Get the date from session data
+                        session_date = session_data.get('date')
+
+                        # Format the session as "date - session"
+                        session_name = f"{session_date} - {session}"
+
+                        # Insert or update batch attendance via raw SQL
+                        query = f"""
+                            INSERT INTO {table_name} (batch, session, program_name, year, total_students, total_present, total_absent, total_late)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                            ON DUPLICATE KEY UPDATE
+                                total_students = VALUES(total_students),
+                                total_present = VALUES(total_present),
+                                total_absent = VALUES(total_absent),
+                                total_late = VALUES(total_late)
+                        """
+                        try:
+                            with connection.cursor() as cursor:
+                                cursor.execute(
+                                    query,
+                                    (
+                                        batch_name,
+                                        session_name,  # Use the formatted session name
+                                        program_name,
+                                        year,
+                                        total_students,
+                                        total_present,
+                                        total_absent,
+                                        total_late,
+                                    ),
+                                )
+                        except IntegrityError as e:
+                            logger.error(f"Integrity error while saving data for batch {batch_name}, session {session_name}: {str(e)}")
+                            return JsonResponse({"error": f"Database Integrity Error: {str(e)}"}, status=500)
+                        except DatabaseError as e:
+                            logger.error(f"Database error while saving data for batch {batch_name}, session {session_name}: {str(e)}")
+                            return JsonResponse({"error": f"Database Error: {str(e)}"}, status=500)
+                        except Exception as e:
+                            logger.error(f"Error executing query for batch {batch_name}, session {session_name}: {str(e)}")
+                            return JsonResponse({"error": f"Error executing query: {str(e)}"}, status=500)
+
+                return JsonResponse(
+                    {
+                        "success": True,
+                        "message": "Batch-wise attendance saved successfully!",
+                    }
+                )
+
+            except Exception as e:
+                # Log unexpected errors
+                logger.exception(f"Unexpected error occurred while saving batch attendance: {str(e)}")
+                return JsonResponse({"error": f"Failed to save batch-wise attendance: {str(e)}"}, status=500)
 
 
 # Route 3: Fetch average attendance and training performance by Branch_Div (using raw SQL with dynamic table names)
@@ -166,6 +280,46 @@ from django.db import connection
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_avg_data(request, table_name):
+    user = request.user
+    if user.role == "faculty":  # Restrict only for faculty users
+        try:
+            faculty_responsibility = FacultyResponsibility.objects.filter(user=user).first()
+            if not faculty_responsibility:
+                return JsonResponse({"error": "Faculty responsibility not assigned"}, status=403)
+
+            # Validate table_name to prevent SQL injection
+            valid_tables = [
+                "program1",
+                "another_program_table",
+            ]  # Add valid table names here
+            if table_name not in valid_tables:
+                return JsonResponse({"error": "Invalid table name"}, status=400)
+
+            # Construct query to fetch average attendance and performance by Branch_Div with dynamic table name
+            query = f"""
+                SELECT Branch_Div,
+                Year,
+                AVG(training_attendance) AS avg_attendance,
+                AVG(training_performance) AS avg_performance
+                FROM {table_name}
+                WHERE department = %s
+                GROUP BY Branch_Div, Year
+            """
+
+            with connection.cursor() as cursor:
+                cursor.execute(query, [faculty_responsibility.department])
+                rows = cursor.fetchall()
+                # Convert the rows into a list of dictionaries
+                columns = [col[0] for col in cursor.description]
+                result = [dict(zip(columns, row)) for row in rows]
+
+            return JsonResponse(result, safe=False)
+        except Exception as e:
+            print(e)
+            return JsonResponse(
+                {"error": f"Failed to fetch average data: {str(e)}"}, status=500
+            )
+    # Allow other roles to access data without restrictions
     try:
         # Validate table_name to prevent SQL injection
         valid_tables = [
@@ -178,11 +332,11 @@ def get_avg_data(request, table_name):
         # Construct query to fetch average attendance and performance by Branch_Div with dynamic table name
         query = f"""
             SELECT Branch_Div,
-           Year,
-           AVG(training_attendance) AS avg_attendance,
-           AVG(training_performance) AS avg_performance
-    FROM {table_name}
-    GROUP BY Branch_Div, Year
+            Year,
+            AVG(training_attendance) AS avg_attendance,
+            AVG(training_performance) AS avg_performance
+            FROM {table_name}
+            GROUP BY Branch_Div, Year
         """
 
         with connection.cursor() as cursor:
@@ -193,7 +347,6 @@ def get_avg_data(request, table_name):
             result = [dict(zip(columns, row)) for row in rows]
 
         return JsonResponse(result, safe=False)
-
     except Exception as e:
         print(e)
         return JsonResponse(

@@ -16,10 +16,9 @@ import { getCookie } from "../../utils";
 import { NoticeData } from "./components/notice";
 import toast from "react-hot-toast";
 import { useReactToPrint } from "react-to-print";
-import PrintIcon from "lucide-react";
-import FileDownloadIcon from "lucide-react";
-import downloadWordDocument from "lucide-react";
-import { DeleteIcon } from "lucide-react";
+// import PrintIcon from "@mui/icons-material/Print";
+// import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import downloadWordDocument from "./utils/downloadWordDocument";
 
 const NoticeCreationForm = () => {
   const [formData, setFormData] = useState({
@@ -104,32 +103,8 @@ const NoticeCreationForm = () => {
         withCredentials: true,
       })
       .then((response) => {
-        console.log("Raw API Response:", response);
         console.log("API Response Data:", response.data);
-        console.log("Response Data Keys:", Object.keys(response.data));
-        console.log("Response Data Structure:", JSON.stringify(response.data, null, 2));
-        
-        // Get the notice ID from the response
-        const noticeId = response.data.data.id;
-        console.log("Notice ID from response:", noticeId);
-        
-        if (!noticeId) {
-          throw new Error("No notice ID found in response");
-        }
-        
-        // Map the response data to match our NoticeData interface
-        const mappedData: NoticeData = {
-          ...formData,
-          companyId: formData.company, // Use the company ID from the form
-          noticeId: noticeId, // Use the notice ID from the response
-          tableData: response.data.data.tableData || [], // Use table data from response
-          College_registration_Link: response.data.data.College_registration_Link || "", // Use registration link from response
-        };
-        console.log("Mapped Notice Data:", mappedData);
-        console.log("Mapped Data Keys:", Object.keys(mappedData));
-        console.log("Notice ID in mapped data:", mappedData.noticeId);
-        
-        setNoticeData(mappedData);
+        setNoticeData(response.data.data);
         toast.success("Notice created successfully!");
       })
       .catch((error) => {
@@ -174,241 +149,230 @@ const NoticeCreationForm = () => {
     }
   };
 
-    return (
-      <Container maxWidth="md">
-        <Paper elevation={3} style={{ padding: "20px", marginTop: "20px" }}>
-          <Typography variant="h6" gutterBottom>
-            Create Placement Notice
-          </Typography>
-          <form onSubmit={handleSubmit}>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <TextField
-                  select
-                  label="Select Company"
-                  name="company"
-                  value={formData.company}
-                  onChange={handleChange}
-                  fullWidth
-                >
-                  {companies.map((company) => (
-                    <MenuItem key={company.id} value={company.id}>
-                      {company.name}-{company.batch}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Sr No"
-                  name="srNo"
-                  value={formData.srNo}
-                  onChange={handleChange}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="To"
-                  name="to"
-                  value={formData.to}
-                  onChange={handleChange}
-                  fullWidth
-                >
-                  {toOptions.map((option, key) => (
+  return (
+    <Container maxWidth="md">
+      <Paper elevation={3} style={{ padding: "20px", marginTop: "20px" }}>
+        <Typography variant="h6" gutterBottom>
+          Create Placement Notice
+        </Typography>
+        <form onSubmit={handleSubmit}>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <TextField
+                select
+                label="Select Company"
+                name="company"
+                value={formData.company}
+                onChange={handleChange}
+                fullWidth
+              >
+                {companies.map((company) => (
+                  <MenuItem key={company.id} value={company.id}>
+                    {company.name}-{company.batch}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Sr No"
+                name="srNo"
+                value={formData.srNo}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+              select
+                label="To"
+                name="to"
+                value={formData.to}
+                onChange={handleChange}
+                fullWidth
+              >
+                {toOptions.map((option, key) => (
                     <MenuItem key={key} value={option}>{option}</MenuItem>
                   ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Subject"
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleChange}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Date"
-                  name="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Introduction"
-                  name="intro"
-                  value={formData.intro}
-                  onChange={handleChange}
-                  multiline
-                  rows={3}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Eligibility Criteria"
-                  name="eligibility_criteria"
-                  value={formData.eligibility_criteria}
-                  onChange={handleChange}
-                  multiline
-                  rows={3}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Roles"
-                  name="roles"
-                  value={formData.roles}
-                  onChange={handleChange}
-                  multiline
-                  rows={3}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="About"
-                  name="about"
-                  value={formData.about}
-                  onChange={handleChange}
-                  multiline
-                  rows={3}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Skills Required"
-                  name="skill_required"
-                  value={formData.skill_required}
-                  onChange={handleChange}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Documents to Carry"
-                  name="Documents_to_Carry"
-                  value={formData.Documents_to_Carry}
-                  onChange={handleChange}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Walk-in Interview Details"
-                  name="Walk_in_interview"
-                  value={formData.Walk_in_interview}
-                  onChange={handleChange}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Company Registration Link"
-                  name="Company_registration_Link"
-                  value={formData.Company_registration_Link}
-                  onChange={handleChange}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Note"
-                  name="Note"
-                  value={formData.Note}
-                  onChange={handleChange}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="From"
-                  name="From"
-                  value={formData.From}
-                  onChange={handleChange}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="From Designation"
-                  name="From_designation"
-                  value={formData.From_designation}
-                  onChange={handleChange}
-                  fullWidth
-                />
-              </Grid>
+              </TextField>
             </Grid>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              style={{ marginTop: "20px" }}
-            >
-              Submit Notice
-            </Button>
-          </form>
-        </Paper>
-        {noticeData && (
-          <div>
-            <Notice formData={noticeData} ref={contentRef} isPlacement />
-            <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 3 }}>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<PrintIcon />}
-                onClick={onPrint}
-                sx={{ px: 3, py: 1, fontWeight: "bold", borderRadius: "8px" }}
-              >
-                Print Notice
-              </Button>
+            <Grid item xs={12}>
+              <TextField
+                label="Subject"
+                name="subject"
+                value={formData.subject}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Date"
+                name="date"
+                type="date"
+                value={formData.date}
+                onChange={handleChange}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Location"
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Introduction"
+                name="intro"
+                value={formData.intro}
+                onChange={handleChange}
+                multiline
+                rows={3}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Eligibility Criteria"
+                name="eligibility_criteria"
+                value={formData.eligibility_criteria}
+                onChange={handleChange}
+                multiline
+                rows={3}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Roles"
+                name="roles"
+                value={formData.roles}
+                onChange={handleChange}
+                multiline
+                rows={3}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="About"
+                name="about"
+                value={formData.about}
+                onChange={handleChange}
+                multiline
+                rows={3}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Skills Required"
+                name="skill_required"
+                value={formData.skill_required}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Documents to Carry"
+                name="Documents_to_Carry"
+                value={formData.Documents_to_Carry}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Walk-in Interview Details"
+                name="Walk_in_interview"
+                value={formData.Walk_in_interview}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Company Registration Link"
+                name="Company_registration_Link"
+                value={formData.Company_registration_Link}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Note"
+                name="Note"
+                value={formData.Note}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="From"
+                name="From"
+                value={formData.From}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="From Designation"
+                name="From_designation"
+                value={formData.From_designation}
+                onChange={handleChange}
+                fullWidth
+              />
+            </Grid>
+          </Grid>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            style={{ marginTop: "20px" }}
+          >
+            Submit Notice
+          </Button>
+        </form>
+      </Paper>
+      {noticeData && (
+        <div>
+          <Notice formData={noticeData} ref={contentRef} isPlacement />
+          <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 3 }}>
+  <Button
+    variant="contained"
+    color="primary"
+    // startIcon={<PrintIcon />}
+    onClick={onPrint}
+    sx={{ px: 3, py: 1, fontWeight: "bold", borderRadius: "8px" }}
+  >
+    Print Notice
+  </Button>
 
-              <Button
-                variant="contained"
-                color="secondary"
-                startIcon={<FileDownloadIcon />}
-                onClick={handleDownloadWord}
-                sx={{ px: 3, py: 1, fontWeight: "bold", borderRadius: "8px" }}
-              >
-                Download as Word
-              </Button>
+  <Button
+    variant="contained"
+    color="secondary"
+    // startIcon={<FileDownloadIcon />}
+    onClick={handleDownloadWord}
+    sx={{ px: 3, py: 1, fontWeight: "bold", borderRadius: "8px" }}
+  >
+    Download as Word
+  </Button>
+</Stack>
+  
+        </div>
+      )}
+    </Container>
+  );
+};
 
-              <Button
-                variant="contained"
-                color="secondary"
-                startIcon={<DeleteIcon />}
-                onClick={onDelete}
-                sx={{ px: 3, py: 1, fontWeight: "bold", borderRadius: "8px" }}
-              >
-                Delete Notice
-              </Button>
-
-            </Stack>
-
-          </div>
-        )}
-      </Container>
-    );
-  };
-
-  export default NoticeCreationForm;
+export default NoticeCreationForm;

@@ -11,7 +11,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from base.models import User
+from base.models import User, FacultyResponsibility
 
 
 def execute_query(query, params=None, fetch_all=True):
@@ -31,20 +31,24 @@ def execute_query(query, params=None, fetch_all=True):
 @permission_classes([IsAuthenticated])
 def get_program_data(request):
     user = User.objects.get(email=request.user)
-    if user.role != "faculty":
-        return JsonResponse({"error": "Permission denied"}, status=403)
-    try:
-        query = "SELECT * FROM attendance_attendancerecord"
-        data = execute_query(query)
-        return JsonResponse(data, safe=False, status=200)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    if user.role == "faculty":  # Restrict only for faculty users
+        try:
+            faculty_responsibility = FacultyResponsibility.objects.filter(user=user).first()
+            if not faculty_responsibility:
+                return JsonResponse({"error": "Faculty responsibility not assigned"}, status=403)
 
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from datetime import datetime
-import json
+            query = """
+                SELECT * FROM attendance_attendancerecord
+                WHERE department = %s
+            """
+            data = execute_query(query, [faculty_responsibility.department])
+            return JsonResponse(data, safe=False, status=200)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    # Allow other roles to access data without restrictions
+    query = "SELECT * FROM attendance_attendancerecord"
+    data = execute_query(query)
+    return JsonResponse(data, safe=False, status=200)
 
 
 @api_view(["POST"])
@@ -52,44 +56,45 @@ import json
 @permission_classes([IsAuthenticated])
 def save_attendance(request):
     user = User.objects.get(email=request.user)
-    if user.role != "faculty":
-        return JsonResponse({"error": "Permission denied"}, status=403)
-    try:
-        attendance_records = request.data.get("students", [])
-        if not attendance_records:
-            return JsonResponse({"error": "No attendance data provided"}, status=400)
+    if user.role == "faculty":  # Restrict only for faculty users
+        try:
+            attendance_records = request.data.get("students", [])
+            if not attendance_records:
+                return JsonResponse({"error": "No attendance data provided"}, status=400)
 
-        for record in attendance_records:
-            query = """
-                INSERT INTO attendance_data (
-                    program_name, session, uid, name, year, batch, present, late, timestamp,semester
+            for record in attendance_records:
+                query = """
+                    INSERT INTO attendance_data (
+                        program_name, session, uid, name, year, batch, present, late, timestamp,semester
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,%s)
+                    ON DUPLICATE KEY UPDATE
+                        present = VALUES(present),
+                        late = VALUES(late),
+                        timestamp = VALUES(timestamp);
+                """
+                params = (
+                    record.get("ProgramName"),
+                    record.get("Session"),
+                    record.get("UID"),
+                    record.get("Name"),
+                    record.get("Year"),
+                    record.get("Batch"),
+                    record.get("Present", "Absent"),
+                    record.get("Late", "Not Late"),
+                    datetime.now(),
+                    record.get("semester"),
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,%s)
-                ON DUPLICATE KEY UPDATE
-                    present = VALUES(present),
-                    late = VALUES(late),
-                    timestamp = VALUES(timestamp);
-            """
-            params = (
-                record.get("ProgramName"),
-                record.get("Session"),
-                record.get("UID"),
-                record.get("Name"),
-                record.get("Year"),
-                record.get("Batch"),
-                record.get("Present", "Absent"),
-                record.get("Late", "Not Late"),
-                datetime.now(),
-                record.get("semester"),
-            )
-            execute_query(query, params, fetch_all=False)
+                execute_query(query, params, fetch_all=False)
 
-        return JsonResponse(
-            {"message": "Attendance data saved successfully"}, status=200
-        )
-    except Exception as e:
-        print(e)
-        return JsonResponse({"error": str(e)}, status=500)
+            return JsonResponse(
+                {"message": "Attendance data saved successfully"}, status=200
+            )
+        except Exception as e:
+            print(e)
+            return JsonResponse({"error": str(e)}, status=500)
+    # Deny access for other roles
+    return JsonResponse({"error": "Permission denied"}, status=403)
 
 
 @api_view(["GET"])
@@ -97,14 +102,25 @@ def save_attendance(request):
 @permission_classes([IsAuthenticated])
 def get_attendance(request):
     """Fetch saved attendance records."""
-    if request.user.role != "faculty":
-        return JsonResponse({"error": "Permission denied"}, status=403)
-    try:
-        query = "SELECT * FROM attendance_attendancerecord"
-        data = execute_query(query)
-        return JsonResponse(data, safe=False, status=200)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    user = User.objects.get(email=request.user)
+    if user.role == "faculty":  # Restrict only for faculty users
+        try:
+            faculty_responsibility = FacultyResponsibility.objects.filter(user=user).first()
+            if not faculty_responsibility:
+                return JsonResponse({"error": "Faculty responsibility not assigned"}, status=403)
+
+            query = """
+                SELECT * FROM attendance_attendancerecord
+                WHERE department = %s
+            """
+            data = execute_query(query, [faculty_responsibility.department])
+            return JsonResponse(data, safe=False, status=200)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    # Allow other roles to access data without restrictions
+    query = "SELECT * FROM attendance_attendancerecord"
+    data = execute_query(query)
+    return JsonResponse(data, safe=False, status=200)
 
 
 def reset_attendance(request):

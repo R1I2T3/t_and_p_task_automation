@@ -197,7 +197,6 @@ def create_notice(request, pk):
 
         # Construct only the necessary response data
         notice_data = {
-            "id": str(notice.id),  # Add the notice ID to the response
             "company": company.id,  # Pass only ID, not the object
             "srNo": data.get("srNo", ""),
             "date": data.get("date", ""),
