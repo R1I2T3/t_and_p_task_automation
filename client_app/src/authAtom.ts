@@ -6,5 +6,6 @@ interface Auth {
   department?: string;
   program?: string;
   academic_year?: string;
+  resource?: true;
 }
 export const authAtom = atom<Auth | null>(null);

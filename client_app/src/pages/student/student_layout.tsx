@@ -2,12 +2,14 @@ import React, { useEffect } from "react";
 import { Link, Outlet } from "react-router";
 import {
   BarChart,
+  CalendarCheck,
   User,
   Menu,
   MessageCircle,
   FileUser,
   LogOutIcon,
   User2Icon,
+  FileText, // Add an appropriate icon for Resource
 } from "lucide-react";
 import {
   Sheet,
@@ -21,10 +23,12 @@ import { logout, redirectToProfile } from "@/utils";
 import { useAtomValue } from "jotai";
 import { authAtom } from "@/authAtom";
 import Logo from "@/assets/tcet_logo_2.png";
+
 const StudentLayout = () => {
   const auth = useAtomValue(authAtom);
   const defaultItems = [
     { icon: BarChart, label: "Stats", href: "/student/" },
+    {icon:CalendarCheck, label:"Session Attendance", href:"/student/session-attendance"},
     { icon: User, label: "Personal Info", href: "/student/info" },
     { icon: FileUser, label: "Resume", href: "/student/resume" },
     { icon: MessageCircle, label: "Notifications", href: "/notifications/" },
@@ -33,8 +37,14 @@ const StudentLayout = () => {
       label: "Internship submission",
       href: "/student/internship-submission",
     },
+    {
+      icon: FileText, // Icon for resource
+      label: "Resource", // Label for resource
+      href: "/student/resources", // Link to resource page
+    },
   ];
   const [menuItems, setMenuItems] = React.useState([...defaultItems]);
+
   useEffect(() => {
     if (auth?.academic_year && auth.academic_year === "BE") {
       console.log("BE student");

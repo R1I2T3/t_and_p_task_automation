@@ -16,6 +16,7 @@ import Upload from "./pages/program_coordinator/Upload";
 import Attendance from "./pages/program_coordinator/Attendance";
 import StudentLayout from "./pages/student/student_layout";
 import StudentHome from "./pages/student";
+import SessionAttendance from "./pages/student/SessionAttendance";
 import InternShipSubmission from "./pages/student/InternShipSubmission";
 import StudentPersonalInfo from "./pages/student/student-personal-info";
 import PlacementRegistration from "./pages/student/PlacementRegistration";
@@ -52,6 +53,9 @@ import JobAcceptance from "./pages/student/JobAcceptance";
 import PrincipalLayout from "./pages/principal/PrincipalLayout";
 import StaffLayout from "./pages/staff/StaffLayout";
 import StaffNotice from "./pages/staff/StaffNotice";
+import CreateResource from "./pages/resources/create-resource";
+import ResourceList from "./pages/resources/resource-list";
+import ResourceDetail from "./pages/resources/resource-details";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -94,10 +98,14 @@ const App = () => {
         </Route>
         <Route path="/student" element={<StudentLayout />}>
           <Route index element={<StudentHome />} />
+          <Route path="session-attendance" element={<SessionAttendance />} />
           <Route path="info" element={<StudentPersonalInfo />} />
           <Route path="resume" element={<Resume />} />
           <Route path="resume-preview" element={<ResumePreview />} />
           <Route path="job-acceptance" element={<JobAcceptance />} />
+          <Route path="resources" element={<ResourceList/>} />
+          <Route path="resources/:id" element={<ResourceDetail />} />
+
           <Route
             path="placement/registration/:id"
             element={<PlacementRegistration />}
@@ -112,9 +120,10 @@ const App = () => {
           />
         </Route>
         <Route path="/faculty_coordinator" element={<FacultyLayout />}>
-          <Route index element={<FacultyHome />} />
-          <Route path="attendance" element={<FacultyTablePage />} />
-        </Route>
+  <Route index element={<FacultyHome />} />
+  <Route path="attendance" element={<FacultyTablePage />} />
+  <Route path="resource/create" element={<CreateResource />} />
+</Route>
         <Route path="/department_coordinator" element={<DepartmentParent />}>
           <Route index element={<DepartmentDashboard />} />
           <Route path="stats" element={<DepartmentStats />} />
