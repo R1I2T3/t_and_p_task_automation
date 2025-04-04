@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Link, Outlet } from "react-router";
 import {
   BarChart,
+  CalendarCheck,
   User,
   Menu,
   MessageCircle,
@@ -27,6 +28,7 @@ const StudentLayout = () => {
   const auth = useAtomValue(authAtom);
   const defaultItems = [
     { icon: BarChart, label: "Stats", href: "/student/" },
+    {icon:CalendarCheck, label:"Session Attendance", href:"/student/session-attendance"},
     { icon: User, label: "Personal Info", href: "/student/info" },
     { icon: FileUser, label: "Resume", href: "/student/resume" },
     { icon: MessageCircle, label: "Notifications", href: "/notifications/" },

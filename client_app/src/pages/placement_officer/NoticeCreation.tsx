@@ -8,6 +8,7 @@ import {
   Typography,
   Grid,
   Paper,
+  Stack
 } from "@mui/material";
 import axios from "axios";
 import Notice from "./components/notice";
@@ -15,7 +16,9 @@ import { getCookie } from "../../utils";
 import { NoticeData } from "./components/notice";
 import toast from "react-hot-toast";
 import { useReactToPrint } from "react-to-print";
-//
+// import PrintIcon from "@mui/icons-material/Print";
+// import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import downloadWordDocument from "./utils/downloadWordDocument";
 
 const NoticeCreationForm = () => {
   const [formData, setFormData] = useState({
@@ -37,9 +40,12 @@ const NoticeCreationForm = () => {
     company: "",
     location: "",
   });
+
+  const toOptions = ["principal", "students", "internship officer", "faculty"];
   const contentRef = useRef<HTMLDivElement>(null);
   const [noticeData, setNoticeData] = useState<NoticeData | null>(null);
   const reactPrintFn = useReactToPrint({ contentRef });
+
   interface Company {
     id: number;
     name: string;
@@ -54,6 +60,15 @@ const NoticeCreationForm = () => {
       [e.target.name]: e.target.value,
     });
   };
+
+  const handleDownloadWord = () => {
+    if (noticeData) {
+      downloadWordDocument(noticeData);
+    } else {
+      console.log("No notice data available.");
+    }
+  };
+
   const csrfToken = getCookie("csrftoken");
   useEffect(() => {
     axios
@@ -79,6 +94,7 @@ const NoticeCreationForm = () => {
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
+    console.log("Submitting form data:", formData);
     axios
       .post(`/api/placement/notice/create/${formData.company}`, formData, {
         headers: {
@@ -87,16 +103,50 @@ const NoticeCreationForm = () => {
         withCredentials: true,
       })
       .then((response) => {
+        console.log("API Response Data:", response.data);
         setNoticeData(response.data.data);
         toast.success("Notice created successfully!");
       })
       .catch((error) => {
         console.error("Error creating notice:", error);
-        alert("Failed to create notice!");
+        console.error("Error details:", error.response?.data);
+        toast.error("Failed to create notice!");
       });
   };
+
   const onPrint = () => {
     reactPrintFn();
+  };
+
+  const onDelete = () => {
+    console.log("Current noticeData:", noticeData);
+    console.log("Notice Data Keys:", Object.keys(noticeData || {}));
+    console.log("Notice ID being used:", noticeData?.noticeId);
+    console.log("Full noticeData object:", JSON.stringify(noticeData, null, 2));
+    
+    if (noticeData?.noticeId) {
+      console.log("Making delete request with ID:", noticeData.noticeId);
+      console.log("Delete request URL:", `/api/placement/notice/delete/${noticeData.noticeId}/`);
+      
+      axios.delete(`/api/placement/notice/delete/${noticeData.noticeId}/`, {
+        headers: {
+          "X-CSRFToken": csrfToken || "",
+        },
+        withCredentials: true,
+      }).then((response) => {
+        console.log("Delete response:", response.data);
+        toast.success("Notice deleted successfully!");
+        setNoticeData(null);  // Clear the notice data after deletion
+      }).catch((error) => {
+        console.error("Error deleting notice:", error);
+        console.error("Error details:", error.response?.data);
+        toast.error("Failed to delete notice!");
+      });
+    } else {
+      console.log("No noticeId found in noticeData");
+      console.log("Available data:", JSON.stringify(noticeData, null, 2));
+      toast.error("No notice selected to delete");
+    }
   };
 
   return (
@@ -134,12 +184,17 @@ const NoticeCreationForm = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
+              select
                 label="To"
                 name="to"
                 value={formData.to}
                 onChange={handleChange}
                 fullWidth
-              />
+              >
+                {toOptions.map((option, key) => (
+                    <MenuItem key={key} value={option}>{option}</MenuItem>
+                  ))}
+              </TextField>
             </Grid>
             <Grid item xs={12}>
               <TextField
@@ -292,15 +347,28 @@ const NoticeCreationForm = () => {
       {noticeData && (
         <div>
           <Notice formData={noticeData} ref={contentRef} isPlacement />
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth={true}
-            style={{ marginTop: "20px" }}
-            onClick={onPrint}
-          >
-            Print Notice
-          </Button>
+          <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 3 }}>
+  <Button
+    variant="contained"
+    color="primary"
+    // startIcon={<PrintIcon />}
+    onClick={onPrint}
+    sx={{ px: 3, py: 1, fontWeight: "bold", borderRadius: "8px" }}
+  >
+    Print Notice
+  </Button>
+
+  <Button
+    variant="contained"
+    color="secondary"
+    // startIcon={<FileDownloadIcon />}
+    onClick={handleDownloadWord}
+    sx={{ px: 3, py: 1, fontWeight: "bold", borderRadius: "8px" }}
+  >
+    Download as Word
+  </Button>
+</Stack>
+  
         </div>
       )}
     </Container>
