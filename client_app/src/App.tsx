@@ -35,7 +35,6 @@ import NoticeCreationForm from "./pages/placement_officer/NoticeCreation";
 import PlacementReport from "./pages/placement_officer/PlacementReport";
 import { CategoryDataStatistics } from "./pages/placement_officer/CategoryData";
 import { ComparativePlacementStatistics } from "./pages/placement_officer/ComparitivePlacementStatistic";
-import { Typography } from "@mui/material";
 import PlacementStats from "./pages/placement_officer";
 import Old from "./pages/placement_officer/Old";
 import JobVerification from "./pages/placement_officer/components/JobVerification";
@@ -162,9 +161,6 @@ const App = () => {
             path="placement"
             element={
               <div>
-                <Typography variant="h5">
-                  Placement Statistics of 2024
-                </Typography>
                 <Old />
               </div>
             }
