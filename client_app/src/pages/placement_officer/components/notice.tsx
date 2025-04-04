@@ -3,29 +3,33 @@ import "./notice.css";
 import noticeHeader from "@/assets/tcet header.jpg";
 import copytoimage from "@/assets/pmt-placement_drive_copytoImage.png";
 import { BASE_URL } from "@/constant";
-export type NoticeData = {
+
+export interface NoticeData {
   srNo: string;
   to: string;
   subject: string;
   date: string;
   intro: string;
   eligibility_criteria: string;
+  roles: string;
   about: string;
+  skill_required: string;
   Documents_to_Carry: string;
   Walk_in_interview: string;
   Company_registration_Link: string;
-  College_registration_Link: string;
   Note: string;
   From: string;
-  CompanyId: string;
   From_designation: string;
+  companyId: string;
+  noticeId: string;
   tableData: Array<{
     type: string;
     salary: string;
     position: string;
   }>;
+  College_registration_Link: string;
   location: string;
-};
+}
 
 const Notice = forwardRef<
   HTMLDivElement,
@@ -99,7 +103,7 @@ console.log("Documents to Carry:", formData.Documents_to_Carry);
             <strong>College Registration Link:</strong>
             {`${BASE_URL}/student/${
               isPlacement ? "placement" : "internship"
-            }/registration/${formData.CompanyId}`}
+            }/registration/${formData.companyId}`}
           </p>
           <p>
             <strong>Note:</strong> {formData.Note}

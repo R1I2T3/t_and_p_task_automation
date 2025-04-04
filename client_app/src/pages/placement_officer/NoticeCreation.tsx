@@ -94,6 +94,7 @@ const NoticeCreationForm = () => {
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
+    console.log("Submitting form data:", formData);
     axios
       .post(`/api/placement/notice/create/${formData.company}`, formData, {
         headers: {
@@ -108,12 +109,44 @@ const NoticeCreationForm = () => {
       })
       .catch((error) => {
         console.error("Error creating notice:", error);
-        alert("Failed to create notice!");
+        console.error("Error details:", error.response?.data);
+        toast.error("Failed to create notice!");
       });
   };
 
   const onPrint = () => {
     reactPrintFn();
+  };
+
+  const onDelete = () => {
+    console.log("Current noticeData:", noticeData);
+    console.log("Notice Data Keys:", Object.keys(noticeData || {}));
+    console.log("Notice ID being used:", noticeData?.noticeId);
+    console.log("Full noticeData object:", JSON.stringify(noticeData, null, 2));
+    
+    if (noticeData?.noticeId) {
+      console.log("Making delete request with ID:", noticeData.noticeId);
+      console.log("Delete request URL:", `/api/placement/notice/delete/${noticeData.noticeId}/`);
+      
+      axios.delete(`/api/placement/notice/delete/${noticeData.noticeId}/`, {
+        headers: {
+          "X-CSRFToken": csrfToken || "",
+        },
+        withCredentials: true,
+      }).then((response) => {
+        console.log("Delete response:", response.data);
+        toast.success("Notice deleted successfully!");
+        setNoticeData(null);  // Clear the notice data after deletion
+      }).catch((error) => {
+        console.error("Error deleting notice:", error);
+        console.error("Error details:", error.response?.data);
+        toast.error("Failed to delete notice!");
+      });
+    } else {
+      console.log("No noticeId found in noticeData");
+      console.log("Available data:", JSON.stringify(noticeData, null, 2));
+      toast.error("No notice selected to delete");
+    }
   };
 
   return (

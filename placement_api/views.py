@@ -29,6 +29,81 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 from uuid import uuid4
 from .utils import is_student_eligible
 
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_notice_id(request):
+    try:
+        sr_no = request.data.get("srNo")
+        company_id = request.data.get("company")
+
+        if not sr_no or not company_id:
+            return JsonResponse(
+                {"error": "srNo and company are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Log the input data
+        print(f"Fetching notice ID for srNo: {sr_no}, companyId: {company_id}")
+
+        # Query the database
+        notice = placementNotice.objects.filter(srNo=sr_no, company__id=company_id).first()
+
+        # Log the query result
+        if notice:
+            print(f"Notice found - ID: {notice.id}")
+            return JsonResponse({"id": str(notice.id)}, status=status.HTTP_200_OK)
+        else:
+            print("Notice not found.")
+            return JsonResponse(
+                {"error": "Notice not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+    except Exception as e:
+        print(f"Error in get_notice_id: {str(e)}")
+        return JsonResponse(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["DELETE"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_notice(request, notice_id):
+    try:
+        # Fetch all notices
+        notices = placementNotice.objects.all()
+        print(f"Total notices fetched: {len(notices)}")
+
+        # Find the notice to delete
+        notice_to_delete = next((notice for notice in notices if str(notice.id) == notice_id), None)
+
+        if not notice_to_delete:
+            print(f"No notice found with ID: {notice_id}")
+            return JsonResponse({"error": "Notice not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Delete the notice
+        notice_to_delete.delete()
+        print(f"Notice with ID {notice_id} deleted successfully.")
+        return JsonResponse({"message": "Notice deleted successfully."}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(f"Error in delete_notice: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_notices(request):
+    try:
+        notices = placementNotice.objects.all()
+        data = PlacementNoticeSerializer(notices, many=True).data
+        return JsonResponse({"notices": data}, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(f"Error in get_all_notices: {str(e)}")
+        return JsonResponse(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
@@ -151,7 +226,6 @@ def create_notice(request, pk):
         return JsonResponse(
             {"error": "Company not found."}, status=status.HTTP_404_BAD_REQUEST
         )
-
     except Exception as e:
         print(e)
         return JsonResponse(
