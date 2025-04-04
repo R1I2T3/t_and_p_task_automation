@@ -8,6 +8,7 @@ import {
   Typography,
   Grid,
   Paper,
+  Stack
 } from "@mui/material";
 import axios from "axios";
 import Notice from "./components/notice";
@@ -15,7 +16,9 @@ import { getCookie } from "../../utils";
 import { NoticeData } from "./components/notice";
 import toast from "react-hot-toast";
 import { useReactToPrint } from "react-to-print";
-//
+// import PrintIcon from "@mui/icons-material/Print";
+// import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import downloadWordDocument from "./utils/downloadWordDocument";
 
 const NoticeCreationForm = () => {
   const [formData, setFormData] = useState({
@@ -37,9 +40,12 @@ const NoticeCreationForm = () => {
     company: "",
     location: "",
   });
+
+  const toOptions = ["principal", "students", "internship officer", "faculty"];
   const contentRef = useRef<HTMLDivElement>(null);
   const [noticeData, setNoticeData] = useState<NoticeData | null>(null);
   const reactPrintFn = useReactToPrint({ contentRef });
+
   interface Company {
     id: number;
     name: string;
@@ -54,6 +60,15 @@ const NoticeCreationForm = () => {
       [e.target.name]: e.target.value,
     });
   };
+
+  const handleDownloadWord = () => {
+    if (noticeData) {
+      downloadWordDocument(noticeData);
+    } else {
+      console.log("No notice data available.");
+    }
+  };
+
   const csrfToken = getCookie("csrftoken");
   useEffect(() => {
     axios
@@ -87,6 +102,7 @@ const NoticeCreationForm = () => {
         withCredentials: true,
       })
       .then((response) => {
+        console.log("API Response Data:", response.data);
         setNoticeData(response.data.data);
         toast.success("Notice created successfully!");
       })
@@ -95,6 +111,7 @@ const NoticeCreationForm = () => {
         alert("Failed to create notice!");
       });
   };
+
   const onPrint = () => {
     reactPrintFn();
   };
@@ -134,12 +151,17 @@ const NoticeCreationForm = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
+              select
                 label="To"
                 name="to"
                 value={formData.to}
                 onChange={handleChange}
                 fullWidth
-              />
+              >
+                {toOptions.map((option, key) => (
+                    <MenuItem key={key} value={option}>{option}</MenuItem>
+                  ))}
+              </TextField>
             </Grid>
             <Grid item xs={12}>
               <TextField
@@ -292,15 +314,28 @@ const NoticeCreationForm = () => {
       {noticeData && (
         <div>
           <Notice formData={noticeData} ref={contentRef} isPlacement />
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth={true}
-            style={{ marginTop: "20px" }}
-            onClick={onPrint}
-          >
-            Print Notice
-          </Button>
+          <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 3 }}>
+  <Button
+    variant="contained"
+    color="primary"
+    // startIcon={<PrintIcon />}
+    onClick={onPrint}
+    sx={{ px: 3, py: 1, fontWeight: "bold", borderRadius: "8px" }}
+  >
+    Print Notice
+  </Button>
+
+  <Button
+    variant="contained"
+    color="secondary"
+    // startIcon={<FileDownloadIcon />}
+    onClick={handleDownloadWord}
+    sx={{ px: 3, py: 1, fontWeight: "bold", borderRadius: "8px" }}
+  >
+    Download as Word
+  </Button>
+</Stack>
+  
         </div>
       )}
     </Container>

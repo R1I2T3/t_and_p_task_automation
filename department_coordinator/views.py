@@ -31,220 +31,222 @@ JSON_FILE_PATH_PLACEMENT = os.path.join("static", "Data", "placement_data.json")
 
 
 class DepartmentCoordinatorViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated, IsDepartmentCoordinator]
+    permission_classes = [IsAuthenticated]
 
     def get_department_coordinator(self):
-        return FacultyResponsibility.objects.get(user=self.request.user)
+        user = self.request.user
+        if user.role == "faculty":  # Restrict only for faculty users
+            return FacultyResponsibility.objects.filter(user=user).first()
+        return None  # Allow other roles to access data without restrictions
 
     def list(self, request):
         department_coordinator = self.get_department_coordinator()
-        if not department_coordinator or not department_coordinator.department:
-            return Response(
-                {"error": "Department Coordinator not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        students = Student.objects.select_related("user").filter(
-            department__startswith=department_coordinator.department
-        )
-
-        if request.query_params.get("year"):
-            students = students.filter(
-                academic_year=request.query_params.get("year")
+        if department_coordinator and department_coordinator.department:
+            students = Student.objects.select_related("user").filter(
+                department__startswith=department_coordinator.department
             )
 
-        stats = {
-            "total_students": len(students),
-            "fe_count": len(students.filter(academic_year="FE")),
-            "se_count": len(students.filter(academic_year="SE")),
-            "te_count": len(students.filter(academic_year="TE")),
-            "be_count": len(students.filter(academic_year="BE")),
-        }
+            if request.query_params.get("year"):
+                students = students.filter(
+                    academic_year=request.query_params.get("year")
+                )
 
-        serializer = DepartmentStatsSerializer(stats)
+            stats = {
+                "total_students": len(students),
+                "fe_count": len(students.filter(academic_year="FE")),
+                "se_count": len(students.filter(academic_year="SE")),
+                "te_count": len(students.filter(academic_year="TE")),
+                "be_count": len(students.filter(academic_year="BE")),
+            }
+
+            serializer = DepartmentStatsSerializer(stats)
+            return Response(serializer.data)
+        # Allow other roles to access all students
+        students = Student.objects.select_related("user").all()
+        serializer = DepartmentStatsSerializer({"total_students": len(students)})
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
     def stats(self, request):
         department_coordinator = self.get_department_coordinator()
-        if not department_coordinator or not department_coordinator.department:
-            return Response(
-                {"error": "Department Coordinator not found"},
-                status=status.HTTP_404_NOT_FOUND,
+        if department_coordinator and department_coordinator.department:
+            # Calculate averages
+            average_academic_attendance = (
+                AcademicAttendanceSemester.objects.select_related("student")
+                .filter(student__department__startswith=department_coordinator.department)
+                .values("student__academic_year")
+                .annotate(avg_attendance=Avg(Cast("attendance", FloatField())))
+                .order_by("student__academic_year")
             )
-        # Filter averages by department
-        average_academic_attendance = (
-            AcademicAttendanceSemester.objects.select_related("student")
-            .filter(student__department__startswith=department_coordinator.department)
-            .values("student__academic_year")
-            .annotate(avg_attendance=Avg(Cast("attendance", FloatField())))
-            .order_by("student__academic_year")
-        )
-        average_academic_performance = (
-            AcademicPerformanceSemester.objects.select_related("student")
-            .filter(student__department__startswith=department_coordinator.department)
-            .values("student__academic_year")
-            .annotate(avg_performance=Avg(Cast("performance", FloatField())))
-            .order_by("student__academic_year")
-        )
+            print(average_academic_attendance)
+            average_academic_performance = (
+                AcademicPerformanceSemester.objects.select_related("student")
+                .filter(student__department__startswith=department_coordinator.department)
+                .values("student__academic_year")
+                .annotate(avg_performance=Avg(Cast("performance", FloatField())))
+                .order_by("student__academic_year")
+            )
 
-        average_training_attendance = (
-            TrainingAttendanceSemester.objects.select_related("student")
-            .filter(student__department__startswith=department_coordinator.department)
-            .values("student__academic_year")
-            .annotate(avg_attendance=Avg(Cast("training_attendance", FloatField())))
-            .order_by("student__academic_year")
-        )
+            average_training_attendance = (
+                TrainingAttendanceSemester.objects.select_related("student")
+                .filter(student__department__startswith=department_coordinator.department)
+                .values("student__academic_year")
+                .annotate(avg_attendance=Avg(Cast("training_attendance", FloatField())))
+                .order_by("student__academic_year")
+            )
 
-        average_training_performance = (
-            TrainingPerformanceSemester.objects.select_related("student")
-            .filter(student__department__startswith=department_coordinator.department)
-            .values("student__academic_year")
-            .annotate(avg_performance=Avg(Cast("training_performance", FloatField())))
-            .order_by("student__academic_year")
-        )
+            average_training_performance = (
+                TrainingPerformanceSemester.objects.select_related("student")
+                .filter(student__department__startswith=department_coordinator.department)
+                .values("student__academic_year")
+                .annotate(avg_performance=Avg(Cast("training_performance", FloatField())))
+                .order_by("student__academic_year")
+            )
+            print(average_academic_attendance)
 
-        # Convert to dictionaries
-        stats_data = {
-            "academic_attendance": {
-                entry["student__academic_year"]: round(entry["avg_attendance"], 2)
-                for entry in average_academic_attendance
-            },
-            "academic_performance": {
-                entry["student__academic_year"]: round(entry["avg_performance"], 2)
-                for entry in average_academic_performance
-            },
-            "training_attendance": {
-                entry["student__academic_year"]: round(entry["avg_attendance"], 2)
-                for entry in average_training_attendance
-            },
-            "training_performance": {
-                entry["student__academic_year"]: round(entry["avg_performance"], 2)
-                for entry in average_training_performance
-            },
-        }
+            # Convert to dictionaries
+            stats_data = {
+                "academic_attendance": {
+                    entry["student__academic_year"]: round(entry["avg_attendance"], 2)
+                    for entry in average_academic_attendance
+                },
+                "academic_performance": {
+                    entry["student__academic_year"]: round(entry["avg_performance"], 2)
+                    for entry in average_academic_performance
+                },
+                "training_attendance": {
+                    entry["student__academic_year"]: round(entry["avg_attendance"], 2)
+                    for entry in average_training_attendance
+                },
+                "training_performance": {
+                    entry["student__academic_year"]: round(entry["avg_performance"], 2)
+                    for entry in average_training_performance
+                },
+            }
 
-        # Add internship and placement data
-        try:
-            with open(INTERNSHIP_JSON_PATH, "r") as f:
-                internship_data = json.load(f)
-                branch_data = internship_data[0]["branch_data"]
-                stipend_data = internship_data[0]["stipend_per_branch"]
+            # Add internship and placement data
+            try:
+                with open(INTERNSHIP_JSON_PATH, "r") as f:
+                    internship_data = json.load(f)
+                    branch_data = internship_data[0]["branch_data"]
+                    stipend_data = internship_data[0]["stipend_per_branch"]
 
-                stats_data["internship"] = {
-                    "branches": {
-                        k: v
-                        for k, v in branch_data.items()
-                        if k.lower().startswith(
-                            department_coordinator.department.lower()
-                        )
-                    },
-                    "stipends": {
-                        k: v
-                        for k, v in stipend_data.items()
-                        if k.lower().startswith(
-                            department_coordinator.department.lower()
-                        )
-                    },
-                }
+                    stats_data["internship"] = {
+                        "branches": {
+                            k: v
+                            for k, v in branch_data.items()
+                            if k.lower().startswith(
+                                department_coordinator.department.lower()
+                            )
+                        },
+                        "stipends": {
+                            k: v
+                            for k, v in stipend_data.items()
+                            if k.lower().startswith(
+                                department_coordinator.department.lower()
+                            )
+                        },
+                    }
 
-            with open(JSON_FILE_PATH_PLACEMENT, "r") as f:
-                placement_data = json.load(f)
-                stats_data["placement"] = {
-                    "2023": {
-                        k: v
-                        for k, v in placement_data[0]["branch_comparison"][
-                            "2023"
-                        ].items()
-                        if k.lower().startswith(
-                            department_coordinator.department.lower()
-                        )
-                    },
-                    "2024": {
-                        k: v
-                        for k, v in placement_data[0]["branch_comparison"][
-                            "2024"
-                        ].items()
-                        if k.lower().startswith(
-                            department_coordinator.department.lower()
-                        )
-                    },
-                }
-        except Exception as e:
-            stats_data["internship"] = {}
-            stats_data["placement"] = {}
+                with open(JSON_FILE_PATH_PLACEMENT, "r") as f:
+                    placement_data = json.load(f)
+                    stats_data["placement"] = {
+                        "2023": {
+                            k: v
+                            for k, v in placement_data[0]["branch_comparison"][
+                                "2023"
+                            ].items()
+                            if k.lower().startswith(
+                                department_coordinator.department.lower()
+                            )
+                        },
+                        "2024": {
+                            k: v
+                            for k, v in placement_data[0]["branch_comparison"][
+                                "2024"
+                            ].items()
+                            if k.lower().startswith(
+                                department_coordinator.department.lower()
+                            )
+                        },
+                    }
+            except Exception as e:
+                stats_data["internship"] = {}
+                stats_data["placement"] = {}
 
-        return Response(stats_data)
+            return Response(stats_data)
+        # Allow other roles to access all stats
+        return Response({"error": "Access restricted for your role"}, status=status.HTTP_403_FORBIDDEN)
 
 
 class AttendanceViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsDepartmentCoordinator]
 
     def get_department_coordinator(self):
-        return FacultyResponsibility.objects.get(user=self.request.user)
+        user = self.request.user
+        if user.role == "faculty":  # Restrict only for faculty users
+            return FacultyResponsibility.objects.filter(user=user).first()
+        return None  # Allow other roles to access data without restrictions
 
     @action(detail=False, methods=["post"])
     def upload_attendance(self, request):
         department_coordinator = self.get_department_coordinator()
-        if not department_coordinator or not department_coordinator.department:
-            return Response(
-                {"error": "Department Coordinator not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        if not validate_file(request.FILES.get("file_attendance")):
-            return Response(
-                {"error": "Invalid file type"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            df = importExcelAndReturnJSON(request.FILES.get("file_attendance"))
-            for record in df:
-                student = Student.objects.get(uid=record["uid"].strip())
-                AcademicAttendanceSemester.objects.update_or_create(
-                    semester=record["semester"],
-                    student=student,
-                    defaults={"attendance": record["attendance"]},
+        if department_coordinator and department_coordinator.department:
+            if not validate_file(request.FILES.get("file_attendance")):
+                return Response(
+                    {"error": "Invalid file type"}, status=status.HTTP_400_BAD_REQUEST
                 )
-                average_attendance = AcademicAttendanceSemester.objects.filter(
-                    student=student
-                ).aggregate(avg_attendance=models.Avg("attendance"))["avg_attendance"]
-                student.attendance = average_attendance
-                student.save()
-            return Response({"message": "Data imported successfully"})
-        except Exception as e:
-            print(e)
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                df = importExcelAndReturnJSON(request.FILES.get("file_attendance"))
+                for record in df:
+                    student = Student.objects.get(uid=record["uid"].strip())
+                    AcademicAttendanceSemester.objects.update_or_create(
+                        semester=record["semester"],
+                        student=student,
+                        defaults={"attendance": record["attendance"]},
+                    )
+                    average_attendance = AcademicAttendanceSemester.objects.filter(
+                        student=student
+                    ).aggregate(avg_attendance=models.Avg("attendance"))["avg_attendance"]
+                    student.attendance = average_attendance
+                    student.save()
+                return Response({"message": "Data imported successfully"})
+            except Exception as e:
+                print(e)
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        # Restrict access for other roles
+        return Response({"error": "Access restricted for your role"}, status=status.HTTP_403_FORBIDDEN)
 
     @action(detail=False, methods=["post"])
     def upload_performance(self, request):
         department_coordinator = self.get_department_coordinator()
-        if not department_coordinator or not department_coordinator.department:
-            return Response(
-                {"error": "Department Coordinator not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        if not validate_file(request.FILES.get("file_performance")):
-            return Response(
-                {"error": "Invalid file type"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            df = importExcelAndReturnJSON(request.FILES.get("file_performance"))
-            for record in df:
-                student = Student.objects.get(uid=record["uid"].strip())
-                semester_record, created = (
-                    AcademicPerformanceSemester.objects.update_or_create(
-                        semester=record["semester"],
-                        student=student,
-                        defaults={"performance": record["performance"]},
-                    )
+        if department_coordinator and department_coordinator.department:
+            if not validate_file(request.FILES.get("file_performance")):
+                return Response(
+                    {"error": "Invalid file type"}, status=status.HTTP_400_BAD_REQUEST
                 )
-                average_performance = AcademicPerformanceSemester.objects.filter(
-                    student=student
-                ).aggregate(avg_performance=models.Avg("performance"))[
-                    "avg_performance"
-                ]
-                student.cgpa = average_performance
-                student.save()
-            return Response({"message": "Data imported successfully"})
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                df = importExcelAndReturnJSON(request.FILES.get("file_performance"))
+                for record in df:
+                    student = Student.objects.get(uid=record["uid"].strip())
+                    semester_record, created = (
+                        AcademicPerformanceSemester.objects.update_or_create(
+                            semester=record["semester"],
+                            student=student,
+                            defaults={"performance": record["performance"]},
+                        )
+                    )
+                    average_performance = AcademicPerformanceSemester.objects.filter(
+                        student=student
+                    ).aggregate(avg_performance=models.Avg("performance"))[
+                        "avg_performance"
+                    ]
+                    student.cgpa = average_performance
+                    student.save()
+                return Response({"message": "Data imported successfully"})
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        # Restrict access for other roles
+        return Response({"error": "Access restricted for your role"}, status=status.HTTP_403_FORBIDDEN)

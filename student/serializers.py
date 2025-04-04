@@ -12,6 +12,7 @@ from .models import (
     Resume_Skill,
     Resume_WorkExperience,
 )
+from program_coordinator_api.models import AttendanceData
 from base.models import User
 
 
@@ -46,6 +47,10 @@ class StudentSerializer(serializers.ModelSerializer):
             "batch",
         ]
 
+class SessionAttendanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AttendanceData
+        fields = '__all__'
 
 class AcademicPerformanceSemesterSerializer(serializers.ModelSerializer):
     student = StudentSerializer()  # Nested student serializer
