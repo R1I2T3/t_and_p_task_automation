@@ -8,7 +8,7 @@ import {
   Typography,
   Grid,
   Paper,
-  Stack
+  Stack,
 } from "@mui/material";
 import axios from "axios";
 import Notice from "./components/notice";
@@ -118,36 +118,36 @@ const NoticeCreationForm = () => {
     reactPrintFn();
   };
 
-  const onDelete = () => {
-    console.log("Current noticeData:", noticeData);
-    console.log("Notice Data Keys:", Object.keys(noticeData || {}));
-    console.log("Notice ID being used:", noticeData?.noticeId);
-    console.log("Full noticeData object:", JSON.stringify(noticeData, null, 2));
-    
-    if (noticeData?.noticeId) {
-      console.log("Making delete request with ID:", noticeData.noticeId);
-      console.log("Delete request URL:", `/api/placement/notice/delete/${noticeData.noticeId}/`);
-      
-      axios.delete(`/api/placement/notice/delete/${noticeData.noticeId}/`, {
-        headers: {
-          "X-CSRFToken": csrfToken || "",
-        },
-        withCredentials: true,
-      }).then((response) => {
-        console.log("Delete response:", response.data);
-        toast.success("Notice deleted successfully!");
-        setNoticeData(null);  // Clear the notice data after deletion
-      }).catch((error) => {
-        console.error("Error deleting notice:", error);
-        console.error("Error details:", error.response?.data);
-        toast.error("Failed to delete notice!");
-      });
-    } else {
-      console.log("No noticeId found in noticeData");
-      console.log("Available data:", JSON.stringify(noticeData, null, 2));
-      toast.error("No notice selected to delete");
-    }
-  };
+  // const onDelete = () => {
+  //   console.log("Current noticeData:", noticeData);
+  //   console.log("Notice Data Keys:", Object.keys(noticeData || {}));
+  //   console.log("Notice ID being used:", noticeData?.noticeId);
+  //   console.log("Full noticeData object:", JSON.stringify(noticeData, null, 2));
+
+  //   if (noticeData?.noticeId) {
+  //     console.log("Making delete request with ID:", noticeData.noticeId);
+  //     console.log("Delete request URL:", `/api/placement/notice/delete/${noticeData.noticeId}/`);
+
+  //     axios.delete(`/api/placement/notice/delete/${noticeData.noticeId}/`, {
+  //       headers: {
+  //         "X-CSRFToken": csrfToken || "",
+  //       },
+  //       withCredentials: true,
+  //     }).then((response) => {
+  //       console.log("Delete response:", response.data);
+  //       toast.success("Notice deleted successfully!");
+  //       setNoticeData(null);  // Clear the notice data after deletion
+  //     }).catch((error) => {
+  //       console.error("Error deleting notice:", error);
+  //       console.error("Error details:", error.response?.data);
+  //       toast.error("Failed to delete notice!");
+  //     });
+  //   } else {
+  //     console.log("No noticeId found in noticeData");
+  //     console.log("Available data:", JSON.stringify(noticeData, null, 2));
+  //     toast.error("No notice selected to delete");
+  //   }
+  // };
 
   return (
     <Container maxWidth="md">
@@ -184,7 +184,7 @@ const NoticeCreationForm = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-              select
+                select
                 label="To"
                 name="to"
                 value={formData.to}
@@ -192,8 +192,10 @@ const NoticeCreationForm = () => {
                 fullWidth
               >
                 {toOptions.map((option, key) => (
-                    <MenuItem key={key} value={option}>{option}</MenuItem>
-                  ))}
+                  <MenuItem key={key} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
               </TextField>
             </Grid>
             <Grid item xs={12}>
@@ -347,28 +349,32 @@ const NoticeCreationForm = () => {
       {noticeData && (
         <div>
           <Notice formData={noticeData} ref={contentRef} isPlacement />
-          <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 3 }}>
-  <Button
-    variant="contained"
-    color="primary"
-    // startIcon={<PrintIcon />}
-    onClick={onPrint}
-    sx={{ px: 3, py: 1, fontWeight: "bold", borderRadius: "8px" }}
-  >
-    Print Notice
-  </Button>
+          <Stack
+            direction="row"
+            spacing={2}
+            justifyContent="center"
+            sx={{ mt: 3 }}
+          >
+            <Button
+              variant="contained"
+              color="primary"
+              // startIcon={<PrintIcon />}
+              onClick={onPrint}
+              sx={{ px: 3, py: 1, fontWeight: "bold", borderRadius: "8px" }}
+            >
+              Print Notice
+            </Button>
 
-  <Button
-    variant="contained"
-    color="secondary"
-    // startIcon={<FileDownloadIcon />}
-    onClick={handleDownloadWord}
-    sx={{ px: 3, py: 1, fontWeight: "bold", borderRadius: "8px" }}
-  >
-    Download as Word
-  </Button>
-</Stack>
-  
+            <Button
+              variant="contained"
+              color="secondary"
+              // startIcon={<FileDownloadIcon />}
+              onClick={handleDownloadWord}
+              sx={{ px: 3, py: 1, fontWeight: "bold", borderRadius: "8px" }}
+            >
+              Download as Word
+            </Button>
+          </Stack>
         </div>
       )}
     </Container>
