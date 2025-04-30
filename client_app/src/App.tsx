@@ -56,6 +56,7 @@ import StaffNotice from "./pages/staff/StaffNotice";
 import CreateResource from "./pages/resources/create-resource";
 import ResourceList from "./pages/resources/resource-list";
 import ResourceDetail from "./pages/resources/resource-details";
+import PlacementSummary from "./pages/student/PlacementSummary";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -103,6 +104,7 @@ const App = () => {
           <Route path="resume" element={<Resume />} />
           <Route path="resume-preview" element={<ResumePreview />} />
           <Route path="job-acceptance" element={<JobAcceptance />} />
+          <Route path="placement-summary" element={<PlacementSummary />} />
           <Route path="resources" element={<ResourceList/>} />
           <Route path="resources/:id" element={<ResourceDetail />} />
 

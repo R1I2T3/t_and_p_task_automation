@@ -9,7 +9,7 @@ import {
   FileUser,
   LogOutIcon,
   User2Icon,
-  FileText, // Add an appropriate icon for Resource
+  FileText,
 } from "lucide-react";
 import {
   Sheet,
@@ -28,33 +28,22 @@ const StudentLayout = () => {
   const auth = useAtomValue(authAtom);
   const defaultItems = [
     { icon: BarChart, label: "Stats", href: "/student/" },
-    {icon:CalendarCheck, label:"Session Attendance", href:"/student/session-attendance"},
+    { icon: CalendarCheck, label: "Session Attendance", href: "/student/session-attendance" },
     { icon: User, label: "Personal Info", href: "/student/info" },
     { icon: FileUser, label: "Resume", href: "/student/resume" },
     { icon: MessageCircle, label: "Notifications", href: "/notifications/" },
-    {
-      icon: FileUser,
-      label: "Internship submission",
-      href: "/student/internship-submission",
-    },
-    {
-      icon: FileText, // Icon for resource
-      label: "Resource", // Label for resource
-      href: "/student/resources", // Link to resource page
-    },
+    { icon: FileUser, label: "Internship submission", href: "/student/internship-submission" },
+    { icon: FileText, label: "Resource", href: "/student/resources" },
   ];
   const [menuItems, setMenuItems] = React.useState([...defaultItems]);
 
   useEffect(() => {
-    if (auth?.academic_year && auth.academic_year === "BE") {
+    if (auth?.academic_year && auth.academic_year === "2026") {
       console.log("BE student");
       setMenuItems([
         ...defaultItems,
-        {
-          icon: FileUser,
-          label: "Job Acceptance",
-          href: "/student/job-acceptance",
-        },
+        { icon: FileUser, label: "Job Acceptance", href: "/student/job-acceptance" },
+        { icon: FileUser, label: "Placement Summary", href: "/student/placement-summary" },
       ]);
     }
   }, [auth]);
@@ -62,7 +51,7 @@ const StudentLayout = () => {
   return (
     <div className="absolute top-0 left-0 w-full min-w-fit">
       <header className="min-w-fit bg-[#d17a00] px-4 py-3 shadow-lg flex justify-between items-center">
-        <h1 className="text-xl md:text-2xl  font-bold text-white flex h-full">
+        <h1 className="text-xl md:text-2xl font-bold text-white flex h-full">
           Student Dashboard
         </h1>
         <img src={Logo} />
@@ -72,7 +61,7 @@ const StudentLayout = () => {
           <Button
             variant="outline"
             size="icon"
-            className="my-3 z-40 rounded-full bg-white shadow-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 "
+            className="my-3 z-40 rounded-full bg-white shadow-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
           >
             <Menu className="h-5 w-5" color="#000000" />
             <span className="sr-only">Open menu</span>
@@ -83,7 +72,7 @@ const StudentLayout = () => {
             <SheetTitle className="text-2xl font-bold">Menu</SheetTitle>
           </SheetHeader>
           <div className="flex h-full flex-col justify-between py-6">
-            <nav className="space-y-2 px-4 flex flex-col w-full">
+            <nav className="space-y-2 px-4 flex flex-col w-full max-h-[calc(100vh-150px)] overflow-y-auto">
               {menuItems.map((item, index) => (
                 <Link
                   key={index}
