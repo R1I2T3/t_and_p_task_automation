@@ -21,7 +21,7 @@ def serve_static(request, path, document_root=""):
 
 
 @api_view(["GET"])
-def my_protected_view(request):
+def my_protected_view(request): 
     current_user = User.objects.get(email=request.user.email)
     if current_user.role == "faculty":
         faculty = FacultyResponsibility.objects.get(user=current_user)

@@ -11,7 +11,7 @@ from .models import (
     Resume_Project,
     Resume_Skill,
     Resume_WorkExperience,
-)
+) 
 from program_coordinator_api.models import AttendanceData
 from base.models import User
 
@@ -45,7 +45,18 @@ class StudentSerializer(serializers.ModelSerializer):
             "is_student_coordinator",
             "consent",
             "batch",
+            "is_pli",
         ]
+
+class StudentConsentUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = ['consent']
+
+class StudentPliUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = ['is_pli']
 
 class SessionAttendanceSerializer(serializers.ModelSerializer):
     class Meta:

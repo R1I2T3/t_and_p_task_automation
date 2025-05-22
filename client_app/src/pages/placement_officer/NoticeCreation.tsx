@@ -16,8 +16,6 @@ import { getCookie } from "../../utils";
 import { NoticeData } from "./components/notice";
 import toast from "react-hot-toast";
 import { useReactToPrint } from "react-to-print";
-// import PrintIcon from "@mui/icons-material/Print";
-// import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import downloadWordDocument from "./utils/downloadWordDocument";
 
 const NoticeCreationForm = () => {
@@ -75,7 +73,7 @@ const NoticeCreationForm = () => {
       .get("/api/placement/company/all", {
         headers: {
           "X-CSRFToken": csrfToken || "",
-        },
+        }, 
         withCredentials: true, // Ensure cookies are included in the request
       })
       .then((response) => {

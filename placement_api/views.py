@@ -26,7 +26,7 @@ from uuid import uuid4
 from student.serializers import StudentSerializer
 from rest_framework.exceptions import NotFound
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from uuid import uuid4
+from uuid import uuid4 
 from .utils import is_student_eligible
 
 @api_view(["POST"])

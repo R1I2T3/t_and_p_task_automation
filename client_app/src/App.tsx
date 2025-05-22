@@ -17,6 +17,8 @@ import Attendance from "./pages/program_coordinator/Attendance";
 import StudentLayout from "./pages/student/student_layout";
 import StudentHome from "./pages/student";
 import SessionAttendance from "./pages/student/SessionAttendance";
+import ConsentForm from "./pages/student/ConsentForm"; 
+import PliForm from "./pages/student/PliForm"; 
 import InternShipSubmission from "./pages/student/InternShipSubmission";
 import StudentPersonalInfo from "./pages/student/student-personal-info";
 import PlacementRegistration from "./pages/student/PlacementRegistration";
@@ -75,7 +77,7 @@ const App = () => {
       } else {
         window.open("http://localhost:8000/auth/login", "_self");
       }
-    };
+    }; 
     onAuthenticate();
   }, []);
   return (
@@ -99,6 +101,8 @@ const App = () => {
         </Route>
         <Route path="/student" element={<StudentLayout />}>
           <Route index element={<StudentHome />} />
+          <Route path="consent/:id" element={<ConsentForm />} />
+          <Route path="pli/:id" element={<PliForm />} />
           <Route path="session-attendance" element={<SessionAttendance />} />
           <Route path="info" element={<StudentPersonalInfo />} />
           <Route path="resume" element={<Resume />} />

@@ -4,18 +4,25 @@ from rest_framework import status
 from .serializers import NotificationSerializer
 from .models import Notification
 from student.models import Student
-
+from rest_framework.permissions import IsAuthenticated
+from django.utils.dateparse import parse_datetime
+from django.utils import timezone
+from django.db import models
+from base import models as base_models
 
 class NotificationListCreate(generics.ListCreateAPIView):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         print("Request data:", request.data)
-        try:
+        try: 
             # Extract data from request
-            title = request.data.get("title")
+            title = request.data.get("title") 
             message = request.data.get("message")
+            expires_at_raw = request.data.get("expires_at")
+            expires_at = parse_datetime(expires_at_raw) if expires_at_raw else None
             academic_years = request.data.get("academic_year", "").split(",")
             departments = request.data.get("department", "").split(",")
 
@@ -25,13 +32,20 @@ class NotificationListCreate(generics.ListCreateAPIView):
 
             print("Processed academic years:", academic_years)
             print("Processed departments:", departments)
-
             notification = Notification.objects.create(
                 title=title,
                 message=message,
                 creator=request.user,
                 files=request.FILES.get("files", None),
+                expires_at=expires_at,
             )
+
+            form_type = request.data.get("form_type")
+            if form_type:
+                base_url = "http://localhost:8000" 
+                dynamic_link = f"{base_url}/student/{form_type}/{notification.id}"
+                notification.link = dynamic_link
+                notification.save(update_fields=["link"])
 
             student_query = Student.objects.all()
 
@@ -57,9 +71,13 @@ class NotificationListCreate(generics.ListCreateAPIView):
 
     def get_queryset(self):
         # Optionally customize how notifications are retrieved
-        return Notification.objects.all().order_by("-created_at")
-
-
+        return Notification.objects.filter(
+                recipients=self.request.user,
+            )
+    
 class NotificationDetail(generics.RetrieveAPIView):
-    queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(recipients=self.request.user)
