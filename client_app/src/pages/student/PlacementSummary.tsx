@@ -148,8 +148,8 @@ const PlacementSummary = () => {
         <div className="w-full sm:w-1/2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Company</label>
           <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Company" />
+            <SelectTrigger className="w-full text-black">
+              <SelectValue placeholder="Select Company" className="text-black" />
             </SelectTrigger>
             <SelectContent>
               {companies.map((company) => (
@@ -164,8 +164,8 @@ const PlacementSummary = () => {
         <div className="w-full sm:w-1/2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Role</label>
           <Select value={selectedRole} onValueChange={setSelectedRole}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Role" />
+            <SelectTrigger className="w-full text-black">
+              <SelectValue placeholder="Select Role" className="text-black" />
             </SelectTrigger>
             <SelectContent>
               {roles.map((role) => (
