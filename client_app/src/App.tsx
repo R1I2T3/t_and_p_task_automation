@@ -49,6 +49,7 @@ import InternshipLayout from "./pages/internship_officer/InternshipLayout";
 import InternShipNotice from "./pages/internship_officer/InternShipNotice";
 import InternshipCompanyRegister from "./pages/internship_officer/InternshipCompanyRegister";
 import InternShipVerify from "./pages/internship_officer/InternShipVerify";
+import InternshipReport from "./pages/internship_officer/internship_report";
 import InternshipStats from "./pages/internship_officer/Stats";
 import OnePageReport from "./pages/internship_officer/OnePageReport";
 import JobAcceptance from "./pages/student/JobAcceptance";
@@ -169,6 +170,7 @@ const App = () => {
           />
           <Route path="verify" element={<InternShipVerify />} />
           <Route path="report" element={<OnePageReport />} />
+          <Route path="internship-reports" element={<InternshipReport />} />
         </Route>
         <Route path="/principal" element={<PrincipalLayout />}>
           <Route index element={<TrainingStats />} />
