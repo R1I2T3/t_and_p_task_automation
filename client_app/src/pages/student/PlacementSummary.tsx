@@ -36,9 +36,9 @@ interface PlacementItem {
 
 const PlacementSummary = () => {
   const [selectedCompany, setSelectedCompany] = useState<string>("All");
-  const [selectedRole, setSelectedRole] = useState<string>("All");
+  const [selectedRole] = useState<string>("All");
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [roles, setRoles] = useState(["All"]);
+  const [, setRoles] = useState(["All"]);
   const [placementData, setPlacementData] = useState<PlacementItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -162,7 +162,7 @@ const PlacementSummary = () => {
         </div>
 
         <div className="w-full sm:w-1/2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Role</label>
+          {/* <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Role</label>
           <Select value={selectedRole} onValueChange={setSelectedRole}>
             <SelectTrigger className="w-full text-black">
               <SelectValue placeholder="Select Role" className="text-black" />
@@ -174,7 +174,7 @@ const PlacementSummary = () => {
                 </SelectItem>
               ))}
             </SelectContent>
-          </Select>
+          </Select> */}
         </div>
       </div>
 
