@@ -96,10 +96,12 @@ class jobAcceptance(models.Model):
     company = models.ForeignKey(
         to=CompanyRegistration, on_delete=models.DO_NOTHING, null=True
     )
-    company_name = models.CharField(max_length=100, null=True)
     offer_letter = models.FileField()
     type = models.CharField(max_length=100, default="")
     salary = models.FloatField(default=0)
     salary_category = models.CharField(max_length=100, default="")
     position = models.CharField(max_length=100, default="")
     isVerified = models.BooleanField(default=False)
+    is_sel = models.BooleanField(default=False)  # selected
+    is_reg = models.BooleanField(default=False)  # registered
+

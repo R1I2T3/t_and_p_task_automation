@@ -13,3 +13,4 @@ class Migration(migrations.Migration):
             name='phase',
             field=models.CharField(choices=[('Phase 1', 'Phase 1'), ('Phase 2', 'Phase 2'), ('Phase 3', 'Phase 3')], default='Phase 1', max_length=100),
         ),
+    ]
