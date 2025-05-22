@@ -13,10 +13,6 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_avg_data(request, table_name):
-    if not request.user.role == "training_officer":
-        return JsonResponse(
-            {"error": "You are not authorized to access this resource"}, status=403
-        )
     try:
         # Validate table_name to prevent SQL injection
         valid_tables = [

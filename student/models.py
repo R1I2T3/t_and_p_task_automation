@@ -11,11 +11,13 @@ class Student(models.Model):
         ("Category 2", "category 2"),
         ("Category 3", "category 3"),
         ("No category", "No category"),
-    ]
+    ] 
     consent_Type = [
         ("placement", "placement"),
         ("Higher studies", "Higher studies"),
+        ("Entrepreneurship", "Entrepreneurship"),
     ]
+
     CARD_TYPE = [
         ("Yellow", "Yellow"),
         ("Orange", "Orange"),
@@ -44,6 +46,7 @@ class Student(models.Model):
     attendance = models.FloatField(null=True)
     is_kt = models.BooleanField(default=False)
     is_backLog = models.BooleanField(default=False)
+    is_pli = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.uid}"

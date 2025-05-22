@@ -32,7 +32,7 @@ urlpatterns = (
         path("api/placement/", include("placement_api.urls")),
         path("api/", views.my_protected_view, name="check-auth"),
         path("api/notifications/", include("notifications.urls")),
-        path("api/program_coordinator/", include("program_coordinator_api.urls")),
+        path("api/program_coordinator/", include("program_coordinator_api.urls")), 
         path("api/internship/", include("internship_api.urls")),
         path("api/student/", include("student.urls")),
         path("api/faculty_coordinator/", include("faculty_coordinator.urls")),

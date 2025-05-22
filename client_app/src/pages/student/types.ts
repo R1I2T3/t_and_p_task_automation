@@ -33,3 +33,20 @@ export interface ResumeData {
   contacts: string[];
   skills: string[];
 }
+
+export type StudentFormData = {
+  uid: string;
+  user_id: string;
+  user: {
+    id: string;
+    email: string;
+    full_name: string;
+  };
+  department: string;
+  academic_year: string;
+  current_category: string;
+  is_student_coordinator: boolean;
+  consent: string;
+  batch: string;
+  is_pli: boolean;
+};

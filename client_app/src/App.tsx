@@ -17,6 +17,8 @@ import Attendance from "./pages/program_coordinator/Attendance";
 import StudentLayout from "./pages/student/student_layout";
 import StudentHome from "./pages/student";
 import SessionAttendance from "./pages/student/SessionAttendance";
+import ConsentForm from "./pages/student/ConsentForm"; 
+import PliForm from "./pages/student/PliForm"; 
 import InternShipSubmission from "./pages/student/InternShipSubmission";
 import StudentPersonalInfo from "./pages/student/student-personal-info";
 import PlacementRegistration from "./pages/student/PlacementRegistration";
@@ -36,7 +38,6 @@ import NoticeCreationForm from "./pages/placement_officer/NoticeCreation";
 import PlacementReport from "./pages/placement_officer/PlacementReport";
 import { CategoryDataStatistics } from "./pages/placement_officer/CategoryData";
 import { ComparativePlacementStatistics } from "./pages/placement_officer/ComparitivePlacementStatistic";
-import { Typography } from "@mui/material";
 import PlacementStats from "./pages/placement_officer";
 import Old from "./pages/placement_officer/Old";
 import JobVerification from "./pages/placement_officer/components/JobVerification";
@@ -57,6 +58,7 @@ import StaffNotice from "./pages/staff/StaffNotice";
 import CreateResource from "./pages/resources/create-resource";
 import ResourceList from "./pages/resources/resource-list";
 import ResourceDetail from "./pages/resources/resource-details";
+import PlacementSummary from "./pages/student/PlacementSummary";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -75,7 +77,7 @@ const App = () => {
       } else {
         window.open("http://localhost:8000/auth/login", "_self");
       }
-    };
+    }; 
     onAuthenticate();
   }, []);
   return (
@@ -99,11 +101,14 @@ const App = () => {
         </Route>
         <Route path="/student" element={<StudentLayout />}>
           <Route index element={<StudentHome />} />
+          <Route path="consent/:id" element={<ConsentForm />} />
+          <Route path="pli/:id" element={<PliForm />} />
           <Route path="session-attendance" element={<SessionAttendance />} />
           <Route path="info" element={<StudentPersonalInfo />} />
           <Route path="resume" element={<Resume />} />
           <Route path="resume-preview" element={<ResumePreview />} />
           <Route path="job-acceptance" element={<JobAcceptance />} />
+          <Route path="placement-summary" element={<PlacementSummary />} />
           <Route path="resources" element={<ResourceList/>} />
           <Route path="resources/:id" element={<ResourceDetail />} />
 
@@ -171,9 +176,6 @@ const App = () => {
             path="placement"
             element={
               <div>
-                <Typography variant="h5">
-                  Placement Statistics of 2024
-                </Typography>
                 <Old />
               </div>
             }

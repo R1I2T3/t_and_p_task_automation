@@ -6,6 +6,7 @@ from rest_framework.exceptions import PermissionDenied
 from django.db.models import Sum
 from django.http import JsonResponse
 from .models import (
+    User,
     Student,
     AcademicAttendanceSemester,
     TrainingAttendanceSemester,
@@ -17,10 +18,78 @@ from .serializers import (
     StudentSerializer,
     ResumeSerializer,
     SessionAttendanceSerializer,
+    StudentConsentUpdateSerializer,
+    StudentPliUpdateSerializer,
 )
-
+from notifications.models import Notification
 from program_coordinator_api.models import AttendanceData  # Import model from another app
 from .utils import categorize
+
+from datetime import datetime
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.utils.timezone import now
+
+class StudentDataView(APIView):
+    def get(self, request):
+        try:
+            student = Student.objects.get(user=request.user)
+            response_serializer = StudentSerializer(student)
+            student_data = response_serializer.data
+            return Response({"student": student_data})
+        except Student.DoesNotExist:
+            return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class StudentFormView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, id):
+        try:
+            student = Student.objects.get(user=request.user)
+            notification_obj = Notification.objects.get(id=id)
+
+            if not notification_obj.link:
+                return Response(
+                    {'error': 'Page Not Found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            if notification_obj.expires_at and now() > notification_obj.expires_at:
+                return Response(
+                    {"error": "This form has expired. Please contact the TNP."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            if "consent" in request.path:
+                serializer = StudentConsentUpdateSerializer(student, data=request.data, partial=True)
+            elif "pli" in request.path:
+                serializer = StudentPliUpdateSerializer(student, data=request.data, partial=True)
+            else:
+                return Response({'error': 'Invalid form type'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if serializer.is_valid():
+                serializer.save()
+
+                if "pli" in request.path:
+                    response_serializer = StudentSerializer(student)
+                    student_data = response_serializer.data
+                    return Response({"student": student_data})
+                
+                return Response(serializer.data)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Student.DoesNotExist:
+            return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Notification.DoesNotExist:
+            return Response({'error': 'Page not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class SessionAttendanceAPIView(APIView):
     permission_classes = [IsAuthenticated]
