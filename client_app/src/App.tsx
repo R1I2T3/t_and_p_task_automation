@@ -59,6 +59,7 @@ import CreateResource from "./pages/resources/create-resource";
 import ResourceList from "./pages/resources/resource-list";
 import ResourceDetail from "./pages/resources/resource-details";
 import PlacementSummary from "./pages/student/PlacementSummary";
+import UploadInhouseInternship from "./pages/department_coordinator/UploadInhouseInternship";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -134,6 +135,7 @@ const App = () => {
           <Route index element={<DepartmentDashboard />} />
           <Route path="stats" element={<DepartmentStats />} />
           <Route path="attendance" element={<DepartmentAttendance />} />
+          <Route path="upload-inhouse-internship" element={<UploadInhouseInternship />} />
         </Route>
         <Route path="/placement_officer" element={<PlacementLayout />}>
           <Route index element={<PlacementStats />} />
