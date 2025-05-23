@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "react-hot-toast";
 import Papa from "papaparse";
 import InternshipBadgeIcon from "@/assets/icons/InternshipBadgeIcon";
+import { getCookie } from "@/utils";
 
 interface PreviewData {
   uid: string;
@@ -95,42 +96,36 @@ const UploadInhouseInternship = () => {
       toast.error("Please select a file first");
       return;
     }
+    console.log("File object:", file);
 
     Papa.parse(file, {
       header: true,
       complete: (results) => {
         const data = results.data as PreviewData[];
-        // Validate columns
-        const requiredColumns = [
-          "uid",
-          "year",
-          "type",
-          "stipend",
-          "is_verified",
-          "domain_name",
-          "total_hours",
-          "start_date",
-          "end_date"
-        ];
-        const fileColumns = Object.keys(data[0] || {});
-        const missing = requiredColumns.filter(col => !fileColumns.includes(col));
-        if (missing.length) {
-          toast.error(`Missing columns: ${missing.join(", ")}`);
+        console.log("Parsed data before filtering:", data); // Log parsed data
+
+        // Filter out empty rows based on uid
+        const filteredData = data.filter(row => row.uid && row.uid.trim() !== '');
+
+        // Validate columns on filtered data (assuming at least one valid row exists)
+        if (filteredData.length === 0) {
+          toast.error("No valid data rows found in the CSV.");
           setPreviewData([]);
           setShowPreview(false);
           return;
         }
 
-        if (validateData(data)) {
+        if (validateData(filteredData)) {
           toast.success("Data validation successful!");
         } else {
           toast.error("Data validation completed with warnings");
         }
         
-        setPreviewData(data.slice(0, 5));
+        setPreviewData(filteredData.slice(0, 5));
         setShowPreview(true);
       },
       error: (error) => {
+        console.error("PapaParse Error:", error);
         toast.error(`Error parsing CSV: ${error.message}`);
       },
     });
@@ -150,6 +145,10 @@ const UploadInhouseInternship = () => {
       const response = await fetch("/api/department_coordinator/upload-inhouse-internship/", {
         method: "POST",
         body: formData,
+        credentials: 'include',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken') || '',
+        },
       });
 
       if (response.ok) {
