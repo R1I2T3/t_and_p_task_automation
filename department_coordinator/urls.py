@@ -1,6 +1,5 @@
 from django.urls import path
-from .views import DepartmentCoordinatorViewSet, AttendanceViewSet
-
+from .views import DepartmentCoordinatorViewSet, AttendanceViewSet , upload_inhouse_internship
 urlpatterns = [
     # Department Coordinator URLs
     path(
@@ -23,5 +22,11 @@ urlpatterns = [
         "attendance/upload-performance/",
         AttendanceViewSet.as_view({"post": "upload_performance"}),
         name="upload-performance",
+    ),
+    # Inhouse Internship Upload URL
+    path(
+        "upload-inhouse-internship/",
+        upload_inhouse_internship,
+        name="upload-inhouse-internship",
     ),
 ]
