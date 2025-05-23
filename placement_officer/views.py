@@ -1,5 +1,5 @@
 from django.shortcuts import render, HttpResponse
-from django.db.models import Count, Sum, Avg, Max, Min
+from django.db.models import Count, Sum, Avg, Max, Min,F
 from django.http import JsonResponse
 import json
 from student.models import Student
@@ -203,48 +203,87 @@ def get_data_by_year(request, year):
     return JsonResponse({"data": student_data})
 
 
+
+
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def consolidated(request):
     try:
         acceptances = jobAcceptance.objects.all()
+
+        # Get the total number of distinct placed students
         placed_students = acceptances.values("student").distinct().count()
+
+        # Get total number of accepted offers
         total_accepted_offers = acceptances.count()
-        total_salary_accepted = acceptances.aggregate(total_salary=Sum("salary"))[
-            "total_salary"
-        ]
-        avg_salary_accepted = acceptances.aggregate(avg_salary=Avg("salary"))[
-            "avg_salary"
-        ]
-        max_salary_accepted = acceptances.aggregate(max_salary=Max("salary"))[
-            "max_salary"
-        ]
-        min_salary_accepted = acceptances.aggregate(min_salary=Min("salary"))[
-            "min_salary"
-        ]
+
+        # Get the total salary accepted
+        total_salary_accepted = acceptances.aggregate(total_salary=Sum("salary"))["total_salary"]
+
+        # Get average salary accepted
+        avg_salary_accepted = acceptances.aggregate(avg_salary=Avg("salary"))["avg_salary"]
+
+        # Get the maximum salary accepted
+        max_salary_accepted = acceptances.aggregate(max_salary=Max("salary"))["max_salary"]
+
+        # Get the minimum salary accepted
+        min_salary_accepted = acceptances.aggregate(min_salary=Min("salary"))["min_salary"]
+
+        # Prepare company data with branch-wise statistics
         company_data = {}
         companies = CompanyRegistration.objects.values("name").distinct()
+
         for company in companies:
             company_name = company["name"]
-            branches = (
-                acceptances.filter(company_name=company_name)
-                .select_related("student")
-                .values("student__department")
-                .distinct()
-            )
+            
+            # Get distinct branches for the company
+            branches = acceptances.filter(company__name=company_name).values("student__department").distinct()
+            print(f"Branches for company {company_name}: {branches}")
+
             branch_data = {}
             for branch in branches:
                 branch_name = branch["student__department"]
-                branch_data[branch_name] = acceptances.filter(
-                    company_name=company_name, student__department=branch_name
+
+                # Fetching selected students where is_sel=1 (True in TinyInt)
+                selected = acceptances.filter(
+                    company__name=company_name,
+                    student__department=branch_name,
+                    is_sel=1  # Checking for TinyInt value 1 (True)
                 ).count()
-            company_data[company_name] = branch_data
+
+                # Fetching registered students where is_reg=1 (True in TinyInt)
+                registered = acceptances.filter(
+                    company__name=company_name,
+                    student__department=branch_name,
+                    is_reg=1  # Checking for TinyInt value 1 (True)
+                ).count()
+
+                # Store selected and registered count in the branch data
+                branch_data[branch_name] = {
+                    "selected": selected,
+                    "registered": registered
+                }
+
+            # Adding the total selected and registered for each company
+            company_data[company_name] = {
+                "branch_data": branch_data,
+                "total_selected": sum(branch["selected"] for branch in branch_data.values()),
+                "total_registered": sum(branch["registered"] for branch in branch_data.values())
+            }
+
+        # Fetching student data (student UID, department, company name, and salary)
         student_data = list(
             acceptances.values(
-                "student__uid", "student__department", "company_name", "salary"
+                "student__uid",
+                "student__department",
+                "company__name",
+                "salary",
+                "company__is_pli"
             )
         )
+
+        # Prepare the final context to return as JSON response
         context = {
             "total_placed_students": placed_students,
             "total_accepted_offers": total_accepted_offers,
@@ -255,19 +294,21 @@ def consolidated(request):
             "company_data": company_data,
             "student_data": student_data,
         }
+
+        # Return the context as JSON response with status 200
+        return JsonResponse(context, status=200)
+
     except Exception as e:
-        print(f"Error in consolidated_view: {e}")
-        context = {
-            "total_placed_students": 0,
-            "total_accepted_offers": 0,
-            "total_salary_accepted": 0,
-            "avg_salary_accepted": 0,
-            "max_salary_accepted": 0,
-            "min_salary_accepted": 0,
-            "company_data": {},
-            "student_data": [],
-        }
-    return JsonResponse(context)
+        # Handle any exceptions and return a JSON response with error details
+        print(f"[ERROR] consolidated view: {str(e)}")
+        return JsonResponse(
+            {
+                "error": "Internal server error occurred while generating report.",
+                "details": str(e)
+            },
+            status=500
+        )
+
 
 
 @api_view(["POST"])

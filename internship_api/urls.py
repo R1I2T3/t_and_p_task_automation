@@ -9,7 +9,9 @@ from .views import (
     get_all_applied_students,
     create_job_acceptance,
     get_all_job_acceptances,
-    verify_job,
+    verify_job,    
+    get_verified_internships,
+    download_internship_report,
 )
 
 urlpatterns = [
@@ -24,4 +26,6 @@ urlpatterns = [
     path("job_acceptance/create/", create_job_acceptance),
     path("jobs/verify/", get_all_job_acceptances, name="internship-acceptance"),
     path("jobs/verify/selected/", verify_job, name="verify-internship"),
+    path("jobs/reports/", get_verified_internships, name="internship-reports"),
+    path("jobs/download-report/", download_internship_report, name="download-internship-report"),
 ]

@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from rest_framework.decorators import (
     api_view,
     permission_classes,
@@ -31,6 +31,8 @@ from uuid import uuid4
 from student.models import Student
 from base.models import User
 from datetime import datetime
+import pandas as pd
+import io
 
 
 @api_view(["POST"])
@@ -411,3 +413,120 @@ def verify_job(request):
         return JsonResponse(
             {"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND
         )
+
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def get_verified_internships(request):
+    user = User.objects.get(email=request.user.email)
+    if not user or user.role not in ["internship_officer", "staff"]:
+        return JsonResponse(
+            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
+        )
+    jobs = InternshipAcceptance.objects.filter(is_verified=True).select_related(
+        "student"
+    )
+    serializer = InternshipAcceptanceSerializer(jobs, many=True)
+    data = []
+    for job in serializer.data:
+        job_data = dict(job)
+        student = job["student"]
+        if student:
+            student_obj = Student.objects.get(id=student)
+            job_data["student_name"] = (
+                student_obj.user.full_name if student_obj.user else ""
+            )
+            job_data["uid"] = student_obj.uid
+            job_data["branch"] = student_obj.department
+        data.append(job_data)
+    return JsonResponse(data, safe=False)
+
+
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def download_internship_report(request):
+    user = User.objects.get(email=request.user.email)
+    if not user or user.role not in ["internship_officer", "staff"]:
+        return JsonResponse(
+            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
+        )
+    
+    jobs = InternshipAcceptance.objects.filter(is_verified=True).select_related("student")
+    data = []
+    salaries = []
+    
+    for job in jobs:
+        if job.student:
+            salary = job.salary
+            salaries.append(salary)
+            data.append({
+                "Sr. No.": len(data) + 1,
+                "Department": job.student.department,
+                "UID": job.student.uid,
+                "Student Name": job.student.user.full_name if job.student.user else "",
+                "Start Date": job.start_date.strftime("%d/%m/%Y"),
+                "Completion Date": job.completion_date.strftime("%d/%m/%Y"),
+                "Company Name": job.company_name or "In House",
+                "Stipend": f"₹{salary:,.2f}"
+            })
+    
+    # Calculate statistics
+    if salaries:
+        maximum = max(salaries)
+        minimum = min(salaries)
+        average = sum(salaries) / len(salaries)
+        
+        # Calculate median
+        sorted_salaries = sorted(salaries)
+        mid = len(sorted_salaries) // 2
+        median = (sorted_salaries[mid] + sorted_salaries[~mid]) / 2
+        
+        # Statistics data
+        stats_data = [
+            ["", "Stipend offered"],
+            ["Maximum", f"₹{maximum:,.2f}"],
+            ["Minimum", f"₹{minimum:,.2f}"],
+            ["Average", f"₹{average:,.2f}"],
+            ["Median", f"₹{median:,.2f}"]
+        ]
+    else:
+        stats_data = [["No data available"]]
+    
+    # Create DataFrame and Excel file
+    df = pd.DataFrame(data)
+    stats_df = pd.DataFrame(stats_data)
+    excel_file = io.BytesIO()
+    
+    with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
+        # Write main report
+        df.to_excel(writer, index=False, sheet_name='Internship Report')
+        
+        # Write statistics
+        stats_df.to_excel(writer, index=False, header=False, sheet_name='Statistics')
+        
+        # Auto-adjust columns' width for main report
+        for sheet_name in ['Internship Report', 'Statistics']:
+            worksheet = writer.sheets[sheet_name]
+            if sheet_name == 'Internship Report':
+                df_to_adjust = df
+            else:
+                df_to_adjust = stats_df
+                
+            for idx, col in enumerate(df_to_adjust.columns):
+                max_length = max(
+                    df_to_adjust[col].astype(str).apply(len).max(),
+                    len(str(col))
+                )
+                worksheet.column_dimensions[chr(65 + idx)].width = max_length + 2
+    
+    excel_file.seek(0)
+    
+    response = HttpResponse(
+        excel_file.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=internship_report.xlsx'
+    
+    return response
