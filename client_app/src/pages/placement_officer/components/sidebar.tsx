@@ -52,6 +52,14 @@ const Sidebar = () => {
           <Send />
           <p>Notification</p>
         </NavLink>
+        <NavLink to="/category-rule-form" className="menu-item">
+          <img src={Stats} alt="Placement Statistics" className="menu-icon" />
+          <p>Category Rule Form</p>
+        </NavLink>
+      <NavLink to="/category-rules/list" className="menu-item">
+        <img src={Stats} alt="List Category Rules" className="menu-icon" />
+        <p>List Category Rules</p>
+      </NavLink>
       </ul>
       <div className="bottom-menu">
         <button
