@@ -2,6 +2,7 @@ from django.shortcuts import render, HttpResponse
 from django.db.models import Count, Sum, Avg, Max, Min,F
 from django.http import JsonResponse
 import json
+from placement_officer.models import CategoryRule
 from student.models import Student
 from placement_api.models import Offers, CompanyRegistration, jobAcceptance
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -16,6 +17,8 @@ from rest_framework.decorators import (
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.response import Response
+from rest_framework import status
 
 
 @api_view(["GET"])
@@ -316,41 +319,60 @@ def consolidated(request):
 @permission_classes([IsAuthenticated])
 def calculateCategory(request):
     try:
+        batch = request.data.get('batch', 'BE_2024')  # Get batch from request or use default
         students = Student.objects.filter(academic_year="BE")
+        
         for student in students:
-            academic_attendance_sum = student.academic_attendance.aggregate(Sum("attendance")).get("attendance__sum")  # type: ignore
-            academic_attendance = (
-                academic_attendance_sum / student.academic_attendance.count()
-                if academic_attendance_sum is not None
-                else None
-            )
-            academic_performance_sum = student.academic_performance.aggregate(Sum("performance")).get("performance__sum")  # type: ignore
-            academic_performance = (
-                academic_performance_sum / student.academic_performance.count()
-                if academic_performance_sum is not None
-                else None
-            )
-            training_attendance_sum = student.training_attendance.aggregate(Sum("training_attendance")).get("training_attendance__sum")  # type: ignore
-            training_attendance = (
-                training_attendance_sum / student.training_attendance.count()
-                if training_attendance_sum is not None
-                else None
-            )
-            training_performance_sum = student.training_performance.aggregate(Sum("training_performance")).get("training_performance__sum")  # type: ignore
-            training_performance = (
-                training_performance_sum / student.training_performance.count()
-                if training_performance_sum is not None
-                else None
-            )
+            # Calculate averages
+            academic_attendance = calculate_average(student.academic_attendance, 'attendance')
+            academic_performance = calculate_average(student.academic_performance, 'performance')
+            training_attendance = calculate_average(student.training_attendance, 'training_attendance')
+            training_performance = calculate_average(student.training_performance, 'training_performance')
+            
+            # Calculate category using the new dynamic rules
             category = categorize(
                 academic_attendance,
                 academic_performance,
                 training_attendance,
                 training_performance,
+                batch
             )
+            
             student.current_category = category
             student.save()
+            
         return JsonResponse({"success": "Category calculated successfully"}, status=200)
     except Exception as e:
         print(e)
-        JsonResponse({"error": "Error in calculating category"}, status=500)
+        return JsonResponse({"error": str(e)}, status=500)
+
+def calculate_average(queryset, field_name):
+    sum_value = queryset.aggregate(Sum(field_name)).get(f'{field_name}__sum')
+    count = queryset.count()
+    return sum_value / count if sum_value is not None and count > 0 else None
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def create_category_rule(request):
+    try:
+        CategoryRule.objects.create(**request.data)
+        return JsonResponse({"message": "Category rule created successfully"}, status=201)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_category_rules(request):
+    rules = CategoryRule.objects.all().values()
+    return Response(list(rules))  # Convert to list here as well for consistency
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def students_by_category(request, category, batch):
+    try:
+        students = Student.objects.filter(current_category=category, batch=batch)
+        student_data = students.values('id', 'current_category', 'academic_year')
+        return Response(list(student_data))  # Convert ValuesQuerySet to list
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
