@@ -61,4 +61,7 @@ urlpatterns = [
     ),
     path("consolidated/", views.consolidated, name="consolidated"),
     path("calculate_category/", views.calculateCategory, name="calculate_category"),
+    path('category-rules/create/', views.create_category_rule, name='create-category-rule'),
+    path('category-rules/list/', views.list_category_rules, name='list-category-rules'),
+    path('students/by-category/<str:category>/<str:batch>/', views.students_by_category, name='students_by_category'),
 ]
