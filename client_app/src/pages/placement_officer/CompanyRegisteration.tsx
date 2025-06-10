@@ -31,7 +31,7 @@ const CompanyRegistrationForm = () => {
     Departments: string;
     is_pli: boolean;
     selectedDepartments: string[];
-    jobOffers: Array<{ type: string; salary: string; position: string, degree: string[] }>;
+    jobOffers: Array<{ type: string; salary: string; position: string, degree: string }>;
     batch: string;
   }
 
@@ -47,7 +47,7 @@ const CompanyRegistrationForm = () => {
     Departments: "all",
     is_pli: false,
     selectedDepartments: [],
-    jobOffers: [{ type: "", salary: "", position: "", degree: [] }],
+    jobOffers: [{ type: "", salary: "", position: "", degree: "" }],
     batch: "",
   });
 
@@ -64,7 +64,7 @@ const CompanyRegistrationForm = () => {
     "MECH",
   ];
 
-  const degreeOptions = ["ME", "BE"]
+  const degreeOptions = ["BE", "ME", "BE, ME"]
 
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target;
@@ -97,8 +97,8 @@ const CompanyRegistrationForm = () => {
     setFormData({ ...formData, jobOffers: updatedJobOffers });
   };
 
-  const handleDegreeChange = (index: number, e: SelectChangeEvent<string[]>) => {
-    const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value;
+  const handleDegreeChange = (index: number, e: SelectChangeEvent<string>) => {
+    const value = e.target.value;
     const updatedJobOffers = [...formData.jobOffers];
     updatedJobOffers[index] = {
       ...updatedJobOffers[index],
@@ -107,12 +107,13 @@ const CompanyRegistrationForm = () => {
     setFormData({ ...formData, jobOffers: updatedJobOffers });
   };
 
+
   const addJobOffer = () => {
     setFormData((prevData) => ({
       ...prevData,
       jobOffers: [
         ...prevData.jobOffers,
-        { type: "", salary: "", position: "", degree: [] },
+        { type: "", salary: "", position: "", degree: "" },
       ],
     }));
   };
@@ -150,7 +151,7 @@ const CompanyRegistrationForm = () => {
         type: offer.type,
         salary: parseFloat(offer.salary),
         position: offer.position,
-        degree: offer.degree, //Added degree {ME, BE}
+        degree: offer.degree,
       })),
     };
 
@@ -373,22 +374,22 @@ const CompanyRegistrationForm = () => {
                     </Grid>
                     <Grid item xs={3}>
                       <Select
-                        multiple
+                        name="degree"
                         value={offer.degree}
                         onChange={(e) => handleDegreeChange(index, e)}
                         fullWidth
                         displayEmpty
-                        renderValue={(selected) =>
-                          selected.length === 0 ? "Select Degree(s)" : selected.join(", ")
-                        }
                       >
+                        <MenuItem value="">
+                          <em>Select Degree</em>
+                        </MenuItem>
                         {degreeOptions.map((deg) => (
                           <MenuItem key={deg} value={deg}>
-                            <Checkbox checked={offer.degree.includes(deg)} />
-                            <Typography>{deg}</Typography>
+                            {deg}
                           </MenuItem>
                         ))}
                       </Select>
+
                     </Grid>
                     <Grid item xs={1.5}>
                       <Button
