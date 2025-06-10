@@ -61,6 +61,10 @@ import ResourceList from "./pages/resources/resource-list";
 import ResourceDetail from "./pages/resources/resource-details";
 import PlacementSummary from "./pages/student/PlacementSummary";
 import UploadInhouseInternship from "./pages/department_coordinator/UploadInhouseInternship";
+import CategoryRuleForm from "./pages/placement_officer/CategoryRuleForm";
+import CategoryRuleList from "./pages/placement_officer/CategoryRuleList";
+import StudentByCategory from "./pages/placement_officer/StudentByCategory";
+
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -199,6 +203,9 @@ const App = () => {
           />
           <Route path="internship/verify" element={<InternShipVerify />} />
         </Route>
+            <Route path="/category-rule-form" element={<CategoryRuleForm />} />
+            <Route path="/category-rules/list" element={<CategoryRuleList />} />
+            <Route path="/category-rules/students/:category/:batch" element={<StudentByCategory />} />
       </Routes>
     </BrowserRouter>
   );
