@@ -38,7 +38,7 @@ const StudentLayout = () => {
   const [menuItems, setMenuItems] = React.useState([...defaultItems]);
 
   useEffect(() => {
-    if (auth?.academic_year && auth.academic_year === "2026") {
+    if (auth?.academic_year && auth.academic_year === " 2026") {
       console.log("BE student");
       setMenuItems([
         ...defaultItems,
