@@ -4,7 +4,7 @@ from uuid import uuid4
 
 # Create your models here.
 
-
+DEGREE_OPTIONS = [("BE", "BE"), ("ME", "ME"), ("BE, ME", "BE, ME")]
 class CompanyRegistration(models.Model):
     DOMAIN_TYPES = [("core", "core"), ("it", "it")]
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
@@ -31,6 +31,7 @@ class Offers(models.Model):
     type = models.CharField(max_length=100)
     salary = models.FloatField()
     position = models.CharField(max_length=100)
+    degree = models.CharField(choices=DEGREE_OPTIONS, max_length=10, default="BE")
     company = models.ForeignKey(
         to=CompanyRegistration, on_delete=models.CASCADE, related_name="company_offers"
     )

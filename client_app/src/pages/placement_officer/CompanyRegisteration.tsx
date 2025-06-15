@@ -13,6 +13,7 @@ import {
   Container,
   Paper,
   Box,
+  SelectChangeEvent,
 } from "@mui/material";
 import { getCookie } from "@/utils";
 import toast from "react-hot-toast";
@@ -31,7 +32,7 @@ const CompanyRegistrationForm = () => {
     is_pli: boolean;
     is_ojt_aedp: boolean;
     selectedDepartments: string[];
-    jobOffers: Array<{ type: string; salary: string; position: string }>;
+    jobOffers: Array<{ type: string; salary: string; position: string, degree: string }>;
     batch: string;
   }
 
@@ -48,7 +49,7 @@ const CompanyRegistrationForm = () => {
     is_pli: false,
     is_ojt_aedp: false,
     selectedDepartments: [],
-    jobOffers: [{ type: "", salary: "", position: "" }],
+    jobOffers: [{ type: "", salary: "", position: "", degree: "" }],
     batch: "",
   });
 
@@ -64,6 +65,8 @@ const CompanyRegistrationForm = () => {
     "IOT",
     "MECH",
   ];
+
+  const degreeOptions = ["BE", "ME", "BE, ME"]
 
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target;
@@ -96,12 +99,23 @@ const CompanyRegistrationForm = () => {
     setFormData({ ...formData, jobOffers: updatedJobOffers });
   };
 
+  const handleDegreeChange = (index: number, e: SelectChangeEvent<string>) => {
+    const value = e.target.value;
+    const updatedJobOffers = [...formData.jobOffers];
+    updatedJobOffers[index] = {
+      ...updatedJobOffers[index],
+      degree: value,
+    };
+    setFormData({ ...formData, jobOffers: updatedJobOffers });
+  };
+
+
   const addJobOffer = () => {
     setFormData((prevData) => ({
       ...prevData,
       jobOffers: [
         ...prevData.jobOffers,
-        { type: "", salary: "", position: "" },
+        { type: "", salary: "", position: "", degree: "" },
       ],
     }));
   };
@@ -140,6 +154,7 @@ const CompanyRegistrationForm = () => {
         type: offer.type,
         salary: parseFloat(offer.salary),
         position: offer.position,
+        degree: offer.degree,
       })),
     };
 
@@ -162,7 +177,7 @@ const CompanyRegistrationForm = () => {
       }
 
       const data = await response.json();
-      console.log(data);
+      console.log("company data now:", data);
       toast.success("Company registered successfully:");
       navigate(`/placement_officer/company_register`);
     } catch (error) {
@@ -342,12 +357,11 @@ const CompanyRegistrationForm = () => {
                   </Grid>
                 </Grid>
               )}
-
               <Grid item xs={12}>
                 <Typography variant="h6">Job Offers</Typography>
                 {formData.jobOffers.map((offer, index) => (
-                  <Grid container spacing={2} key={index}>
-                    <Grid item xs={4}>
+                  <Grid container spacing={2} key={index} alignItems="center">
+                    <Grid item xs={2.5}>
                       <TextField
                         name="type"
                         label="Type"
@@ -356,7 +370,7 @@ const CompanyRegistrationForm = () => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item xs={4}>
+                    <Grid item xs={2.5}>
                       <TextField
                         name="salary"
                         label="Salary"
@@ -366,7 +380,7 @@ const CompanyRegistrationForm = () => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item xs={4}>
+                    <Grid item xs={2.5}>
                       <TextField
                         name="position"
                         label="Position"
@@ -375,11 +389,31 @@ const CompanyRegistrationForm = () => {
                         fullWidth
                       />
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid item xs={3}>
+                      <Select
+                        name="degree"
+                        value={offer.degree}
+                        onChange={(e) => handleDegreeChange(index, e)}
+                        fullWidth
+                        displayEmpty
+                      >
+                        <MenuItem value="">
+                          <em>Select Degree</em>
+                        </MenuItem>
+                        {degreeOptions.map((deg) => (
+                          <MenuItem key={deg} value={deg}>
+                            {deg}
+                          </MenuItem>
+                        ))}
+                      </Select>
+
+                    </Grid>
+                    <Grid item xs={1.5}>
                       <Button
                         onClick={() => removeJobOffer(index)}
                         disabled={formData.jobOffers.length === 1}
                         color="error"
+                        fullWidth
                       >
                         Remove
                       </Button>
@@ -388,11 +422,7 @@ const CompanyRegistrationForm = () => {
                 ))}
               </Grid>
               <Grid item xs={12}>
-                <Button
-                  onClick={addJobOffer}
-                  variant="contained"
-                  color="primary"
-                >
+                <Button onClick={addJobOffer} variant="contained" color="primary">
                   Add Job Offer
                 </Button>
               </Grid>

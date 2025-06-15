@@ -17,8 +17,8 @@ import Attendance from "./pages/program_coordinator/Attendance";
 import StudentLayout from "./pages/student/student_layout";
 import StudentHome from "./pages/student";
 import SessionAttendance from "./pages/student/SessionAttendance";
-import ConsentForm from "./pages/student/ConsentForm"; 
-import PliForm from "./pages/student/PliForm"; 
+import ConsentForm from "./pages/student/ConsentForm";
+import PliForm from "./pages/student/PliForm";
 import InternShipSubmission from "./pages/student/InternShipSubmission";
 import StudentPersonalInfo from "./pages/student/student-personal-info";
 import PlacementRegistration from "./pages/student/PlacementRegistration";
@@ -60,6 +60,11 @@ import CreateResource from "./pages/resources/create-resource";
 import ResourceList from "./pages/resources/resource-list";
 import ResourceDetail from "./pages/resources/resource-details";
 import PlacementSummary from "./pages/student/PlacementSummary";
+import UploadInhouseInternship from "./pages/department_coordinator/UploadInhouseInternship";
+import CategoryRuleForm from "./pages/placement_officer/CategoryRuleForm";
+import CategoryRuleList from "./pages/placement_officer/CategoryRuleList";
+import StudentByCategory from "./pages/placement_officer/StudentByCategory";
+
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -78,7 +83,7 @@ const App = () => {
       } else {
         window.open("http://localhost:8000/auth/login", "_self");
       }
-    }; 
+    };
     onAuthenticate();
   }, []);
   return (
@@ -110,7 +115,7 @@ const App = () => {
           <Route path="resume-preview" element={<ResumePreview />} />
           <Route path="job-acceptance" element={<JobAcceptance />} />
           <Route path="placement-summary" element={<PlacementSummary />} />
-          <Route path="resources" element={<ResourceList/>} />
+          <Route path="resources" element={<ResourceList />} />
           <Route path="resources/:id" element={<ResourceDetail />} />
 
           <Route
@@ -127,14 +132,15 @@ const App = () => {
           />
         </Route>
         <Route path="/faculty_coordinator" element={<FacultyLayout />}>
-  <Route index element={<FacultyHome />} />
-  <Route path="attendance" element={<FacultyTablePage />} />
-  <Route path="resource/create" element={<CreateResource />} />
-</Route>
+          <Route index element={<FacultyHome />} />
+          <Route path="attendance" element={<FacultyTablePage />} />
+          <Route path="resource/create" element={<CreateResource />} />
+        </Route>
         <Route path="/department_coordinator" element={<DepartmentParent />}>
           <Route index element={<DepartmentDashboard />} />
           <Route path="stats" element={<DepartmentStats />} />
           <Route path="attendance" element={<DepartmentAttendance />} />
+          <Route path="upload-inhouse-internship" element={<UploadInhouseInternship />} />
         </Route>
         <Route path="/placement_officer" element={<PlacementLayout />}>
           <Route index element={<PlacementStats />} />
@@ -197,6 +203,9 @@ const App = () => {
           />
           <Route path="internship/verify" element={<InternShipVerify />} />
         </Route>
+            <Route path="/category-rule-form" element={<CategoryRuleForm />} />
+            <Route path="/category-rules/list" element={<CategoryRuleList />} />
+            <Route path="/category-rules/students/:category/:batch" element={<StudentByCategory />} />
       </Routes>
     </BrowserRouter>
   );

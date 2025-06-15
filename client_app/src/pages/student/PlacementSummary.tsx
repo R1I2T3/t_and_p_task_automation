@@ -36,9 +36,7 @@ interface PlacementItem {
 
 const PlacementSummary = () => {
   const [selectedCompany, setSelectedCompany] = useState<string>("All");
-  const [selectedRole, setSelectedRole] = useState<string>("All");
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [roles, setRoles] = useState(["All"]);
   const [placementData, setPlacementData] = useState<PlacementItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,23 +58,6 @@ const PlacementSummary = () => {
       .catch((error) => {
         console.error("Error fetching companies:", error);
         setError("Failed to fetch companies");
-      });
-  }, []);
-
-  useEffect(() => {
-    axios
-      .get("/api/placement/roles/", {
-        headers: { "X-CSRFToken": csrftoken || "" },
-        withCredentials: true,
-      })
-      .then((response) => {
-        // Assuming response is an array of role names
-        setRoles(["All", ...response.data]);
-      })
-      .catch((error) => {
-        console.error("Error fetching roles:", error);
-        // Fallback: Use static roles or extract from placement data later
-        setRoles(["All", "Software Engineer", "Data Analyst", "Product Manager"]);
       });
   }, []);
 
@@ -127,10 +108,6 @@ const PlacementSummary = () => {
     fetchData();
   }, [selectedCompany]);
 
-  const filteredData = placementData.filter(
-    (item) => selectedRole === "All" || item.role === selectedRole
-  );
-
   if (loading) {
     return <div className="p-6 text-center">Loading...</div>;
   }
@@ -160,22 +137,6 @@ const PlacementSummary = () => {
             </SelectContent>
           </Select>
         </div>
-
-        <div className="w-full sm:w-1/2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Role</label>
-          <Select value={selectedRole} onValueChange={setSelectedRole}>
-            <SelectTrigger className="w-full text-black">
-              <SelectValue placeholder="Select Role" className="text-black" />
-            </SelectTrigger>
-            <SelectContent>
-              {roles.map((role) => (
-                <SelectItem key={role} value={role}>
-                  {role}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       {/* Table */}
@@ -193,8 +154,8 @@ const PlacementSummary = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredData.length > 0 ? (
-              filteredData.map((item, index) => (
+            {placementData.length > 0 ? (
+              placementData.map((item, index) => (
                 <TableRow key={index}>
                   <TableCell>{item.company}</TableCell>
                   <TableCell>{item.role}</TableCell>
