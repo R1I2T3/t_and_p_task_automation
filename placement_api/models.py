@@ -19,6 +19,7 @@ class CompanyRegistration(models.Model):
     Departments = models.TextField(default="all")
     created_at = models.DateTimeField(auto_now=True)
     is_pli = models.BooleanField(default=False)
+    is_ojt_aedp = models.BooleanField(default=False)
     batch = models.CharField(max_length=100, default="2021")
 
     def __str__(self) -> str:
