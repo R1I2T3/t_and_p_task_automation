@@ -4,7 +4,7 @@ from uuid import uuid4
 
 # Create your models here.
 
-DEGREE_OPTIONS = [("BE", "BE"), ("ME", "ME")]
+DEGREE_OPTIONS = [("BE", "BE"), ("ME", "ME"), ("BE, ME", "BE, ME")]
 class CompanyRegistration(models.Model):
     DOMAIN_TYPES = [("core", "core"), ("it", "it")]
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
