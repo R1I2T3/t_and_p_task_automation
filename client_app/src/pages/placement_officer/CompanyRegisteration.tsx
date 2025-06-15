@@ -30,6 +30,7 @@ const CompanyRegistrationForm = () => {
     domain: string;
     Departments: string;
     is_pli: boolean;
+    is_ojt_aedp: boolean;
     selectedDepartments: string[];
     jobOffers: Array<{ type: string; salary: string; position: string, degree: string }>;
     batch: string;
@@ -46,6 +47,7 @@ const CompanyRegistrationForm = () => {
     domain: "core",
     Departments: "all",
     is_pli: false,
+    is_ojt_aedp: false,
     selectedDepartments: [],
     jobOffers: [{ type: "", salary: "", position: "", degree: "" }],
     batch: "",
@@ -144,6 +146,7 @@ const CompanyRegistrationForm = () => {
         is_kt: formData.is_kt,
         is_backLog: formData.is_backLog,
         domain: formData.domain,
+        is_ojt_aedp: formData.is_ojt_aedp,
         departments: formData.selectedDepartments,
         batch: formData.batch, // Added batch field to payload
       },
@@ -260,7 +263,18 @@ const CompanyRegistrationForm = () => {
                       color="primary"
                     />
                   }
-                  label="Offering PLI (Placement Linked Internship)"
+                  label="Offering PLI (Placement Linked Internship)/AEDP" />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      name="is_ojt_aedp"
+                      onChange={handleChange}
+                      color="primary"
+                    />
+                  }
+                  label="Offering OJT/AEDP"
                 />
               </Grid>
               <Grid item xs={12}>
