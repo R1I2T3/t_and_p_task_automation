@@ -145,10 +145,10 @@ const CompanyRegistrationForm = () => {
         is_pli: formData.is_pli,
         is_kt: formData.is_kt,
         is_backLog: formData.is_backLog,
-        domain: formData.domain,
         is_ojt_aedp: formData.is_ojt_aedp,
+        domain: formData.domain,
         departments: formData.selectedDepartments,
-        batch: formData.batch, // Added batch field to payload
+        batch: formData.batch,
       },
       offers: formData.jobOffers.map((offer) => ({
         type: offer.type,
@@ -263,8 +263,10 @@ const CompanyRegistrationForm = () => {
                       color="primary"
                     />
                   }
-                  label="Offering PLI (Placement Linked Internship)/AEDP" />
+                  label="Offering PLI (Placement Linked Internship)/AEDP"
+                />
               </Grid>
+
               <Grid item xs={12}>
                 <FormControlLabel
                   control={
@@ -277,6 +279,7 @@ const CompanyRegistrationForm = () => {
                   label="Offering OJT/AEDP"
                 />
               </Grid>
+
               <Grid item xs={12}>
                 <FormControlLabel
                   control={
