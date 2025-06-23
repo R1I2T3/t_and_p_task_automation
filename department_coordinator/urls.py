@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import DepartmentCoordinatorViewSet, AttendanceViewSet , upload_inhouse_internship
+from .views import DepartmentCoordinatorViewSet, AttendanceViewSet , upload_inhouse_internship, DepartmentStudentDataView
 urlpatterns = [
     # Department Coordinator URLs
     path(
@@ -7,6 +7,11 @@ urlpatterns = [
         DepartmentCoordinatorViewSet.as_view({"get": "list"}),
         name="department-list",
     ),
+    path(
+    "student-data/",
+    DepartmentStudentDataView.as_view(),
+    name="department-student-data",
+),
     path(
         "stats/",
         DepartmentCoordinatorViewSet.as_view({"get": "stats"}),

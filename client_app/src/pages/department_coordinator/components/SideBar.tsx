@@ -23,6 +23,14 @@ const Sidebar = () => {
           />
           <p>Students</p>
         </NavLink>
+        <NavLink to="student-data" className="menu-item">
+          <img
+            src={StatIcon}
+            alt="Placement Statistics"
+            className="menu-icon"
+          />
+          <p>Students Data</p>
+        </NavLink>
         <NavLink to="attendance" className="menu-item">
           <img
             src={StatIcon}

@@ -64,6 +64,7 @@ import UploadInhouseInternship from "./pages/department_coordinator/UploadInhous
 import CategoryRuleForm from "./pages/placement_officer/CategoryRuleForm";
 import CategoryRuleList from "./pages/placement_officer/CategoryRuleList";
 import StudentByCategory from "./pages/placement_officer/StudentByCategory";
+import DepartmentStudentData from "./pages/department_coordinator/DepartmentStudentData";
 
 const App = () => {
   const setUser = useSetAtom(authAtom);
@@ -138,6 +139,7 @@ const App = () => {
         </Route>
         <Route path="/department_coordinator" element={<DepartmentParent />}>
           <Route index element={<DepartmentDashboard />} />
+          <Route path="student-data" element={<DepartmentStudentData />} />
           <Route path="stats" element={<DepartmentStats />} />
           <Route path="attendance" element={<DepartmentAttendance />} />
           <Route path="upload-inhouse-internship" element={<UploadInhouseInternship />} />
@@ -203,9 +205,9 @@ const App = () => {
           />
           <Route path="internship/verify" element={<InternShipVerify />} />
         </Route>
-            <Route path="/category-rule-form" element={<CategoryRuleForm />} />
-            <Route path="/category-rules/list" element={<CategoryRuleList />} />
-            <Route path="/category-rules/students/:category/:batch" element={<StudentByCategory />} />
+        <Route path="/category-rule-form" element={<CategoryRuleForm />} />
+        <Route path="/category-rules/list" element={<CategoryRuleList />} />
+        <Route path="/category-rules/students/:category/:batch" element={<StudentByCategory />} />
       </Routes>
     </BrowserRouter>
   );

@@ -17,19 +17,36 @@ from student.models import (
 import json
 import os
 from .utils import validate_file, importExcelAndReturnJSON
-from .serializers import DepartmentStatsSerializer
+from .serializers import DepartmentStatsSerializer, DepartmentStudentSerializer
 from django.db import models
 import pandas as pd
 from internship_api.models import InternshipAcceptance
 from django.db import transaction
 from datetime import datetime
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.views import APIView
 
 
 class IsDepartmentCoordinator(BasePermission):
     def has_permission(self, request, view):
         return request.user.role == "faculty"
 
+class DepartmentStudentDataView(APIView):
+    def get(self, request):
+        try:
+            student_uid = request.GET.get("uid")
+            if not student_uid:
+                return Response({'error': 'Student UID is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            student = Student.objects.get(uid=student_uid)
+            response_serializer = DepartmentStudentSerializer(student)
+            return Response({"student": response_serializer.data})
+        except Student.DoesNotExist:
+            return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        
 
 INTERNSHIP_JSON_PATH = os.path.join("static", "Data", "intern_data_24.json")
 JSON_FILE_PATH_ALUMNI = os.path.join("static", "Data", "alumni_data_2024.json")
