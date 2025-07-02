@@ -15,7 +15,6 @@ from .models import (
 from program_coordinator_api.models import AttendanceData
 from base.models import User
 
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -81,7 +80,7 @@ class AcademicAttendanceSemesterSerializer(serializers.ModelSerializer):
 
 class TrainingPerformanceSemesterSerializer(serializers.ModelSerializer):
     student = StudentSerializer()  # Nested student serializer
-    program = ProgramCoordinatorSerializer()  # Nested program serializer
+    #program = ProgramCoordinatorSerializer()  # Nested program serializer
 
     class Meta:
         model = TrainingPerformanceSemester
@@ -90,7 +89,7 @@ class TrainingPerformanceSemesterSerializer(serializers.ModelSerializer):
 
 class TrainingAttendanceSemesterSerializer(serializers.ModelSerializer):
     student = StudentSerializer()  # Nested student serializer
-    program = ProgramCoordinatorSerializer()  # Nested program serializer
+    #program = ProgramCoordinatorSerializer()  # Nested program serializer
 
     class Meta:
         model = TrainingAttendanceSemester

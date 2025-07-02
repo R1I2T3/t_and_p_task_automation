@@ -4,9 +4,13 @@ import { useParams } from "react-router";
 import { getCookie } from "@/utils";
 
 interface Student {
-  id: number;
+  uid: string;
   current_category: string;
+  department: string;
   academic_year: string;
+  batch: string | null;
+  consent: string;
+  contact: string | null;
   // Add other student fields if needed (e.g., name)
 }
 
@@ -54,17 +58,25 @@ const StudentsByCategory = () => {
           <table className="min-w-full border border-gray-200">
             <thead className="bg-gray-100">
               <tr>
-                <th className="px-4 py-2 border">Student ID</th>
-                <th className="px-4 py-2 border">Category</th>
+                <th className="px-4 py-2 border">UID</th>
+                <th className="px-4 py-2 border">Department</th>
                 <th className="px-4 py-2 border">Academic Year</th>
+                <th className="px-4 py-2 border">Category</th>
+                <th className="px-4 py-2 border">Batch</th>
+                <th className="px-4 py-2 border">Consent</th>
+                <th className="px-4 py-2 border">Contact</th>
               </tr>
             </thead>
             <tbody>
               {students.map((student) => (
-                <tr key={student.id} className="border-t">
-                  <td className="px-4 py-2 border">{student.id}</td>
+                <tr key={student.uid} className="border-t">
+                  <td className="px-4 py-2 border">{student.uid}</td>
+                  <td className="px-4 py-2 border">{student.department}</td>
                   <td className="px-4 py-2 border">{student.current_category}</td>
                   <td className="px-4 py-2 border">{student.academic_year}</td>
+                  <td className="px-4 py-2 border">{student.batch || "-"}</td>
+                  <td className="px-4 py-2 border">{student.consent}</td>
+                  <td className="px-4 py-2 border">{student.contact || "-"}</td>
                 </tr>
               ))}
             </tbody>

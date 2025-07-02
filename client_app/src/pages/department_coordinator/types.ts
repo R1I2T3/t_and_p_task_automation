@@ -8,17 +8,17 @@ export type SemesterAttendance = {
   attendance: number;
 };
 
-// export type TrainingPerformance = {
-//   semester: string;
-//   training_performance: number;
-//   program: string;
-// };
+export type TrainingPerformance = {
+  semester: string;
+  training_performance: number;
+  program: string;
+};
 
-// export type TrainingAttendance = {
-//   semester: string;
-//   training_attendance: number;
-//   program: string;
-// };
+export type TrainingAttendance = {
+  semester: string;
+  training_attendance: number;
+  program: string;
+};
 
 export type DeptStudentFormData = {
   uid: string;
@@ -38,6 +38,6 @@ export type DeptStudentFormData = {
 
   academic_performance?: SemesterPerformance[];
   academic_attendance?: SemesterAttendance[];
-//   training_performance?: TrainingPerformance[];
-//   training_attendance?: TrainingAttendance[];
+  training_performance?: TrainingPerformance[];
+  training_attendance?: TrainingAttendance[];
 };

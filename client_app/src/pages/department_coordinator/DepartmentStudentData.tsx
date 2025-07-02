@@ -121,8 +121,8 @@ function DepartmentStudentData() {
 
                         {renderSemesterSection("Academic Performance", studentData.academic_performance, ['semester', 'performance'])}
                         {renderSemesterSection("Academic Attendance", studentData.academic_attendance, ['semester', 'attendance'])}
-                        {/* {renderSemesterSection("Training Performance", studentData.training_performance, ['semester', 'training_performance', 'program'])}
-                        {renderSemesterSection("Training Attendance", studentData.training_attendance, ['semester', 'training_attendance', 'program'])} */}
+                        {renderSemesterSection("Training Performance", studentData.training_performance, ['semester', 'training_performance', 'program'])}
+                        {renderSemesterSection("Training Attendance", studentData.training_attendance, ['semester', 'training_attendance', 'program'])}
                     </CardContent>
                 </Card>
             )}

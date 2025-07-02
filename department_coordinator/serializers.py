@@ -21,8 +21,8 @@ class DepartmentStudentSerializer(serializers.ModelSerializer):
 
     academic_performance = AcademicPerformanceSemesterSerializer(many=True, read_only=True)
     academic_attendance = AcademicAttendanceSemesterSerializer(many=True, read_only=True)
-    # training_performance = TrainingPerformanceSemesterSerializer(many=True, read_only=True)
-    # training_attendance = TrainingAttendanceSemesterSerializer(many=True, read_only=True)
+    training_performance = TrainingPerformanceSemesterSerializer(many=True, read_only=True)
+    training_attendance = TrainingAttendanceSemesterSerializer(many=True, read_only=True)
  
     class Meta:
         model = Student
@@ -38,6 +38,6 @@ class DepartmentStudentSerializer(serializers.ModelSerializer):
             "is_pli",
             "academic_performance",
             "academic_attendance",
-            # "training_performance",
-            # "training_attendance"
+            "training_performance",
+            "training_attendance"
         ]
