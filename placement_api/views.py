@@ -6,7 +6,7 @@ from rest_framework.decorators import (
     parser_classes,
 )
 from rest_framework.views import APIView
-from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework import status
 from .models import CompanyRegistration, Offers, placementNotice, jobAcceptance
 from .serializers import (
@@ -14,20 +14,17 @@ from .serializers import (
     OffersSerializer,
     PlacementNoticeSerializer,
     JobAcceptanceSerializer,
-    JobApplicationSerializer,
 )
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.permissions import AllowAny
 from base.models import User
-from django.views.decorators.csrf import csrf_exempt
 from student.models import Student
 from .models import jobApplication
 from uuid import uuid4
 from student.serializers import StudentSerializer
 from rest_framework.exceptions import NotFound
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from uuid import uuid4
 from .utils import is_student_eligible
+
 
 @api_view(["POST"])
 @authentication_classes([SessionAuthentication])
@@ -47,7 +44,9 @@ def get_notice_id(request):
         print(f"Fetching notice ID for srNo: {sr_no}, companyId: {company_id}")
 
         # Query the database
-        notice = placementNotice.objects.filter(srNo=sr_no, company__id=company_id).first()
+        notice = placementNotice.objects.filter(
+            srNo=sr_no, company__id=company_id
+        ).first()
 
         # Log the query result
         if notice:
@@ -76,20 +75,29 @@ def delete_notice(request, notice_id):
         print(f"Total notices fetched: {len(notices)}")
 
         # Find the notice to delete
-        notice_to_delete = next((notice for notice in notices if str(notice.id) == notice_id), None)
+        notice_to_delete = next(
+            (notice for notice in notices if str(notice.id) == notice_id), None
+        )
 
         if not notice_to_delete:
             print(f"No notice found with ID: {notice_id}")
-            return JsonResponse({"error": "Notice not found."}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse(
+                {"error": "Notice not found."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         # Delete the notice
         notice_to_delete.delete()
         print(f"Notice with ID {notice_id} deleted successfully.")
-        return JsonResponse({"message": "Notice deleted successfully."}, status=status.HTTP_200_OK)
+        return JsonResponse(
+            {"message": "Notice deleted successfully."}, status=status.HTTP_200_OK
+        )
 
     except Exception as e:
         print(f"Error in delete_notice: {str(e)}")
-        return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse(
+            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
 
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
@@ -104,6 +112,7 @@ def get_all_notices(request):
         return JsonResponse(
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
 
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
@@ -171,10 +180,10 @@ def get_all_companies(request):
 def create_notice(request, pk):
     try:
         company = CompanyRegistration.objects.get(id=pk)  # Ensure company exists
-        
+
         data = request.data.copy()  # Create a mutable copy
         data["company"] = company.id  # Assign only the company ID (not object)
-        
+
         # Use serializer to validate and save data
         notice_serializer = PlacementNoticeSerializer(data=data)
         if notice_serializer.is_valid():
@@ -203,7 +212,9 @@ def create_notice(request, pk):
             "to": data.get("to", ""),
             "subject": data.get("subject", ""),
             "intro": data.get("intro", ""),  # Fix key case
-            "eligibility_criteria": data.get("eligibility_criteria", ""),  # Fix key case
+            "eligibility_criteria": data.get(
+                "eligibility_criteria", ""
+            ),  # Fix key case
             "about": data.get("about", ""),  # Fix key case
             "location": data.get("location", ""),
             "Documents_to_Carry": data.get("Documents_to_Carry", ""),
@@ -231,6 +242,7 @@ def create_notice(request, pk):
         return JsonResponse(
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
 
 @api_view(["POST"])
 @authentication_classes([SessionAuthentication])

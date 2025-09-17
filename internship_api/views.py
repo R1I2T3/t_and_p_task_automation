@@ -5,7 +5,7 @@ from rest_framework.decorators import (
     authentication_classes,
     parser_classes,
 )
-from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework import status
 from .models import (
     InternshipRegistration,
@@ -19,15 +19,11 @@ from .serializers import (
     InternshipNoticeSerializer,
     InternshipAcceptanceSerializer,
     InternshipApplicationSerializer,
-    InternshipDataSerializer,
 )
 from rest_framework.permissions import IsAuthenticated
-from django.views.decorators.csrf import csrf_exempt
 from .models import InternshipApplication
 from uuid import uuid4
-from rest_framework.exceptions import NotFound
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from uuid import uuid4
 from student.models import Student
 from base.models import User
 from datetime import datetime
@@ -225,7 +221,6 @@ def create_notice(request, pk):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_notice(request, pk):
-
     try:
         notice = InternshipNotice.objects.get(id=pk)
         notice = InternshipNoticeSerializer(notice)
