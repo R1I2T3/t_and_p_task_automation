@@ -10,9 +10,7 @@ from django.utils.html import strip_tags
 from django.core.mail import send_mail
 from django.conf import settings
 import logging
-from django.http import HttpResponse
 from dotenv import load_dotenv
-import os
 
 load_dotenv()
 
@@ -44,6 +42,7 @@ def send_otp(email, otp, subject="OTP Verification"):
 def redirect_user(request, user):
     login_user(request, user)
     return redirect("/")
+
 
 def login(request):
     if request.method == "POST":
@@ -95,6 +94,7 @@ def login(request):
             messages.error(request, "Invalid email or password.")
 
     return render(request, "base/login.html")
+
 
 def verify_otp(request):
     if request.method == "POST":
