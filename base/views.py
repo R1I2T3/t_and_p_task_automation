@@ -2,8 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as login_user, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from base.models import User, UserDevice, PasswordResetOTP
-import uuid
+from base.models import User, PasswordResetOTP
 import pyotp
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -55,82 +54,12 @@ def login(request):
 
         user = authenticate(request, email=email, password=password)
         if user is not None:
-            device_id = request.COOKIES.get("device_id", str(uuid.uuid4()))
-
-            try:
-                device = UserDevice.objects.get_or_create(
-                    device_id=device_id, user=user, defaults={"is_verified": False}
-                )[0]
-
-                if not device.is_verified:
-                    # Generate and store OTP
-                    otp_secret = pyotp.random_base32()
-                    totp = pyotp.TOTP(otp_secret, interval=300)  # 5 minute validity
-                    otp = totp.now()
-
-                    # Store in session
-                    request.session["otp_secret"] = otp_secret
-                    request.session["user_id"] = str(user.pk)
-                    request.session["device_id"] = device_id
-                    request.session["login_attempt_time"] = str(totp.now())
-
-                    # Send OTP
-                    if send_otp(user.email, otp, "Device Verification OTP"):
-                        logger.info(f"OTP sent to {user.email} for device verification")
-                        return redirect("http://localhost:8000/auth/verify-otp/")
-                    else:
-                        messages.error(request, "Failed to send OTP. Please try again.")
-                        return render(request, "base/login.html")
-                else:
-                    response = redirect_user(request, user)
-                    response.set_cookie("device_id", device_id)
-                    return response
-
-            except Exception as e:
-                logger.error(f"Login error for user {email}: {str(e)}")
-                messages.error(request, "An error occurred. Please try again.")
-
+            response = redirect_user(request, user)
+            return response
         else:
             messages.error(request, "Invalid email or password.")
 
     return render(request, "base/login.html")
-
-
-def verify_otp(request):
-    if request.method == "POST":
-        entered_otp = request.POST.get("otp")
-        otp_secret = request.session.get("otp_secret")
-        user_id = request.session.get("user_id")
-        device_id = request.session.get("device_id")
-
-        if not all([entered_otp, otp_secret, user_id, device_id]):
-            messages.error(request, "Session expired. Please login again.")
-            return redirect("login")
-
-        try:
-            totp = pyotp.TOTP(otp_secret, interval=300)  # 5 minute validity
-            if totp.verify(entered_otp):
-                user = User.objects.get(id=user_id)
-                device = UserDevice.objects.get(user=user, device_id=device_id)
-                device.is_verified = True
-                device.save()
-
-                # Clear session data
-                for key in ["otp_secret", "user_id", "device_id", "login_attempt_time"]:
-                    request.session.pop(key, None)
-
-                response = redirect_user(request, user)
-                response.set_cookie("device_id", device_id)
-                return response
-            else:
-                messages.error(request, "Invalid or expired OTP. Please try again.")
-                logger.warning(f"Invalid OTP attempt for user_id: {user_id}")
-        except Exception as e:
-            logger.error(f"OTP verification error: {str(e)}")
-            messages.error(request, "An error occurred. Please try again.")
-            return redirect("login")
-
-    return render(request, "base/verify_otp.html")
 
 
 def password_reset_request(request):
@@ -206,10 +135,9 @@ def password_update(request):
         password = request.POST.get("new_password")
         confirm_password = request.POST.get("confirm_password")
         if password == confirm_password:
-            print(password)
             user.set_password(password)
             user.save()
-            messages.success(request, "password update successfully")
+            messages.success(request, "Password updated successfully.")
         else:
             messages.error(request, "Passwords do not match.")
     return render(request, "base/password_update.html")

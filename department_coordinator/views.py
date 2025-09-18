@@ -66,118 +66,6 @@ class DepartmentCoordinatorViewSet(viewsets.ViewSet):
         serializer = DepartmentStatsSerializer({"total_students": len(students)})
         return Response(serializer.data)
 
-    @action(detail=False, methods=["get"])
-    def stats(self, request):
-        department_coordinator = self.get_department_coordinator()
-        if department_coordinator and department_coordinator.department:
-            # Calculate averages
-            average_academic_attendance = (
-                AcademicAttendanceSemester.objects.select_related("student")
-                .filter(student__department__startswith=department_coordinator.department)
-                .values("student__academic_year")
-                .annotate(avg_attendance=Avg(Cast("attendance", FloatField())))
-                .order_by("student__academic_year")
-            )
-            print(average_academic_attendance)
-            average_academic_performance = (
-                AcademicPerformanceSemester.objects.select_related("student")
-                .filter(student__department__startswith=department_coordinator.department)
-                .values("student__academic_year")
-                .annotate(avg_performance=Avg(Cast("performance", FloatField())))
-                .order_by("student__academic_year")
-            )
-
-            average_training_attendance = (
-                TrainingAttendanceSemester.objects.select_related("student")
-                .filter(student__department__startswith=department_coordinator.department)
-                .values("student__academic_year")
-                .annotate(avg_attendance=Avg(Cast("training_attendance", FloatField())))
-                .order_by("student__academic_year")
-            )
-
-            average_training_performance = (
-                TrainingPerformanceSemester.objects.select_related("student")
-                .filter(student__department__startswith=department_coordinator.department)
-                .values("student__academic_year")
-                .annotate(avg_performance=Avg(Cast("training_performance", FloatField())))
-                .order_by("student__academic_year")
-            )
-            print(average_academic_attendance)
-
-            # Convert to dictionaries
-            stats_data = {
-                "academic_attendance": {
-                    entry["student__academic_year"]: round(entry["avg_attendance"], 2)
-                    for entry in average_academic_attendance
-                },
-                "academic_performance": {
-                    entry["student__academic_year"]: round(entry["avg_performance"], 2)
-                    for entry in average_academic_performance
-                },
-                "training_attendance": {
-                    entry["student__academic_year"]: round(entry["avg_attendance"], 2)
-                    for entry in average_training_attendance
-                },
-                "training_performance": {
-                    entry["student__academic_year"]: round(entry["avg_performance"], 2)
-                    for entry in average_training_performance
-                },
-            }
-
-            # Add internship and placement data
-            try:
-                with open(INTERNSHIP_JSON_PATH, "r") as f:
-                    internship_data = json.load(f)
-                    branch_data = internship_data[0]["branch_data"]
-                    stipend_data = internship_data[0]["stipend_per_branch"]
-
-                    stats_data["internship"] = {
-                        "branches": {
-                            k: v
-                            for k, v in branch_data.items()
-                            if k.lower().startswith(
-                                department_coordinator.department.lower()
-                            )
-                        },
-                        "stipends": {
-                            k: v
-                            for k, v in stipend_data.items()
-                            if k.lower().startswith(
-                                department_coordinator.department.lower()
-                            )
-                        },
-                    }
-
-                with open(JSON_FILE_PATH_PLACEMENT, "r") as f:
-                    placement_data = json.load(f)
-                    stats_data["placement"] = {
-                        "2023": {
-                            k: v
-                            for k, v in placement_data[0]["branch_comparison"][
-                                "2023"
-                            ].items()
-                            if k.lower().startswith(
-                                department_coordinator.department.lower()
-                            )
-                        },
-                        "2024": {
-                            k: v
-                            for k, v in placement_data[0]["branch_comparison"][
-                                "2024"
-                            ].items()
-                            if k.lower().startswith(
-                                department_coordinator.department.lower()
-                            )
-                        },
-                    }
-            except Exception as e:
-                stats_data["internship"] = {}
-                stats_data["placement"] = {}
-
-            return Response(stats_data)
-        # Allow other roles to access all stats
-        return Response({"error": "Access restricted for your role"}, status=status.HTTP_403_FORBIDDEN)
-
 
 class AttendanceViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsDepartmentCoordinator]
@@ -208,7 +96,9 @@ class AttendanceViewSet(viewsets.ViewSet):
                     )
                     average_attendance = AcademicAttendanceSemester.objects.filter(
                         student=student
-                    ).aggregate(avg_attendance=models.Avg("attendance"))["avg_attendance"]
+                    ).aggregate(avg_attendance=models.Avg("attendance"))[
+                        "avg_attendance"
+                    ]
                     student.attendance = average_attendance
                     student.save()
                 return Response({"message": "Data imported successfully"})
@@ -216,7 +106,10 @@ class AttendanceViewSet(viewsets.ViewSet):
                 print(e)
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         # Restrict access for other roles
-        return Response({"error": "Access restricted for your role"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"error": "Access restricted for your role"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
     @action(detail=False, methods=["post"])
     def upload_performance(self, request):
@@ -249,4 +142,7 @@ class AttendanceViewSet(viewsets.ViewSet):
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         # Restrict access for other roles
-        return Response({"error": "Access restricted for your role"}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"error": "Access restricted for your role"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
