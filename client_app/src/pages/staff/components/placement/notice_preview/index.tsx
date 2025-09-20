@@ -4,12 +4,12 @@ import noticeHeader from "@/assets/tcet header.jpg";
 import { BASE_URL } from "@/constant";
 import { FormDataType } from "@/pages/staff/placement_company";
 
-const Notice = forwardRef<
+const notice = forwardRef<
   HTMLDivElement,
   { formData: FormDataType; isPlacement?: boolean }
 >(({ formData, isPlacement = true }, ref) => {
-  const hasMultipleJobs = formData.jobOffers.length > 1;
-  const singleJob = !hasMultipleJobs ? formData.jobOffers[0] : null;
+  const hasMultipleJobs = formData.job_offers.length > 1;
+  const singleJob = !hasMultipleJobs ? formData.job_offers[0] : null;
 
   return (
     <div className="notice-body">
@@ -25,7 +25,7 @@ const Notice = forwardRef<
             {new Date().getFullYear()}
           </p>
           <p>
-            <strong>Date:</strong> {formData.Notice.date}
+            <strong>Date:</strong> {formData.notice.date}
           </p>
         </div>
 
@@ -37,11 +37,11 @@ const Notice = forwardRef<
           </p>
 
           <p>
-            <strong>Sub:</strong> {formData.Notice.subject}
+            <strong>Sub:</strong> {formData.notice.subject}
           </p>
 
           <ol>
-            <li>{formData.Notice.intro}</li>
+            <li>{formData.notice.intro}</li>
 
             <li>
               <strong>Eligibility Criteria:</strong>
@@ -54,7 +54,7 @@ const Notice = forwardRef<
                 </li>
                 <li>
                   Eligible Departments:{" "}
-                  {formData.selectedDepartments.join(", ")}
+                  {formData.selected_departments.join(", ")}
                 </li>
               </ul>
             </li>
@@ -92,7 +92,7 @@ const Notice = forwardRef<
                     </tr>
                   </thead>
                   <tbody>
-                    {formData.jobOffers.map((job, index) => (
+                    {formData.job_offers.map((job, index) => (
                       <tr key={index}>
                         <td>{job.role}</td>
                         <td>{job.salary}</td>
@@ -105,30 +105,34 @@ const Notice = forwardRef<
             )}
 
             <li>
-              <strong>About Company:</strong> {formData.Notice.about}
+              <strong>About Company:</strong> {formData.notice.about}
             </li>
 
             <li>
-              <strong>Job Location:</strong> {formData.Notice.location}
+              <strong>Job Location:</strong> {formData.notice.location}
             </li>
 
             <li>
               All the eligible and interested students are required to register
-              online before the deadline.
+              online before the deadline <b>{formData.notice.deadline}</b>
               <br />
-              <strong>Company Registration Link:</strong>{" "}
-              <a href={formData.Notice.Company_registration_Link}>
-                {formData.Notice.Company_registration_Link}
+              <strong>Company Link:</strong>{" "}
+              <a href={formData.notice.company_registration_link}>
+                {formData.notice.company_registration_link}
               </a>
               <br />
               <strong>College Registration Link:</strong>{" "}
-              {`${BASE_URL}/student/${
-                isPlacement ? "placement" : "internship"
-              }/registration/${formData.name}`}
+              <a
+                href={`${BASE_URL}/student/${
+                  isPlacement ? "placement" : "internship"
+                }/registration/${formData.name}`}
+              >
+                {formData.name} Registration Link
+              </a>
             </li>
 
             <li>
-              <strong>Note:</strong> {formData.Notice.Note}
+              <strong>Note:</strong> {formData.notice.note}
             </li>
           </ol>
         </div>
@@ -144,14 +148,14 @@ const Notice = forwardRef<
               <li>All Deans</li>
               <li>All HODs</li>
               <li>Website</li>
-              <li>Notice Board of TCET</li>
+              <li>notice Board of TCET</li>
             </ul>
           </div>
 
           <div className="notice-signature">
             <p>Sd/-</p>
-            <p>({formData.Notice.From})</p>
-            <p>{formData.Notice.From_designation}</p>
+            <p>(Dr. Zahir Aalam)</p>
+            <p>Dean (TP&IL)</p>
           </div>
         </div>
       </div>
@@ -159,4 +163,4 @@ const Notice = forwardRef<
   );
 });
 
-export default Notice;
+export default notice;

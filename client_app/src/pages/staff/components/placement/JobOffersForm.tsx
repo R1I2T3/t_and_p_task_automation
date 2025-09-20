@@ -13,18 +13,21 @@ const JobOffersForm = ({ formData, setFormData }: Props) => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    const updatedJobOffers = [...formData.jobOffers];
+    const updatedJobOffers = [...formData.job_offers];
     updatedJobOffers[index] = {
       ...updatedJobOffers[index],
       [name as keyof (typeof updatedJobOffers)[typeof index]]: value,
     };
-    setFormData({ ...formData, jobOffers: updatedJobOffers });
+    setFormData({ ...formData, job_offers: updatedJobOffers });
   };
 
   const addJobOffer = () => {
     setFormData((prevData) => ({
       ...prevData,
-      jobOffers: [...prevData.jobOffers, { role: "", salary: "", skills: "" }],
+      job_offers: [
+        ...prevData.job_offers,
+        { role: "", salary: "", skills: "" },
+      ],
     }));
   };
 
@@ -32,16 +35,16 @@ const JobOffersForm = ({ formData, setFormData }: Props) => {
     setFormData((prevData) => ({
       ...prevData,
       jobOffers:
-        prevData.jobOffers.length > 1
-          ? prevData.jobOffers.filter((_, i) => i !== index)
-          : prevData.jobOffers,
+        prevData.job_offers.length > 1
+          ? prevData.job_offers.filter((_, i) => i !== index)
+          : prevData.job_offers,
     }));
   };
 
   return (
     <Grid item xs={12}>
       <Typography variant="h6">Job Offers</Typography>
-      {formData.jobOffers.map((offer, index) => (
+      {formData.job_offers.map((offer, index) => (
         <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
           <Grid item xs={4}>
             <TextField
@@ -74,7 +77,7 @@ const JobOffersForm = ({ formData, setFormData }: Props) => {
           <Grid item xs={12}>
             <Button
               onClick={() => removeJobOffer(index)}
-              disabled={formData.jobOffers.length === 1}
+              disabled={formData.job_offers.length === 1}
               color="error"
             >
               Remove

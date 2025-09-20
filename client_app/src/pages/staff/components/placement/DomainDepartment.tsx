@@ -30,9 +30,9 @@ const DomainDepartmentsForm = ({ formData, setFormData }: Props) => {
     const { value, checked } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      selectedDepartments: checked
-        ? [...prevData.selectedDepartments, value]
-        : prevData.selectedDepartments.filter((dept) => dept !== value),
+      selected_departments: checked
+        ? [...prevData.selected_departments, value]
+        : prevData.selected_departments.filter((dept) => dept !== value),
     }));
   };
 
@@ -54,25 +54,25 @@ const DomainDepartmentsForm = ({ formData, setFormData }: Props) => {
 
       <Grid item xs={12}>
         <Select
-          name="Departments"
-          value={formData.Departments}
+          name="departments"
+          value={formData.departments}
           onChange={(e) => {
             const value = e.target.value;
             setFormData({
               ...formData,
-              Departments: value,
-              selectedDepartments:
-                value === "all" ? [] : formData.selectedDepartments,
+              departments: value,
+              selected_departments:
+                value === "all" ? [] : formData.selected_departments,
             });
           }}
           fullWidth
         >
           <MenuItem value="all">All</MenuItem>
-          <MenuItem value="select">Select Departments</MenuItem>
+          <MenuItem value="select">Select departments</MenuItem>
         </Select>
       </Grid>
 
-      {formData.Departments === "select" && (
+      {formData.departments === "select" && (
         <Grid item xs={12}>
           <Grid container spacing={1}>
             {departmentOptions.map((dept) => (
@@ -81,7 +81,7 @@ const DomainDepartmentsForm = ({ formData, setFormData }: Props) => {
                   control={
                     <Checkbox
                       value={dept}
-                      checked={formData.selectedDepartments.includes(dept)}
+                      checked={formData.selected_departments.includes(dept)}
                       onChange={handleDepartmentChange}
                       color="primary"
                     />

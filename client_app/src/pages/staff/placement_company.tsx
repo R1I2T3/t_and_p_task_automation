@@ -22,11 +22,10 @@ export interface NoticeType {
   date: string;
   intro: string;
   about: string;
-  Company_registration_Link: string;
-  Note: string;
-  From: string;
-  From_designation: string;
+  company_registration_link: string;
+  note: string;
   location: string;
+  deadline: string;
 }
 
 export interface FormDataType {
@@ -36,12 +35,12 @@ export interface FormDataType {
   min_cgpa: string;
   accepted_kt: boolean;
   domain: string;
-  Departments: string;
+  departments: string;
   is_aedp_or_pli: boolean;
   is_aedp_or_ojt: boolean;
-  selectedDepartments: string[];
-  jobOffers: JobOffer[];
-  Notice: NoticeType;
+  selected_departments: string[];
+  job_offers: JobOffer[];
+  notice: NoticeType;
   batch: string;
 }
 
@@ -52,11 +51,10 @@ const PlacementCompany = () => {
     date: "",
     intro: "",
     about: "",
-    Company_registration_Link: "",
-    Note: "",
-    From: "",
-    From_designation: "",
+    company_registration_link: "",
+    note: "",
     location: "",
+    deadline: "",
   };
   const [formData, setFormData] = useState<FormDataType>({
     name: "",
@@ -65,13 +63,13 @@ const PlacementCompany = () => {
     min_cgpa: "",
     accepted_kt: false,
     domain: "core",
-    Departments: "all",
+    departments: "all",
     is_aedp_or_pli: false,
     is_aedp_or_ojt: false,
-    selectedDepartments: [],
-    jobOffers: [{ role: "", salary: "", skills: "" }],
+    selected_departments: [],
+    job_offers: [{ role: "", salary: "", skills: "" }],
     batch: "",
-    Notice,
+    notice: Notice,
   });
 
   const handleChange = (e: any) => {
@@ -84,49 +82,27 @@ const PlacementCompany = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log(formData);
+    try {
+      const csrfToken = getCookie("csrftoken");
+      const response = await fetch("/api/staff/placement/company", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken || "",
+        },
+        body: JSON.stringify(formData),
+        credentials: "include",
+      });
 
-    const payload = {
-      company: {
-        name: formData.name,
-        min_tenth_marks: parseFloat(formData.min_tenth_marks),
-        min_higher_secondary_marks: parseFloat(
-          formData.min_higher_secondary_marks
-        ),
-        min_cgpa: parseFloat(formData.min_cgpa),
-        is_aedp_or_pli: formData.is_aedp_or_pli,
-        is_aedp_or_ojt: formData.is_aedp_or_ojt,
-        accepted_kt: formData.accepted_kt,
-        domain: formData.domain,
-        departments: formData.selectedDepartments,
-        batch: formData.batch,
-      },
-      offers: formData.jobOffers.map((offer) => ({
-        role: offer.role,
-        salary: parseFloat(offer.salary),
-        skills: offer.skills,
-      })),
-    };
-    console.log("Payload to be sent:", payload);
-    // try {
-    //   const csrfToken = getCookie("csrftoken");
-    //   const response = await fetch("/api/placement/company/register/1", {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       "X-CSRFToken": csrfToken || "",
-    //     },
-    //     body: JSON.stringify(payload),
-    //     credentials: "include",
-    //   });
+      if (!response.ok) throw new Error("Failed to register company");
 
-    //   if (!response.ok) throw new Error("Failed to register company");
-
-    //   toast.success("Company registered successfully!");
-    //   navigate(`/placement_officer/company_register`);
-    // } catch (error) {
-    //   console.error("Error registering company:", error);
-    //   alert("Error registering company. Check console for details.");
-    // }
+      toast.success("Company registered successfully!");
+      navigate(`/placement_officer/company_register`);
+    } catch (error) {
+      console.error("Error registering company:", error);
+      alert("Error registering company. Check console for details.");
+    }
   };
 
   return (

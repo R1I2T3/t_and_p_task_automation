@@ -6,14 +6,7 @@ from rest_framework.response import Response as JSONResponse
 from base.models import User, FacultyResponsibility
 from django.contrib.auth import logout
 from student.models import Student
-from django.http import HttpResponseRedirect
-from django.shortcuts import render
 from django.views.static import serve
-
-
-@login_required
-def index(request):
-    return render(request, "index.html")
 
 
 def serve_static(request, path, document_root=""):

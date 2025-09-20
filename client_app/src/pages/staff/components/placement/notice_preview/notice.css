@@ -2,7 +2,6 @@
   font-size: 12px;
   font-family: "Times New Roman", serif;
   color: black;
-  padding: 20px;
 }
 
 .notice-container {
@@ -10,19 +9,19 @@
   min-height: 297mm;
   margin: auto;
   background: white;
-  padding: 20mm;
+  padding: 10mm;
   box-sizing: border-box;
   page-break-after: always;
 }
 
 .header-image {
   width: 100%;
-  margin-bottom: 15px;
+  /* margin-bottom: 15px; */
 }
 
 .notice-title {
   text-align: center;
-  font-size: 16px;
+  font-size: 12px;
   font-weight: bold;
   margin: 10px 0;
   text-transform: uppercase;
@@ -36,7 +35,7 @@
 }
 
 .notice-content {
-  margin-top: 15px;
+  margin-top: 10px;
 }
 
 .notice-content p {
@@ -45,7 +44,7 @@
 }
 
 .notice-content ol {
-  margin-left: 20px;
+  margin-left: 10px;
 }
 
 .notice-content li {
@@ -54,18 +53,18 @@
 }
 
 .notice-content ul {
-  margin-left: 20px;
+  margin-left: 10px;
   list-style-type: disc;
 }
 
 .notice-signature {
-  margin-top: 40px;
+  margin-top: 20px;
   text-align: right;
   font-weight: bold;
 }
 
 .notice-copyto {
-  margin-top: 30px;
+  margin-top: 20px;
   font-size: 12px;
 }
 
