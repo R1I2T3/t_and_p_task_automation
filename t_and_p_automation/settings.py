@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     # Our created apps
-    "theme",
     "base",
     "student",
     "department_coordinator",
@@ -126,8 +125,8 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": os.getenv("DATABASE_NAME"),
         "USER": os.getenv("DATABASE_USER"),
-        "PASSWORD": os.getenv("DATABASE_PASSWORD"),
-        "HOST": os.getenv("DATABASE_HOST"),  # Or your MySQL server's IP address
+        "PASSWORD": os.getenv("DATABASE_ROOT_PASSWORD"),
+        "HOST": "127.0.0.1",  # Or your MySQL server's IP address
         "PORT": os.getenv("DATABASE_PORT"),
     }
 }
