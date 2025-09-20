@@ -9,7 +9,6 @@ import {
   FileUser,
   LogOutIcon,
   User2Icon,
-  FileText, // Add an appropriate icon for Resource
 } from "lucide-react";
 import {
   Sheet,
@@ -28,7 +27,11 @@ const StudentLayout = () => {
   const auth = useAtomValue(authAtom);
   const defaultItems = [
     { icon: BarChart, label: "Stats", href: "/student/" },
-    {icon:CalendarCheck, label:"Session Attendance", href:"/student/session-attendance"},
+    {
+      icon: CalendarCheck,
+      label: "Session Attendance",
+      href: "/student/session-attendance",
+    },
     { icon: User, label: "Personal Info", href: "/student/info" },
     { icon: FileUser, label: "Resume", href: "/student/resume" },
     { icon: MessageCircle, label: "Notifications", href: "/notifications/" },
@@ -36,11 +39,6 @@ const StudentLayout = () => {
       icon: FileUser,
       label: "Internship submission",
       href: "/student/internship-submission",
-    },
-    {
-      icon: FileText, // Icon for resource
-      label: "Resource", // Label for resource
-      href: "/student/resources", // Link to resource page
     },
   ];
   const [menuItems, setMenuItems] = React.useState([...defaultItems]);

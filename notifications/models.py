@@ -1,7 +1,6 @@
 # filepath: backend/notifications/models.py
 from django.db import models
 from base.models import User
-from student.models import Student
 
 
 class Notification(models.Model):
@@ -14,6 +13,7 @@ class Notification(models.Model):
     files = models.FileField(upload_to="notifications/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    type_notification = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return self.title

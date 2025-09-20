@@ -19,6 +19,8 @@ const CreateNotification = () => {
   const [error, setError] = useState("");
   const [year, setYear] = useState<string[]>(["FE"]);
   const [branch, setBranch] = useState<string[]>(["IT"]);
+  const [type_notification, setType_notification] = useState<string>("General");
+
   const year_options = ["FE", "SE", "TE", "BE"];
   const branch_options = [
     "Computer",
@@ -30,6 +32,13 @@ const CreateNotification = () => {
     "AI&DS",
     "MME",
   ];
+  const type_notification_options = [
+    "General",
+    "Training",
+    "Placement",
+    "Internship",
+    "Resource",
+  ];
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData();
@@ -37,6 +46,7 @@ const CreateNotification = () => {
     formData.append("message", message);
     formData.append("academic_year", year.join(","));
     formData.append("department", branch.join(","));
+    formData.append("type_notification", type_notification);
     if (files) formData.append("files", files);
 
     try {
@@ -62,6 +72,11 @@ const CreateNotification = () => {
       target: { value },
     } = e;
     setYear(typeof value === "string" ? value.split(",") : value);
+  };
+  const handleTypeChange = (
+    event: SelectChangeEvent<typeof type_notification_options>
+  ) => {
+    setType_notification(event.target.value as string);
   };
   const handleDepartmentChange = (
     e: SelectChangeEvent<typeof year_options>
@@ -114,6 +129,18 @@ const CreateNotification = () => {
             {branch_options.map((branch, index) => (
               <MenuItem key={index} value={branch}>
                 {branch}
+              </MenuItem>
+            ))}
+          </Select>
+          <Select
+            className="w-full mb-2"
+            value={[type_notification]}
+            renderValue={(selected) => selected.join(", ")}
+            onChange={handleTypeChange}
+          >
+            {type_notification_options.map((type, index) => (
+              <MenuItem key={index} value={type}>
+                {type}
               </MenuItem>
             ))}
           </Select>

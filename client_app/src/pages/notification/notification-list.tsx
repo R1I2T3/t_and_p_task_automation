@@ -7,6 +7,10 @@ import {
   CardContent,
   CardActionArea,
   Box,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import axios from "axios";
 
@@ -16,10 +20,23 @@ interface NotificationProps {
   message: string;
   creator_name: string;
   created_at: string;
+  type_notification: string;
 }
+
+const type_notification_options = [
+  "All",
+  "General",
+  "Training",
+  "Placement",
+  "Internship",
+  "Resource",
+];
+
 const NotificationList = () => {
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
+  const [selectedType, setSelectedType] = useState<string>("All");
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
@@ -33,9 +50,17 @@ const NotificationList = () => {
     };
     fetchNotifications();
   }, []);
+
   const handleViewNotification = (id: number) => {
     navigate(`/notifications/${id}`);
   };
+
+  // filter based on type
+  const filteredNotifications =
+    selectedType === "All"
+      ? notifications
+      : notifications.filter((n) => n.type_notification === selectedType);
+
   return (
     <Box
       sx={{
@@ -59,7 +84,24 @@ const NotificationList = () => {
       >
         Notifications
       </Typography>
-      {notifications.length === 0 ? (
+
+      {/* Filter dropdown */}
+      <FormControl sx={{ mb: 3, minWidth: 200 }}>
+        <InputLabel id="type-select-label">Filter by Type</InputLabel>
+        <Select
+          labelId="type-select-label"
+          value={selectedType}
+          onChange={(e) => setSelectedType(e.target.value)}
+        >
+          {type_notification_options.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      {filteredNotifications.length === 0 ? (
         <Typography variant="body1">No notifications available.</Typography>
       ) : (
         <Grid
@@ -68,7 +110,7 @@ const NotificationList = () => {
           direction="column"
           sx={{ maxWidth: "600px" }}
         >
-          {notifications.map((notification) => (
+          {filteredNotifications.map((notification) => (
             <Grid item key={notification.id}>
               <Card sx={{ boxShadow: 3, borderRadius: 2, padding: 2 }}>
                 <CardActionArea
@@ -95,6 +137,12 @@ const NotificationList = () => {
                     <Typography variant="caption" color="textSecondary">
                       Created at:{" "}
                       {new Date(notification.created_at).toLocaleString()}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block", mt: 1, fontWeight: "bold" }}
+                    >
+                      Type: {notification.type_notification}
                     </Typography>
                   </CardContent>
                 </CardActionArea>

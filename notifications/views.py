@@ -31,6 +31,7 @@ class NotificationListCreate(generics.ListCreateAPIView):
                 message=message,
                 creator=request.user,
                 files=request.FILES.get("files", None),
+                type_notification=request.data.get("type_notification", "message"),
             )
 
             student_query = Student.objects.all()

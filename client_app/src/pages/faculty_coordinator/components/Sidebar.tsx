@@ -7,7 +7,6 @@ import Logo from "@/assets/img/logo.png";
 import MessageIcon from "@/assets/img/Training_Programme_Statistics.png";
 import LogoutIcon from "@/assets/img/logout.png";
 import ProfileIcon from "@/assets/img/user_profile.png";
-import ResourceIcon from "@/assets/img/resource.png";
 const Sidebar = () => {
   const auth = useAtomValue(authAtom);
   return (
@@ -35,13 +34,7 @@ const Sidebar = () => {
             <img src={MessageIcon} alt="Student Data" className="menu-icon" />
             Program
           </Link>
-          
         )}
-
-          <Link to="resource/create" className="menu-item">
-          <img src={ResourceIcon} alt="Create Resource" className="ResourceIcon" />
-          <p> Create Resource</p>
-        </Link>
       </ul>
       <div className="footer"></div>
       <div className="bottom-menu">
