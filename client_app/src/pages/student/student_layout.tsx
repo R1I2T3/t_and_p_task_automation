@@ -1,7 +1,5 @@
-import React, { useEffect } from "react";
 import { Link, Outlet } from "react-router";
 import {
-  BarChart,
   CalendarCheck,
   User,
   Menu,
@@ -19,20 +17,17 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { logout, redirectToProfile } from "@/utils";
-import { useAtomValue } from "jotai";
-import { authAtom } from "@/authAtom";
 import Logo from "@/assets/tcet_logo_2.png";
 
 const StudentLayout = () => {
-  const auth = useAtomValue(authAtom);
-  const defaultItems = [
-    { icon: BarChart, label: "Stats", href: "/student/" },
+  const menuItems = [
+    { icon: User, label: "Personal Info", href: "/student/" },
     {
       icon: CalendarCheck,
       label: "Session Attendance",
       href: "/student/session-attendance",
     },
-    { icon: User, label: "Personal Info", href: "/student/info" },
+
     { icon: FileUser, label: "Resume", href: "/student/resume" },
     { icon: MessageCircle, label: "Notifications", href: "/notifications/" },
     {
@@ -41,21 +36,6 @@ const StudentLayout = () => {
       href: "/student/internship-submission",
     },
   ];
-  const [menuItems, setMenuItems] = React.useState([...defaultItems]);
-
-  useEffect(() => {
-    if (auth?.academic_year && auth.academic_year === "BE") {
-      console.log("BE student");
-      setMenuItems([
-        ...defaultItems,
-        {
-          icon: FileUser,
-          label: "Job Acceptance",
-          href: "/student/job-acceptance",
-        },
-      ]);
-    }
-  }, [auth]);
 
   return (
     <div className="absolute top-0 left-0 w-full min-w-fit">

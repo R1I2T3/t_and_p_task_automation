@@ -12,15 +12,15 @@ from .models import (
     Resume,
 )
 from .serializers import (
-    AcademicAttendanceSemesterSerializer,
-    TrainingAttendanceSemesterSerializer,
-    StudentSerializer,
     ResumeSerializer,
     SessionAttendanceSerializer,
 )
 
-from program_coordinator_api.models import AttendanceData  # Import model from another app
+from program_coordinator_api.models import (
+    AttendanceData,
+)  # Import model from another app
 from .utils import categorize
+
 
 class SessionAttendanceAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -28,12 +28,17 @@ class SessionAttendanceAPIView(APIView):
     def get(self, request):
         try:
             student = Student.objects.get(user=request.user)  # Get student object
-            attendance_data = AttendanceData.objects.filter(uid=student.uid)  # Fetch attendance data
-            
-            serializer = SessionAttendanceSerializer(attendance_data, many=True)  # Serialize data
+            attendance_data = AttendanceData.objects.filter(
+                uid=student.uid
+            )  # Fetch attendance data
+
+            serializer = SessionAttendanceSerializer(
+                attendance_data, many=True
+            )  # Serialize data
             return Response(serializer.data)  # Return JSON response
         except Student.DoesNotExist:
             return Response({"error": "Student not found"}, status=404)
+
 
 class HomeAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -84,28 +89,36 @@ class SdPAPIView(APIView):
 
         student = Student.objects.get(user=request.user)
 
-        academic_attendance_sum = student.academic_attendance.aggregate(Sum("attendance")).get("attendance__sum")  # type: ignore
+        academic_attendance_sum = student.academic_attendance.aggregate(
+            Sum("attendance")
+        ).get("attendance__sum")  # type: ignore
         academic_attendance = (
             academic_attendance_sum / student.academic_attendance.count()
             if academic_attendance_sum is not None
             else None
         )
 
-        academic_performance_sum = student.academic_performance.aggregate(Sum("performance")).get("performance__sum")  # type: ignore
+        academic_performance_sum = student.academic_performance.aggregate(
+            Sum("performance")
+        ).get("performance__sum")  # type: ignore
         academic_performance = (
             academic_performance_sum / student.academic_performance.count()
             if academic_performance_sum is not None
             else None
         )
 
-        training_attendance_sum = student.training_attendance.aggregate(Sum("training_attendance")).get("training_attendance__sum")  # type: ignore
+        training_attendance_sum = student.training_attendance.aggregate(
+            Sum("training_attendance")
+        ).get("training_attendance__sum")  # type: ignore
         training_attendance = (
             training_attendance_sum / student.training_attendance.count()
             if training_attendance_sum is not None
             else None
         )
 
-        training_performance_sum = student.training_performance.aggregate(Sum("training_performance")).get("training_performance__sum")  # type: ignore
+        training_performance_sum = student.training_performance.aggregate(
+            Sum("training_performance")
+        ).get("training_performance__sum")  # type: ignore
         training_performance = (
             training_performance_sum / student.training_performance.count()
             if training_performance_sum is not None
@@ -117,6 +130,7 @@ class SdPAPIView(APIView):
             academic_performance,
             training_attendance,
             training_performance,
+            student.batch,
         )
 
         return JsonResponse(

@@ -15,7 +15,6 @@ import Session from "./pages/program_coordinator/Session";
 import Upload from "./pages/program_coordinator/Upload";
 import Attendance from "./pages/program_coordinator/Attendance";
 import StudentLayout from "./pages/student/student_layout";
-import StudentHome from "./pages/student";
 import SessionAttendance from "./pages/student/SessionAttendance";
 import InternShipSubmission from "./pages/student/InternShipSubmission";
 import StudentPersonalInfo from "./pages/student/student-personal-info";
@@ -48,7 +47,6 @@ import InternshipCompanyRegister from "./pages/internship_officer/InternshipComp
 import InternShipVerify from "./pages/internship_officer/InternShipVerify";
 import InternshipStats from "./pages/internship_officer/Stats";
 import OnePageReport from "./pages/internship_officer/OnePageReport";
-import JobAcceptance from "./pages/student/JobAcceptance";
 import PrincipalLayout from "./pages/principal/PrincipalLayout";
 import StaffLayout from "./pages/staff/StaffLayout";
 import StaffNotice from "./pages/staff/StaffNotice";
@@ -97,12 +95,10 @@ const App = () => {
           <Route index element={<ProgramHome />} />
         </Route>
         <Route path="/student" element={<StudentLayout />}>
-          <Route index element={<StudentHome />} />
           <Route path="session-attendance" element={<SessionAttendance />} />
-          <Route path="info" element={<StudentPersonalInfo />} />
+          <Route index element={<StudentPersonalInfo />} />
           <Route path="resume" element={<Resume />} />
           <Route path="resume-preview" element={<ResumePreview />} />
-          <Route path="job-acceptance" element={<JobAcceptance />} />
           <Route
             path="placement/registration/:id"
             element={<PlacementRegistration />}
