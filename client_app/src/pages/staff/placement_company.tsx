@@ -1,0 +1,168 @@
+// PlacementCompany.tsx
+import React, { useState } from "react";
+import { useNavigate } from "react-router";
+import { Container, Paper, Typography, Box, Grid, Button } from "@mui/material";
+import toast from "react-hot-toast";
+import { getCookie } from "@/utils";
+
+import CompanyDetailsForm from "./components/placement/CompanyDetailsForm";
+import EligibilityForm from "./components/placement/EligibilityForm";
+import DomainDepartmentsForm from "./components/placement/DomainDepartment";
+import JobOffersForm from "./components/placement/JobOffersForm";
+import CompanyNotice from "./components/placement/CompanyNotice";
+
+interface JobOffer {
+  role: string;
+  salary: string;
+  skills: string;
+}
+
+export interface NoticeType {
+  subject: string;
+  date: string;
+  intro: string;
+  about: string;
+  Company_registration_Link: string;
+  Note: string;
+  From: string;
+  From_designation: string;
+  location: string;
+}
+
+export interface FormDataType {
+  name: string;
+  min_tenth_marks: string;
+  min_higher_secondary_marks: string;
+  min_cgpa: string;
+  accepted_kt: boolean;
+  domain: string;
+  Departments: string;
+  is_aedp_or_pli: boolean;
+  is_aedp_or_ojt: boolean;
+  selectedDepartments: string[];
+  jobOffers: JobOffer[];
+  Notice: NoticeType;
+  batch: string;
+}
+
+const PlacementCompany = () => {
+  const navigate = useNavigate();
+  const Notice: NoticeType = {
+    subject: "",
+    date: "",
+    intro: "",
+    about: "",
+    Company_registration_Link: "",
+    Note: "",
+    From: "",
+    From_designation: "",
+    location: "",
+  };
+  const [formData, setFormData] = useState<FormDataType>({
+    name: "",
+    min_tenth_marks: "",
+    min_higher_secondary_marks: "",
+    min_cgpa: "",
+    accepted_kt: false,
+    domain: "core",
+    Departments: "all",
+    is_aedp_or_pli: false,
+    is_aedp_or_ojt: false,
+    selectedDepartments: [],
+    jobOffers: [{ role: "", salary: "", skills: "" }],
+    batch: "",
+    Notice,
+  });
+
+  const handleChange = (e: any) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const payload = {
+      company: {
+        name: formData.name,
+        min_tenth_marks: parseFloat(formData.min_tenth_marks),
+        min_higher_secondary_marks: parseFloat(
+          formData.min_higher_secondary_marks
+        ),
+        min_cgpa: parseFloat(formData.min_cgpa),
+        is_aedp_or_pli: formData.is_aedp_or_pli,
+        is_aedp_or_ojt: formData.is_aedp_or_ojt,
+        accepted_kt: formData.accepted_kt,
+        domain: formData.domain,
+        departments: formData.selectedDepartments,
+        batch: formData.batch,
+      },
+      offers: formData.jobOffers.map((offer) => ({
+        role: offer.role,
+        salary: parseFloat(offer.salary),
+        skills: offer.skills,
+      })),
+    };
+    console.log("Payload to be sent:", payload);
+    // try {
+    //   const csrfToken = getCookie("csrftoken");
+    //   const response = await fetch("/api/placement/company/register/1", {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       "X-CSRFToken": csrfToken || "",
+    //     },
+    //     body: JSON.stringify(payload),
+    //     credentials: "include",
+    //   });
+
+    //   if (!response.ok) throw new Error("Failed to register company");
+
+    //   toast.success("Company registered successfully!");
+    //   navigate(`/placement_officer/company_register`);
+    // } catch (error) {
+    //   console.error("Error registering company:", error);
+    //   alert("Error registering company. Check console for details.");
+    // }
+  };
+
+  return (
+    <Container component="main" maxWidth="md">
+      <Paper elevation={3} sx={{ p: 4, mt: 8 }}>
+        <Typography component="h1" variant="h5">
+          Company Registration
+        </Typography>
+        <Box component="form" sx={{ mt: 3 }} onSubmit={handleSubmit}>
+          <Grid container spacing={2}>
+            <CompanyDetailsForm
+              formData={formData}
+              handleChange={handleChange}
+            />
+            <EligibilityForm formData={formData} handleChange={handleChange} />
+            <DomainDepartmentsForm
+              formData={formData}
+              setFormData={setFormData}
+            />
+            <JobOffersForm formData={formData} setFormData={setFormData} />
+            <CompanyNotice formData={formData} setFormData={setFormData} />
+            <Grid item xs={12}>
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                color="primary"
+              >
+                Submit
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+      </Paper>
+    </Container>
+  );
+};
+
+export default PlacementCompany;

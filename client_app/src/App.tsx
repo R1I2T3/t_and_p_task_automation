@@ -53,6 +53,7 @@ import StaffNotice from "./pages/staff/StaffNotice";
 import CategoryRuleForm from "./pages/placement_officer/CategoryRuleForm";
 import CategoryRuleList from "./pages/placement_officer/CategoryRuleList";
 import StudentByCategory from "./pages/placement_officer/StudentByCategory";
+import PlacementCompany from "./pages/staff/placement_company";
 
 const App = () => {
   const setUser = useSetAtom(authAtom);
@@ -169,6 +170,7 @@ const App = () => {
         </Route>
         <Route path="/staff" element={<StaffLayout />}>
           <Route index element={<StaffNotice />} />
+          <Route path="placement_company" element={<PlacementCompany />} />
           <Route
             path="placement/register"
             element={<CompanyRegistrationForm />}
