@@ -54,6 +54,9 @@ import CategoryRuleForm from "./pages/placement_officer/CategoryRuleForm";
 import CategoryRuleList from "./pages/placement_officer/CategoryRuleList";
 import StudentByCategory from "./pages/placement_officer/StudentByCategory";
 import PlacementCompany from "./pages/staff/placement_company";
+import CompanyPage from "./pages/staff/placement_companies_view";
+import ViewCompanyInfo from "./pages/staff/view-company-info";
+import EditCompanyInfo from "./pages/staff/edit-comapny-info";
 
 const App = () => {
   const setUser = useSetAtom(authAtom);
@@ -170,7 +173,10 @@ const App = () => {
         </Route>
         <Route path="/staff" element={<StaffLayout />}>
           <Route index element={<StaffNotice />} />
-          <Route path="placement_company" element={<PlacementCompany />} />
+          <Route path="placement_companies" element={<CompanyPage />} />
+          <Route path="placement_companies/register" element={<PlacementCompany />} />
+          <Route path="placement_companies/view" element={<ViewCompanyInfo />} />
+          <Route path="placement_companies/edit" element={<EditCompanyInfo />} />
           <Route
             path="placement/register"
             element={<CompanyRegistrationForm />}

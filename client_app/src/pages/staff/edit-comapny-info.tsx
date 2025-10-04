@@ -1,51 +1,19 @@
-// PlacementCompany.tsx
-import React, { useState } from "react";
-import { useNavigate } from "react-router";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 import { Container, Paper, Typography, Box, Grid, Button } from "@mui/material";
 import toast from "react-hot-toast";
 import { getCookie } from "@/utils";
-
 import CompanyDetailsForm from "./components/placement/CompanyDetailsForm";
 import EligibilityForm from "./components/placement/EligibilityForm";
 import DomainDepartmentsForm from "./components/placement/DomainDepartment";
 import JobOffersForm from "./components/placement/JobOffersForm";
 import CompanyNotice from "./components/placement/CompanyNotice";
-
-export interface JobOffer {
-  role: string;
-  salary: string;
-  skills: string;
-}
-
-export interface NoticeType {
-  subject: string;
-  date: string;
-  intro: string;
-  about: string;
-  company_registration_link: string;
-  note: string;
-  location: string;
-  deadline: string;
-}
-
-export interface FormDataType {
-  name: string;
-  min_tenth_marks: string;
-  min_higher_secondary_marks: string;
-  min_cgpa: string;
-  accepted_kt: boolean;
-  domain: string;
-  departments: string;
-  is_aedp_or_pli: boolean;
-  is_aedp_or_ojt: boolean;
-  selected_departments: string[];
-  job_offers: JobOffer[];
-  notice: NoticeType;
-  batch: string;
-}
-
-const PlacementCompany = () => {
+import type { FormDataType, NoticeType } from "./placement_company";
+const EditCompanyInfo = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const searchParamId = searchParams.get("id");
   const Notice: NoticeType = {
     subject: "",
     date: "",
@@ -71,7 +39,47 @@ const PlacementCompany = () => {
     batch: "",
     notice: Notice,
   });
-
+   useEffect(()=>{
+    if(!searchParamId){
+      toast.error("Company ID is required");
+      navigate(-1);
+      return;
+    }
+    const fetchCompanyData = async()=>{
+      try{
+        const response = await fetch(`/api/staff/placement/company/${searchParamId}/`,{
+          method:"GET",
+          headers:{
+            "Content-Type":"application/json",
+            "X-CSRFToken":getCookie("csrftoken")||""
+          }
+        });
+        if(!response.ok){
+          throw new Error("Failed to fetch company data");
+        }
+        const data = await response.json();
+        setFormData({
+          name: data.name,
+          min_tenth_marks: data.min_tenth_marks,
+          min_higher_secondary_marks: data.min_higher_secondary_marks,
+          min_cgpa: data.min_cgpa,
+          accepted_kt: data.accepted_kt,
+          domain: data.domain,
+          departments: data.departments,
+          is_aedp_or_pli: data.is_aedp_or_pli,
+          is_aedp_or_ojt: data.is_aedp_or_ojt,
+          selected_departments: data.selected_departments,
+          job_offers: data.job_offers.length>0?data.job_offers:[{ role: "", salary: "", skills: "" }],
+          batch: data.batch,
+          notice: data.notice || Notice,
+        });
+      }catch(error:any){
+        console.error("Error fetching company data:",error);
+        toast.error(error.message||"Something went wrong");
+      }
+    }
+    fetchCompanyData();
+   },[searchParamId])
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -79,13 +87,16 @@ const PlacementCompany = () => {
       [name]: type === "checkbox" ? checked : value,
     });
   };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      if(!searchParamId){
+        toast.error("Company ID is required");
+        return;
+      }
       const csrfToken = getCookie("csrftoken");
-      const response = await fetch("/api/staff/placement/company", {
-        method: "POST",
+      const response = await fetch(`/api/staff/placement/company/${searchParamId}/`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "X-CSRFToken": csrfToken || "",
@@ -93,17 +104,14 @@ const PlacementCompany = () => {
         body: JSON.stringify(formData),
         credentials: "include",
       });
-
-      if (!response.ok) throw new Error("Failed to register company");
-
-      toast.success("Company registered successfully!");
-      navigate(`/placement_officer/company_register`);
+      if (!response.ok) throw new Error("Failed to update company info");
+      toast.success("Company info updated successfully!");
+      navigate(-1);
     } catch (error) {
-      console.error("Error registering company:", error);
-      alert("Error registering company. Check console for details.");
+      console.error("Error updating company info:", error);
+      toast.error("Error updating company info");
     }
   };
-
   return (
     <Container component="main" maxWidth="md">
       <Paper elevation={3} sx={{ p: 4, mt: 8 }}>
@@ -140,4 +148,4 @@ const PlacementCompany = () => {
   );
 };
 
-export default PlacementCompany;
+export default EditCompanyInfo;
