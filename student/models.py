@@ -1,7 +1,7 @@
 from django.db import models
 from base.models import User
 from uuid import uuid4
-
+from staff.models import CompanyRegistration, JobOffer
 # Create your models here.
 
 
@@ -14,9 +14,11 @@ class Student(models.Model):
     ]
     consent_Type = [
         ("placement", "placement"),
+        ("placement+aedp/pli", "placement+aedp/pli"),
         ("Higher studies", "Higher studies"),
     ]
     CARD_TYPE = [
+        ("Green", "Green"),
         ("Yellow", "Yellow"),
         ("Orange", "Orange"),
         ("Red", "Red"),
@@ -34,7 +36,6 @@ class Student(models.Model):
     dob = models.CharField(null=True, blank=True, default="Not Provided", max_length=20)
     contact = models.CharField(max_length=15, default="Not Provided")
     personal_email = models.EmailField(blank=True, null=True)
-    is_student_coordinator = models.BooleanField(default=False)
     tenth_grade = models.FloatField(default=0.0)
     higher_secondary_grade = models.FloatField(default=0.0)
     card = models.CharField(max_length=40, choices=CARD_TYPE, default="Green")
@@ -43,7 +44,8 @@ class Student(models.Model):
     cgpa = models.FloatField(null=True)
     attendance = models.FloatField(null=True)
     is_kt = models.BooleanField(default=False)
-    is_backLog = models.BooleanField(default=False)
+    is_blacklisted = models.BooleanField(default=False)
+    joined_company = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.uid}"
@@ -156,3 +158,64 @@ class Resume_Project(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="project")
     title = models.CharField(max_length=100)
     description = models.TextField(null=True)
+
+class StudentOffer(models.Model):
+    OFFER_STATUS_CHOICES = [
+        ("offered", "Offered"),      # Company offered the job
+        ("accepted", "Accepted"),    # Student accepted the job
+        ("rejected", "Rejected"),    # Student rejected the job
+        ("joined", "Joined"),        # Student joined the company
+    ]
+
+    OFFER_TYPE_CHOICES = [
+        ("PLACEMENT", "Placement"),
+        ("AEDP_PLI", "AEDP/PLI"),
+        ("AEDP_OJT", "AEDP/OJT"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name="student_offers"
+    )
+    company = models.ForeignKey(
+        CompanyRegistration,
+        on_delete=models.CASCADE,
+        related_name="company_offers"
+    )
+
+    job_offer = models.ForeignKey(
+        JobOffer,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="student_offers"
+    )
+
+    offer_type = models.CharField(
+        max_length=20,
+        choices=OFFER_TYPE_CHOICES,
+        default="PLACEMENT"
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=OFFER_STATUS_CHOICES,
+        default="offered"
+    )
+
+    salary = models.FloatField()
+    role = models.CharField(max_length=255)
+    offer_date = models.DateField(auto_now_add=True)
+
+    # Optional helper flags
+    is_aedp_pli = models.BooleanField(default=False)
+    is_aedp_ojt = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ("student", "company", "role")
+
+    def __str__(self):
+        return f"{self.student.uid} → {self.company.name} ({self.status})"

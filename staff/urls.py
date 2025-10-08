@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CompanyListCreateView, CompanyDetailView, CompanyByBatchView,CompanyBatchesView
+from .views import CompanyListCreateView, CompanyDetailView, CompanyByBatchView,CompanyBatchesView,SendPlacementNotificationApiView
 
 urlpatterns = [
     path(
@@ -19,5 +19,10 @@ urlpatterns = [
         "companies/batches/",
         CompanyBatchesView.as_view(),
         name="company-batches",
+    ),
+    path(
+        "placement/company/send_notifications/<str:id>/",
+        SendPlacementNotificationApiView.as_view(),
+        name="send-placement-notifications",
     ),
 ]

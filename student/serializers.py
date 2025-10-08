@@ -42,7 +42,6 @@ class StudentSerializer(serializers.ModelSerializer):
             "department",
             "academic_year",
             "current_category",
-            "is_student_coordinator",
             "consent",
             "batch",
         ]

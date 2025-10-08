@@ -11,8 +11,10 @@ import {
   IconButton,
   Grid,
 } from "@mui/material";
-import { Plus, Eye, Pencil, Trash2 } from "lucide-react"; // Lucide icons
-import { useNavigate } from "react-router";
+import { Plus, Eye, Pencil, Trash2, Send } from "lucide-react"; // Lucide icons
+import { useNavigate,  } from "react-router";
+import { getCookie } from "@/utils";
+import toast from "react-hot-toast";
 
 type Company = {
   id: string;
@@ -24,7 +26,7 @@ const CompanyPage = () => {
   const [batches, setBatches] = useState<string[]>([]);
   const [selectedBatch, setSelectedBatch] = useState<string>("");
   const [companies, setCompanies] = useState<Company[]>([]);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   useEffect(() => {
     fetch("/api/staff/companies/batches/") // Django endpoint for unique batches
       .then((res) => res.json())
@@ -52,6 +54,20 @@ const CompanyPage = () => {
       .catch((err) => console.error("Error deleting company:", err));
   };
 
+  const handleSendNotification =async (id:string)=>{
+    const res = await fetch(`/api/staff/placement/company/send_notifications/${id}/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+         "X-CSRFToken":getCookie("csrftoken")||""
+      },
+    });
+    if(res.status===201){
+      toast.success("Notifications sent successfully");
+    } else {
+      toast.error("Failed to send notifications");
+    }
+  };
   return (
     <Container sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
@@ -98,6 +114,9 @@ const CompanyPage = () => {
               <CardActions>
                 <IconButton onClick={() => navigate(`/staff/placement_companies/view/?id=${company.id}`)}>
                   <Eye size={18} />
+                </IconButton>
+                <IconButton onClick={() => handleSendNotification(company.id)}>
+                  <Send size={18} />
                 </IconButton>
                 <IconButton onClick={() => navigate(`/staff/placement_companies/edit/?id=${company.id}`)}>
                   <Pencil size={18} />

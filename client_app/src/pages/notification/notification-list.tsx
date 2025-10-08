@@ -27,7 +27,7 @@ const type_notification_options = [
   "All",
   "General",
   "Training",
-  "Placement",
+  "placement",
   "Internship",
   "Resource",
 ];
