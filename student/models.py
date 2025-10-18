@@ -219,3 +219,45 @@ class StudentOffer(models.Model):
 
     def __str__(self):
         return f"{self.student.uid} → {self.company.name} ({self.status})"
+
+class StudentPlacementAppliedCompany(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name="applied_companies"
+    )
+    company = models.ForeignKey(
+        CompanyRegistration,
+        on_delete=models.CASCADE,
+        related_name="company"
+    )
+    job_offer = models.ForeignKey(
+        JobOffer,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="offer"
+    )
+    interested = models.BooleanField(default=False)
+    not_interested_reason = models.TextField()
+
+    application_date = models.DateField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("student", "company")
+
+    def __str__(self):
+        return f"{self.student.uid} applied to {self.company.name}"
+
+
+class PlacementCompanyProgress(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    application = models.OneToOneField(
+        StudentPlacementAppliedCompany,on_delete=models.CASCADE, related_name="application")
+    registered = models.BooleanField(default=True)
+    aptitude_test = models.BooleanField(default=False)
+    technical_interview = models.BooleanField(default=False)
+    hr_interview = models.BooleanField(default=False)
+    gd = models.BooleanField(default=False)
+    final_result = models.CharField(max_length=100, default="Pending")

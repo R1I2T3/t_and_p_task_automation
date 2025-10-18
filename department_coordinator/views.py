@@ -24,12 +24,6 @@ class IsDepartmentCoordinator(BasePermission):
     def has_permission(self, request, view):
         return request.user.role == "faculty"
 
-
-INTERNSHIP_JSON_PATH = os.path.join("static", "Data", "intern_data_24.json")
-JSON_FILE_PATH_ALUMNI = os.path.join("static", "Data", "alumni_data_2024.json")
-JSON_FILE_PATH_PLACEMENT = os.path.join("static", "Data", "placement_data.json")
-
-
 class DepartmentCoordinatorViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 

@@ -21,58 +21,58 @@ def is_student_eligible(student, company):
         return False
     if offer_type == "PLACEMENT" and student.consent not in ["placement", "placement+aedp/pli"]:
         return False
-    joined_aedp_pli = student.student_offers.filter(
-        status="joined", offer_type="AEDP_PLI"
-    ).exists()
-    if joined_aedp_pli:
+    if student.student_offers.filter(status="joined", offer_type="AEDP_PLI").exists():
         return False
-    job_offer = company.job_offers.first()
-    if not job_offer:
+    job_offers = company.job_offers.all()
+    if not job_offers.exists():
         return False
-
-    try:
-        salary = float(job_offer.salary)
-    except ValueError:
-        return False
-
     category = student.current_category
     accepted_offers = student.student_offers.filter(status__in=["accepted", "joined"])
-    if category == "Category 3":
-        if salary > 5:
-            return False
-        if accepted_offers.exists():  # Already has offer
-            return False
-    elif category == "Category 2":
-        if salary > 10:
-            return False
 
-        has_below_5 = accepted_offers.filter(salary__lt=5).exists()
-        has_above_5 = accepted_offers.filter(salary__gte=5).exists()
-        if has_above_5 and salary < 5:
-            return False
-        if accepted_offers.filter(salary__gte=10).exists():
-            return False
+    def get_tier(s):
+        if s < 5:
+            return "low"
+        elif s < 10:
+            return "mid"
+        return "high"
+    for job_offer in job_offers:
+        try:
+            salary = float(job_offer.salary)
+        except (ValueError, TypeError):
+            continue
+        if category == "Category 3":
+            if salary > 5:
+                continue
+            if accepted_offers.exists():  #
+                continue
+            return True
 
-    elif category == "Category 1":
-        def get_tier(s):
-            if s < 5:
-                return "low"
-            elif s < 10:
-                return "mid"
-            return "high"
+        elif category == "Category 2":
+            if salary > 10:
+                continue
+            has_above_5 = accepted_offers.filter(salary__gte=5).exists()
 
-        current_tier = get_tier(salary)
-        if accepted_offers.filter(salary__gte=10).exists():
-            return False
-        existing_tiers = {get_tier(float(o.salary)) for o in accepted_offers}
-        if current_tier in existing_tiers:
-            return False
-        if "mid" in existing_tiers and salary < 5:
-            return False
-        if "high" in existing_tiers and salary < 10:
-            return False
+            if has_above_5 and salary < 5:
+                continue
+            if accepted_offers.filter(salary__gte=10).exists():
+                continue
+            return True
 
-    return True
+        elif category == "Category 1":
+            current_tier = get_tier(salary)
+            if accepted_offers.filter(salary__gte=10).exists():
+                continue
+
+            existing_tiers = {get_tier(float(o.salary)) for o in accepted_offers if o.salary}
+            if current_tier in existing_tiers:
+                continue
+            if "mid" in existing_tiers and salary < 5:
+                continue
+            if "high" in existing_tiers and salary < 10:
+                continue
+            return True
+    return False
+
 
 def get_eligible_students(company):
 

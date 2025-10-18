@@ -48,7 +48,9 @@ class SendPlacementNotificationApiView(generics.CreateAPIView):
         try:
             load_dotenv()
             company_id = self.kwargs.get("id")
+            print(type(company_id),company_id)
             company = get_object_or_404(CompanyRegistration, id=company_id)
+            print("Company fetched:", company)
             eligible_student_ids = get_eligible_students(company)
             if not eligible_student_ids:
                 return Response(
