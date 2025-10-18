@@ -5,7 +5,7 @@ from rest_framework.decorators import (
     authentication_classes,
     parser_classes,
 )
-from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework import status
 from .models import (
     InternshipRegistration,
@@ -19,15 +19,11 @@ from .serializers import (
     InternshipNoticeSerializer,
     InternshipAcceptanceSerializer,
     InternshipApplicationSerializer,
-    InternshipDataSerializer,
 )
 from rest_framework.permissions import IsAuthenticated
-from django.views.decorators.csrf import csrf_exempt
 from .models import InternshipApplication
 from uuid import uuid4
-from rest_framework.exceptions import NotFound
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from uuid import uuid4
 from student.models import Student
 from base.models import User
 from datetime import datetime
@@ -143,95 +139,6 @@ def get_all_companies(request):
                 {"company": company_serializer.data, "offers": offers_serializer.data}
             )
         return JsonResponse(company_data, safe=False, status=status.HTTP_200_OK)
-    except Exception as e:
-        return JsonResponse(
-            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
-@api_view(["POST"])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
-def create_notice(request, pk):
-    user = User.objects.get(email=request.user.email)
-    if not user or user.role not in ["internship_officer", "staff"]:
-        return JsonResponse(
-            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
-        )
-    try:
-        company = InternshipRegistration.objects.get(id=pk)
-        data = request.data
-        print(company)
-        if not company:
-            return JsonResponse(
-                {"error": "Company not found."}, status=status.HTTP_404_NOT_FOUND
-            )
-
-        notice_data = data
-        notice_data["company"] = company
-        notice_data = {
-            "srNo": data.get("srNo", ""),
-            "date": data.get("date", ""),
-            "to": data.get("to", ""),
-            "subject": data.get("subject", ""),
-            "Intro": data.get("intro", ""),
-            "Eligibility_Criteria": data.get("eligibility_criteria", ""),
-            "About_Company": data.get("about", ""),
-            "Location": data.get("location", ""),
-            "Documents_to_Carry": data.get("Documents_to_Carry", ""),
-            "Walk_in_interview": data.get("Walk_in_interview", ""),
-            "Company_registration_Link": data.get("Company_registration_Link", ""),
-            "College_registration_Link": data.get("College_registration_Link", ""),
-            "Note": data.get("Note", ""),
-            "From": data.get("From", ""),
-            "From_designation": data.get("From_designation", ""),
-            "CompanyId": pk,
-        }
-        # Prepare tableData from related offers (assuming a related field 'offers' exists)
-        offers = Offers.objects.filter(
-            company=company
-        )  # Adjust as per your related name
-        table_data = [
-            {
-                "type": offer.type,
-                "salary": offer.stipend,
-                "position": offer.position,
-            }
-            for offer in offers
-        ]
-        print(table_data)
-        # Construct response data
-        response_data = {
-            **notice_data,
-            "tableData": table_data,
-        }
-
-        return JsonResponse(
-            {"message": "Notice created successfully", "data": response_data},
-            status=status.HTTP_201_CREATED,
-        )
-
-    except InternshipRegistration.DoesNotExist:
-        return JsonResponse(
-            {"error": "Company not found."}, status=status.HTTP_404_NOT_FOUND
-        )
-
-    except Exception as e:
-        print(e)
-        return JsonResponse(
-            {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
-@api_view(["GET"])
-@authentication_classes([SessionAuthentication, BasicAuthentication])
-@permission_classes([IsAuthenticated])
-def get_notice(request, pk):
-
-    try:
-        notice = InternshipNotice.objects.get(id=pk)
-        notice = InternshipNoticeSerializer(notice)
-        return JsonResponse({"notice": notice.data}, status=status.HTTP_200_OK)
     except Exception as e:
         return JsonResponse(
             {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -362,171 +269,3 @@ def get_jobs_by_company_name(request, company_name):
 
     serializer = InternshipAcceptanceSerializer(jobs, many=True)
     return JsonResponse(serializer.data)
-
-
-@api_view(["GET"])
-@authentication_classes([SessionAuthentication, BasicAuthentication])
-@permission_classes([IsAuthenticated])
-def get_all_job_acceptances(request):
-    user = User.objects.get(email=request.user.email)
-    if not user or user.role not in ["internship_officer", "staff"]:
-        return JsonResponse(
-            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
-        )
-    jobs = InternshipAcceptance.objects.filter(is_verified=False).select_related(
-        "student"
-    )
-    serializer = InternshipAcceptanceSerializer(jobs, many=True)
-    data = []
-    for job in serializer.data:
-        job_data = dict(job)
-        student = job["student"]
-        if student:
-            student_obj = Student.objects.get(id=student)
-            job_data["student_name"] = (
-                student_obj.user.full_name if student_obj.user else ""
-            )
-            job_data["uid"] = student_obj.uid
-        data.append(job_data)
-    return JsonResponse(data, safe=False)
-
-
-@api_view(["POST"])
-@authentication_classes([SessionAuthentication, BasicAuthentication])
-@permission_classes([IsAuthenticated])
-def verify_job(request):
-    user = User.objects.get(email=request.user.email)
-    if not user or user.role not in ["internship_officer", "staff"]:
-        return JsonResponse(
-            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
-        )
-    try:
-        job_ids = request.data.get("jobIds", [])
-        for job_id in job_ids:
-            job = InternshipAcceptance.objects.get(id=job_id)
-            job.is_verified = True
-            job.save()
-        return JsonResponse(
-            {"message": "Job verified successfully"}, status=status.HTTP_200_OK
-        )
-    except InternshipAcceptance.DoesNotExist:
-        return JsonResponse(
-            {"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND
-        )
-
-
-@api_view(["GET"])
-@authentication_classes([SessionAuthentication, BasicAuthentication])
-@permission_classes([IsAuthenticated])
-def get_verified_internships(request):
-    user = User.objects.get(email=request.user.email)
-    if not user or user.role not in ["internship_officer", "staff"]:
-        return JsonResponse(
-            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
-        )
-    jobs = InternshipAcceptance.objects.filter(is_verified=True).select_related(
-        "student"
-    )
-    serializer = InternshipAcceptanceSerializer(jobs, many=True)
-    data = []
-    for job in serializer.data:
-        job_data = dict(job)
-        student = job["student"]
-        if student:
-            student_obj = Student.objects.get(id=student)
-            job_data["student_name"] = (
-                student_obj.user.full_name if student_obj.user else ""
-            )
-            job_data["uid"] = student_obj.uid
-            job_data["branch"] = student_obj.department
-        data.append(job_data)
-    return JsonResponse(data, safe=False)
-
-
-@api_view(["GET"])
-@authentication_classes([SessionAuthentication, BasicAuthentication])
-@permission_classes([IsAuthenticated])
-def download_internship_report(request):
-    user = User.objects.get(email=request.user.email)
-    if not user or user.role not in ["internship_officer", "staff"]:
-        return JsonResponse(
-            {"error": "Failed to find user"}, status=status.HTTP_404_NOT_FOUND
-        )
-    
-    jobs = InternshipAcceptance.objects.filter(is_verified=True).select_related("student")
-    data = []
-    salaries = []
-    
-    for job in jobs:
-        if job.student:
-            salary = job.salary
-            salaries.append(salary)
-            data.append({
-                "Sr. No.": len(data) + 1,
-                "Department": job.student.department,
-                "UID": job.student.uid,
-                "Student Name": job.student.user.full_name if job.student.user else "",
-                "Start Date": job.start_date.strftime("%d/%m/%Y"),
-                "Completion Date": job.completion_date.strftime("%d/%m/%Y"),
-                "Company Name": job.company_name or "In House",
-                "Stipend": f"₹{salary:,.2f}"
-            })
-    
-    # Calculate statistics
-    if salaries:
-        maximum = max(salaries)
-        minimum = min(salaries)
-        average = sum(salaries) / len(salaries)
-        
-        # Calculate median
-        sorted_salaries = sorted(salaries)
-        mid = len(sorted_salaries) // 2
-        median = (sorted_salaries[mid] + sorted_salaries[~mid]) / 2
-        
-        # Statistics data
-        stats_data = [
-            ["", "Stipend offered"],
-            ["Maximum", f"₹{maximum:,.2f}"],
-            ["Minimum", f"₹{minimum:,.2f}"],
-            ["Average", f"₹{average:,.2f}"],
-            ["Median", f"₹{median:,.2f}"]
-        ]
-    else:
-        stats_data = [["No data available"]]
-    
-    # Create DataFrame and Excel file
-    df = pd.DataFrame(data)
-    stats_df = pd.DataFrame(stats_data)
-    excel_file = io.BytesIO()
-    
-    with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
-        # Write main report
-        df.to_excel(writer, index=False, sheet_name='Internship Report')
-        
-        # Write statistics
-        stats_df.to_excel(writer, index=False, header=False, sheet_name='Statistics')
-        
-        # Auto-adjust columns' width for main report
-        for sheet_name in ['Internship Report', 'Statistics']:
-            worksheet = writer.sheets[sheet_name]
-            if sheet_name == 'Internship Report':
-                df_to_adjust = df
-            else:
-                df_to_adjust = stats_df
-                
-            for idx, col in enumerate(df_to_adjust.columns):
-                max_length = max(
-                    df_to_adjust[col].astype(str).apply(len).max(),
-                    len(str(col))
-                )
-                worksheet.column_dimensions[chr(65 + idx)].width = max_length + 2
-    
-    excel_file.seek(0)
-    
-    response = HttpResponse(
-        excel_file.read(),
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-    response['Content-Disposition'] = 'attachment; filename=internship_report.xlsx'
-    
-    return response

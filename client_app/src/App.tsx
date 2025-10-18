@@ -15,7 +15,6 @@ import Session from "./pages/program_coordinator/Session";
 import Upload from "./pages/program_coordinator/Upload";
 import Attendance from "./pages/program_coordinator/Attendance";
 import StudentLayout from "./pages/student/student_layout";
-import StudentHome from "./pages/student";
 import SessionAttendance from "./pages/student/SessionAttendance";
 import ConsentForm from "./pages/student/ConsentForm";
 import PliForm from "./pages/student/PliForm";
@@ -30,7 +29,6 @@ import FacultyHome from "./pages/faculty_coordinator/FacultyHome";
 import FacultyTablePage from "./pages/faculty_coordinator/FacultyAttendanceTable";
 import DepartmentParent from "./pages/department_coordinator/DepartmentParent";
 import DepartmentDashboard from "./pages/department_coordinator/DepartmentHome";
-import DepartmentStats from "./pages/department_coordinator/DepartmentStats";
 import DepartmentAttendance from "./pages/department_coordinator/DepartmentAttendance";
 import PlacementLayout from "./pages/placement_officer/PlacementLayout";
 import CompanyRegistrationForm from "./pages/placement_officer/CompanyRegisteration";
@@ -52,19 +50,16 @@ import InternShipVerify from "./pages/internship_officer/InternShipVerify";
 import InternshipReport from "./pages/internship_officer/internship_report";
 import InternshipStats from "./pages/internship_officer/Stats";
 import OnePageReport from "./pages/internship_officer/OnePageReport";
-import JobAcceptance from "./pages/student/JobAcceptance";
 import PrincipalLayout from "./pages/principal/PrincipalLayout";
 import StaffLayout from "./pages/staff/StaffLayout";
 import StaffNotice from "./pages/staff/StaffNotice";
-import CreateResource from "./pages/resources/create-resource";
-import ResourceList from "./pages/resources/resource-list";
-import ResourceDetail from "./pages/resources/resource-details";
-import PlacementSummary from "./pages/student/PlacementSummary";
-import UploadInhouseInternship from "./pages/department_coordinator/UploadInhouseInternship";
 import CategoryRuleForm from "./pages/placement_officer/CategoryRuleForm";
 import CategoryRuleList from "./pages/placement_officer/CategoryRuleList";
 import StudentByCategory from "./pages/placement_officer/StudentByCategory";
-import DepartmentStudentData from "./pages/department_coordinator/DepartmentStudentData";
+import PlacementCompany from "./pages/staff/placement_company";
+import CompanyPage from "./pages/staff/placement_companies_view";
+import ViewCompanyInfo from "./pages/staff/view-company-info";
+import EditCompanyInfo from "./pages/staff/edit-comapny-info";
 
 const App = () => {
   const setUser = useSetAtom(authAtom);
@@ -107,18 +102,10 @@ const App = () => {
           <Route index element={<ProgramHome />} />
         </Route>
         <Route path="/student" element={<StudentLayout />}>
-          <Route index element={<StudentHome />} />
-          <Route path="consent/:id" element={<ConsentForm />} />
-          <Route path="pli/:id" element={<PliForm />} />
           <Route path="session-attendance" element={<SessionAttendance />} />
-          <Route path="info" element={<StudentPersonalInfo />} />
+          <Route index element={<StudentPersonalInfo />} />
           <Route path="resume" element={<Resume />} />
           <Route path="resume-preview" element={<ResumePreview />} />
-          <Route path="job-acceptance" element={<JobAcceptance />} />
-          <Route path="placement-summary" element={<PlacementSummary />} />
-          <Route path="resources" element={<ResourceList />} />
-          <Route path="resources/:id" element={<ResourceDetail />} />
-
           <Route
             path="placement/registration/:id"
             element={<PlacementRegistration />}
@@ -135,12 +122,9 @@ const App = () => {
         <Route path="/faculty_coordinator" element={<FacultyLayout />}>
           <Route index element={<FacultyHome />} />
           <Route path="attendance" element={<FacultyTablePage />} />
-          <Route path="resource/create" element={<CreateResource />} />
         </Route>
         <Route path="/department_coordinator" element={<DepartmentParent />}>
           <Route index element={<DepartmentDashboard />} />
-          <Route path="student-data" element={<DepartmentStudentData />} />
-          <Route path="stats" element={<DepartmentStats />} />
           <Route path="attendance" element={<DepartmentAttendance />} />
           <Route path="upload-inhouse-internship" element={<UploadInhouseInternship />} />
         </Route>
@@ -194,6 +178,10 @@ const App = () => {
         </Route>
         <Route path="/staff" element={<StaffLayout />}>
           <Route index element={<StaffNotice />} />
+          <Route path="placement_companies" element={<CompanyPage />} />
+          <Route path="placement_companies/register" element={<PlacementCompany />} />
+          <Route path="placement_companies/view" element={<ViewCompanyInfo />} />
+          <Route path="placement_companies/edit" element={<EditCompanyInfo />} />
           <Route
             path="placement/register"
             element={<CompanyRegistrationForm />}
@@ -207,7 +195,10 @@ const App = () => {
         </Route>
         <Route path="/category-rule-form" element={<CategoryRuleForm />} />
         <Route path="/category-rules/list" element={<CategoryRuleList />} />
-        <Route path="/category-rules/students/:category/:batch" element={<StudentByCategory />} />
+        <Route
+          path="/category-rules/students/:category/:batch"
+          element={<StudentByCategory />}
+        />
       </Routes>
     </BrowserRouter>
   );

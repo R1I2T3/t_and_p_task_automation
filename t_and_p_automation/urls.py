@@ -38,14 +38,12 @@ urlpatterns = (
         path("api/faculty_coordinator/", include("faculty_coordinator.urls")),
         path("api/logout/", views.logout_api, name="logout"),
         path("profile", user_profile, name="user_profile"),
-        path('api/resources/', include('resources.urls')),
         path(
             "profile/update_password",
             password_update,
             name="user_profile_update_password",
         ),
-        path("", views.index),
-        re_path(r"^(?!static/|media/).*$", views.index),
+        path("api/staff/", include("staff.urls")),
     ]
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

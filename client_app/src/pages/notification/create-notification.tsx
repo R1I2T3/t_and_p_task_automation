@@ -14,6 +14,7 @@ import { getCookie } from "@/utils";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import toast from "react-hot-toast";
+import "./create-notification.css";
 
 const CreateNotification = () => {
   const [title, setTitle] = useState("");
@@ -22,11 +23,14 @@ const CreateNotification = () => {
   const [error, setError] = useState("");
   const [year, setYear] = useState<string[]>(["FE"]);
   const [branch, setBranch] = useState<string[]>(["IT"]);
-  const [expiration, setExpiration] = useState("");
-  const [formType, setFormType] = useState("consent");
-  const [generateLink, setGenerateLink] = useState(false); // 🆕 checkbox toggle
+  const [type_notification, setType_notification] = useState<string>("General");
 
+  // Added missing state for optional form link and expiration
+  const [generateLink, setGenerateLink] = useState<boolean>(false);
+  const [formType, setFormType] = useState<string>("consent");
   const formTypeOptions = ["consent", "pli", "survey"];
+  const [expiration, setExpiration] = useState<string>("");
+
   const year_options = ["FE", "SE", "TE", "BE"];
   const branch_options = [
     "Computer",
@@ -38,7 +42,13 @@ const CreateNotification = () => {
     "AI&DS",
     "MME",
   ];
-
+  const type_notification_options = [
+    "General",
+    "Training",
+    "Placement",
+    "Internship",
+    "Resource",
+  ];
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData();
@@ -46,7 +56,7 @@ const CreateNotification = () => {
     formData.append("message", message);
     formData.append("academic_year", year.join(","));
     formData.append("department", branch.join(","));
-    if (generateLink) formData.append("form_type", formType); // 🆕 only if checked
+    formData.append("type_notification", type_notification);
     if (files) formData.append("files", files);
     if (expiration) formData.append("expires_at", new Date(expiration).toISOString());
 
@@ -71,9 +81,17 @@ const CreateNotification = () => {
     const { value } = e.target;
     setYear(typeof value === "string" ? value.split(",") : value);
   };
-
-  const handleDepartmentChange = (e: SelectChangeEvent<typeof year_options>) => {
-    const { value } = e.target;
+  const handleTypeChange = (
+    event: SelectChangeEvent<typeof type_notification_options>
+  ) => {
+    setType_notification(event.target.value as string);
+  };
+  const handleDepartmentChange = (
+    e: SelectChangeEvent<typeof year_options>
+  ) => {
+    const {
+      target: { value },
+    } = e;
     setBranch(typeof value === "string" ? value.split(",") : value);
   };
 
@@ -161,13 +179,33 @@ const CreateNotification = () => {
               </MenuItem>
             ))}
           </Select>
-
+          <Select
+            className="w-full mb-2"
+            value={[type_notification]}
+            renderValue={(selected) => selected.join(", ")}
+            onChange={handleTypeChange}
+          >
+            {type_notification_options.map((type, index) => (
+              <MenuItem key={index} value={type}>
+                {type}
+              </MenuItem>
+            ))}
+          <label htmlFor="file-input" className="file-label">
+            <Button variant="outlined" component="span">
+              {files ? "Change file" : "Upload file"}
+            </Button>
+          </label>
           <input
+            id="file-input"
             type="file"
+            title="Choose file to upload"
+            placeholder="Choose a file"
+            aria-label="File upload"
             onChange={(e) => {
               if (e.target.files) setFiles(e.target.files[0]);
             }}
-            style={{ margin: "20px 0" }}
+            className="file-input"
+          />
           />
 
           {error && <Typography color="error">{error}</Typography>}

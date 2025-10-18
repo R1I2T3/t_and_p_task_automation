@@ -17,9 +17,9 @@ const Sidebar = () => {
           <NotebookPen />
           <p>Notice Creation</p>
         </NavLink>
-        <NavLink to="placement/register" className="menu-item gap-3">
+        <NavLink to="placement_companies" className="menu-item gap-3">
           <Building2 />
-          <p>Placement Company Form</p>
+          <p>Placement Companies</p>
         </NavLink>
         <NavLink to="internship/register" className="menu-item gap-3">
           <Building2 />

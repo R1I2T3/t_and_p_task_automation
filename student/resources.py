@@ -23,7 +23,6 @@ class StudentResource(resources.ModelResource):
             "dob",
             "contact",
             "personal_email",
-            "is_student_coordinator",
             "tenth_grade",
             "higher_secondary_grade",
             "card",

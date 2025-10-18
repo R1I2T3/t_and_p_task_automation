@@ -5,25 +5,28 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from django.db.models import Sum
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from .models import (
     User,
     Student,
     AcademicAttendanceSemester,
     TrainingAttendanceSemester,
     Resume,
+    StudentPlacementAppliedCompany,
+    PlacementCompanyProgress
 )
 from .serializers import (
-    AcademicAttendanceSemesterSerializer,
-    TrainingAttendanceSemesterSerializer,
-    StudentSerializer,
     ResumeSerializer,
     SessionAttendanceSerializer,
     StudentConsentUpdateSerializer,
     StudentPliUpdateSerializer,
 )
-from notifications.models import Notification
-from program_coordinator_api.models import AttendanceData  # Import model from another app
-from .utils import categorize
+
+from program_coordinator_api.models import (
+    AttendanceData,
+)
+from .utils import categorize,is_student_eligible
+from staff.models import CompanyRegistration,JobOffer
 
 from datetime import datetime
 from rest_framework import status
@@ -97,12 +100,17 @@ class SessionAttendanceAPIView(APIView):
     def get(self, request):
         try:
             student = Student.objects.get(user=request.user)  # Get student object
-            attendance_data = AttendanceData.objects.filter(uid=student.uid)  # Fetch attendance data
-            
-            serializer = SessionAttendanceSerializer(attendance_data, many=True)  # Serialize data
+            attendance_data = AttendanceData.objects.filter(
+                uid=student.uid
+            )  # Fetch attendance data
+
+            serializer = SessionAttendanceSerializer(
+                attendance_data, many=True
+            )  # Serialize data
             return Response(serializer.data)  # Return JSON response
         except Student.DoesNotExist:
             return Response({"error": "Student not found"}, status=404)
+
 
 class HomeAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -153,28 +161,36 @@ class SdPAPIView(APIView):
 
         student = Student.objects.get(user=request.user)
 
-        academic_attendance_sum = student.academic_attendance.aggregate(Sum("attendance")).get("attendance__sum")  # type: ignore
+        academic_attendance_sum = student.academic_attendance.aggregate(
+            Sum("attendance")
+        ).get("attendance__sum")  # type: ignore
         academic_attendance = (
             academic_attendance_sum / student.academic_attendance.count()
             if academic_attendance_sum is not None
             else None
         )
 
-        academic_performance_sum = student.academic_performance.aggregate(Sum("performance")).get("performance__sum")  # type: ignore
+        academic_performance_sum = student.academic_performance.aggregate(
+            Sum("performance")
+        ).get("performance__sum")  # type: ignore
         academic_performance = (
             academic_performance_sum / student.academic_performance.count()
             if academic_performance_sum is not None
             else None
         )
 
-        training_attendance_sum = student.training_attendance.aggregate(Sum("training_attendance")).get("training_attendance__sum")  # type: ignore
+        training_attendance_sum = student.training_attendance.aggregate(
+            Sum("training_attendance")
+        ).get("training_attendance__sum")  # type: ignore
         training_attendance = (
             training_attendance_sum / student.training_attendance.count()
             if training_attendance_sum is not None
             else None
         )
 
-        training_performance_sum = student.training_performance.aggregate(Sum("training_performance")).get("training_performance__sum")  # type: ignore
+        training_performance_sum = student.training_performance.aggregate(
+            Sum("training_performance")
+        ).get("training_performance__sum")  # type: ignore
         training_performance = (
             training_performance_sum / student.training_performance.count()
             if training_performance_sum is not None
@@ -186,6 +202,7 @@ class SdPAPIView(APIView):
             academic_performance,
             training_attendance,
             training_performance,
+            student.batch,
         )
 
         return JsonResponse(
@@ -239,4 +256,94 @@ class ResumeView(APIView):
         except Resume.DoesNotExist:
             return Response(
                 {"message": "Resume not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+class PlacementCompanyAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            try:
+                student = Student.objects.get(user=request.user)
+            except Student.DoesNotExist:
+                return Response(
+                    {"message": "You can't fill this form"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            data = request.data
+            interest = data.get("interest", "").strip().lower()
+            company_id = data.get("company_id")
+
+            if not company_id:
+                return Response(
+                    {"message": "Company ID is required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            company = get_object_or_404(CompanyRegistration, id=company_id)
+            if StudentPlacementAppliedCompany.objects.filter(student=student, company=company).exists():
+                return Response(
+                    {"message": "You have already responded for this company"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if interest in ["no", "false"]:
+                reason = data.get("reason", "").strip()
+                if not reason:
+                    return Response(
+                        {"message": "Please provide a reason"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                StudentPlacementAppliedCompany.objects.create(
+                    student=student,
+                    company=company,
+                    job_offer=None,
+                    interested=False,
+                    not_interested_reason=reason
+                )
+
+                return Response(
+                    {"message": "Response recorded"},
+                    status=status.HTTP_201_CREATED
+                )
+            offer_role = data.get("offer_role", "").strip()
+            if not offer_role:
+                return Response(
+                    {"message": "Offer role is required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            try:
+                offer = JobOffer.objects.get(form=company, role=offer_role)
+            except JobOffer.DoesNotExist:
+                return Response(
+                    {"message": "Invalid job offer role"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            is_eligible = is_student_eligible(student, company,offer)
+            if not is_eligible:
+                return Response(
+                    {"message": "You are not eligible for this company"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            applied=StudentPlacementAppliedCompany.objects.create(
+                student=student,
+                company=company,
+                job_offer=offer,
+                interested=True,
+                not_interested_reason=""
+            )
+            PlacementCompanyProgress.objects.get_or_create(
+                application=applied
+            )
+            return Response(
+                {"message": "You are registered"},
+                status=status.HTTP_201_CREATED
+            )
+
+        except Exception as e:
+            print(f"[ERROR] PlacementCompanyAPIView: {e}")
+            return Response(
+                {"message": "Internal Server Error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

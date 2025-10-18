@@ -1,43 +1,6 @@
-import numpy as np
+from student.models import Student
 
-
-def categorize(
-    academic_attendance,
-    academic_performance,
-    training_attendance,
-    training_performance,
-    batch,
-):
-    from placement_officer.models import CategoryRule
-
-    if any(
-        x is None or np.isnan(x)
-        for x in [
-            academic_attendance,
-            academic_performance,
-            training_attendance,
-            training_performance,
-        ]
-    ):
-        return "Category_NA"
-
-    # Get all rules for the batch, ordered by category
-    rules = CategoryRule.objects.filter(batch=batch).order_by("category")
-
-    # Check each category rule in order
-    for rule in rules:
-        if (
-            academic_attendance >= rule.minimum_academic_attendance
-            and academic_performance >= rule.minimum_academic_performance
-            and training_attendance >= rule.minimum_training_attendance
-            and training_performance >= rule.minimum_training_performance
-        ):
-            return rule.category
-
-    # If no rules match, return the lowest category
-    return "Category_4"
-
-def is_student_eligible(student, company,offer):
+def is_student_eligible(student, company):
     if (
         float(student.tenth_grade or 0) < float(company.min_tenth_marks)
         or float(student.higher_secondary_grade or 0) < float(company.min_higher_secondary_marks)
@@ -60,7 +23,9 @@ def is_student_eligible(student, company,offer):
         return False
     if student.student_offers.filter(status="joined", offer_type="AEDP_PLI").exists():
         return False
-    job_offers = [offer]
+    job_offers = company.job_offers.all()
+    if not job_offers.exists():
+        return False
     category = student.current_category
     accepted_offers = student.student_offers.filter(status__in=["accepted", "joined"])
 
@@ -70,7 +35,6 @@ def is_student_eligible(student, company,offer):
         elif s < 10:
             return "mid"
         return "high"
-
     for job_offer in job_offers:
         try:
             salary = float(job_offer.salary)
@@ -109,3 +73,23 @@ def is_student_eligible(student, company,offer):
             return True
     return False
 
+
+def get_eligible_students(company):
+
+    students = Student.objects.filter(
+        batch=company.batch,
+        academic_year="BE",
+        is_blacklisted=False,
+    )
+    if company.selected_departments:
+        students = students.filter(department__in=company.selected_departments)
+    if not company.accepted_kt:
+        students = students.filter(is_kt=False)
+
+    eligible_students = []
+    students = students.select_related("user").prefetch_related("student_offers")
+    for student in students:
+        if is_student_eligible(student, company):
+            eligible_students.append(student.id)
+
+    return eligible_students

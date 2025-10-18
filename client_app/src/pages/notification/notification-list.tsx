@@ -7,8 +7,10 @@ import {
   CardContent,
   CardActionArea,
   Box,
-  Chip,
-  Divider,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import axios from "axios";
 
@@ -18,11 +20,21 @@ interface NotificationProps {
   message: string;
   creator_name: string;
   created_at: string;
-  expires_at?: string;
+  type_notification: string;
 }
+
+const type_notification_options = [
+  "All",
+  "General",
+  "Training",
+  "placement",
+  "Internship",
+  "Resource",
+];
 
 const NotificationList = () => {
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
+  const [selectedType, setSelectedType] = useState<string>("All");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,11 +58,11 @@ const NotificationList = () => {
     navigate(`/notifications/${id}`);
   };
 
-  const isExpired = (expiresAt?: string) =>
-    expiresAt && new Date(expiresAt) < new Date();
-
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("en-GB"); // DD/MM/YYYY
+  // filter based on type
+  const filteredNotifications =
+    selectedType === "All"
+      ? notifications
+      : notifications.filter((n) => n.type_notification === selectedType);
 
   return (
     <Box
@@ -76,10 +88,24 @@ const NotificationList = () => {
         Notifications
       </Typography>
 
-      {notifications.length === 0 ? (
-        <Typography variant="body1" sx={{ mt: 3 }}>
-          No notifications available.
-        </Typography>
+      {/* Filter dropdown */}
+      <FormControl sx={{ mb: 3, minWidth: 200 }}>
+        <InputLabel id="type-select-label">Filter by Type</InputLabel>
+        <Select
+          labelId="type-select-label"
+          value={selectedType}
+          onChange={(e) => setSelectedType(e.target.value)}
+        >
+          {type_notification_options.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      {filteredNotifications.length === 0 ? (
+        <Typography variant="body1">No notifications available.</Typography>
       ) : (
         <Grid
           container
@@ -87,7 +113,7 @@ const NotificationList = () => {
           direction="column"
           sx={{ maxWidth: "600px", width: "100%" }}
         >
-          {notifications.map((notification) => (
+          {filteredNotifications.map((notification) => (
             <Grid item key={notification.id}>
               <Card sx={{ boxShadow: 4, borderRadius: 2 }}>
                 <CardActionArea
@@ -136,16 +162,12 @@ const NotificationList = () => {
                     >
                       Created at: {formatDate(notification.created_at)}
                     </Typography>
-
-                    {notification.expires_at && (
-                      <Typography
-                        variant="caption"
-                        color="textSecondary"
-                        display="block"
-                      >
-                        Expires on: {formatDate(notification.expires_at)}
-                      </Typography>
-                    )}
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block", mt: 1, fontWeight: "bold" }}
+                    >
+                      Type: {notification.type_notification}
+                    </Typography>
                   </CardContent>
                 </CardActionArea>
               </Card>

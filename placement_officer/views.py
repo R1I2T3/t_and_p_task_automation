@@ -371,10 +371,8 @@ def list_category_rules(request):
 @permission_classes([IsAuthenticated])
 def students_by_category(request, category, batch):
     try:
-        # Normalize category: replace space with underscore and ensure consistent case
-        normalized_category = category.replace("_", " ").title()
-        students = Student.objects.filter(current_category=normalized_category, batch=batch)
-        student_data = students.values('uid', 'department', 'academic_year', 'current_category', 'batch', 'consent', 'contact')
-        return Response(list(student_data))
+        students = Student.objects.filter(current_category=category, batch=batch)
+        student_data = students.values('id', 'current_category', 'academic_year')
+        return Response(list(student_data))  # Convert ValuesQuerySet to list
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -37,15 +37,8 @@ class NotificationListCreate(generics.ListCreateAPIView):
                 message=message,
                 creator=request.user,
                 files=request.FILES.get("files", None),
-                expires_at=expires_at,
+                type_notification=request.data.get("type_notification", "message"),
             )
-
-            form_type = request.data.get("form_type")
-            if form_type:
-                base_url = "http://localhost:8000" 
-                dynamic_link = f"{base_url}/student/{form_type}/{notification.id}"
-                notification.link = dynamic_link
-                notification.save(update_fields=["link"])
 
             student_query = Student.objects.all()
 
