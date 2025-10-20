@@ -1,9 +1,9 @@
 import React from 'react'
 
-const ViewCompanyInfo = () => {
+const ViewCompanyForm = () => {
   return (
-    <div>ViewCompanyInfo</div>
+    <div>ViewCompanyForm</div>
   )
 }
 
-export default ViewCompanyInfo
+export default ViewCompanyForm
