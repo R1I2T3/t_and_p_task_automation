@@ -16,7 +16,7 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include, re_path
+from django.urls import path, include
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
@@ -29,7 +29,6 @@ urlpatterns = (
         path("auth/", include("base.urls")),
         path("api/placement_officer/", include("placement_officer.urls")),
         path("api/training_officer/", include("training_officer.urls")),
-        path("api/placement/", include("placement_api.urls")),
         path("api/", views.my_protected_view, name="check-auth"),
         path("api/notifications/", include("notifications.urls")),
         path("api/program_coordinator/", include("program_coordinator_api.urls")),

@@ -103,10 +103,10 @@ class PaginatedInterestedStudentsView(generics.ListAPIView):
     def get_queryset(self):
         company_id = self.kwargs["company_id"]
         company = get_object_or_404(CompanyRegistration, id=company_id)
-
-        return StudentPlacementAppliedCompany.objects.filter(
+        result = StudentPlacementAppliedCompany.objects.filter(
             company=company, interested=True
-        ).select_related("student__department", "progress")
+        ).select_related("application")
+        return result
 
 
 class PaginatedNotInterestedStudentsView(generics.ListAPIView):
@@ -119,7 +119,7 @@ class PaginatedNotInterestedStudentsView(generics.ListAPIView):
 
         return StudentPlacementAppliedCompany.objects.filter(
             company=company, interested=False
-        ).select_related("student__department")
+        )
 
 
 class EligibleButNotRegisteredView(generics.ListAPIView):
@@ -142,7 +142,7 @@ class EligibleButNotRegisteredView(generics.ListAPIView):
 
         return Student.objects.filter(
             id__in=eligible_not_registered_ids
-        ).select_related("department")
+        )
 
 
 class BulkUpdateProgressView(APIView):
@@ -253,6 +253,7 @@ class TriggerResumeExportView(APIView):
             {"task_id": task.id},
             status=status.HTTP_202_ACCEPTED
         )
+
 class GetTaskStatusView(APIView):
     def get(self, request, task_id, *args, **kwargs):
         result = AsyncResult(task_id)

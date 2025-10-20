@@ -67,13 +67,22 @@ class FormDataSerializer(serializers.ModelSerializer):
 
 
 class BasicStudentSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source='user.email', read_only=True)
+    full_name = serializers.CharField(source='user.full_name', read_only=True)
+    role = serializers.CharField(source='user.role', read_only=True)
+    is_superuser = serializers.BooleanField(source='user.is_superuser', read_only=True)
+    is_staff = serializers.BooleanField(source='user.is_staff', read_only=True)
+
     class Meta:
         model = Student
         fields = [
-            'id', 'uid', 'first_name', 'last_name', 'personal_email',
-            'contact', 'department', 'cgpa'
+            'email', 'full_name', 'role', 'is_superuser', 'is_staff',
+            'id', 'uid', 'department', 'academic_year', 'current_category',
+            'is_dse_student', 'gender', 'dob', 'contact', 'personal_email',
+            'tenth_grade', 'higher_secondary_grade', 'card', 'consent',
+            'batch', 'cgpa', 'attendance', 'is_kt', 'is_blacklisted',
+            'joined_company',
         ]
-
 class PlacementCompanyProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = PlacementCompanyProgress
@@ -82,7 +91,7 @@ class PlacementCompanyProgressSerializer(serializers.ModelSerializer):
 class InterestedStudentApplicationSerializer(serializers.ModelSerializer):
     student = BasicStudentSerializer(read_only=True)
 
-    progress = PlacementCompanyProgressSerializer(read_only=True)
+    progress = PlacementCompanyProgressSerializer(source="application", read_only=True)
     application_id = serializers.UUIDField(source='id')
 
     class Meta:

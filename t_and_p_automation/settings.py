@@ -58,7 +58,6 @@ INSTALLED_APPS = [
     "department_coordinator",
     "placement_officer",
     "training_officer",
-    "placement_api",
     "notifications",
     "program_coordinator_api",
     "internship_api",
