@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router";
+import { QueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import Home from "./pages/home";
 import { getCookie } from "./utils";
@@ -54,6 +55,7 @@ import PlacementCompany from "./pages/staff/placement_company";
 import CompanyPage from "./pages/staff/placement_companies_view";
 import ViewCompanyInfo from "./pages/staff/view-company-info";
 import EditCompanyInfo from "./pages/staff/edit-comapny-info";
+import { QueryClientProvider } from "@tanstack/react-query";
 
 const App = () => {
   const setUser = useSetAtom(authAtom);
@@ -76,7 +78,9 @@ const App = () => {
     };
     onAuthenticate();
   }, []);
+  const queryClient = new QueryClient();
   return (
+    <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -183,6 +187,7 @@ const App = () => {
         />
       </Routes>
     </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 

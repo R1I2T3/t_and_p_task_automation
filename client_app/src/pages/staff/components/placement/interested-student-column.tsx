@@ -30,26 +30,32 @@ export const interestedStudentColumns: ColumnDef<InterestedStudentApplication>[]
       enableHiding: false,
     },
     {
+      id:'uid',
       accessorKey: "student.uid",
       header: "UID",
     },
     {
+      id: 'name',
       header: "Name",
       accessorKey: "student.full_name",
     },
     {
+      id: 'email',
       accessorKey: "student.personal_email",
       header: "Email",
     },
     {
+      id: 'department',
       accessorKey: "student.department",
       header: "Department",
     },
     {
+      id: 'cgpa',
       accessorKey: "student.cgpa",
       header: "CGPA",
     },
     {
+      id: 'aptitude_test',
       accessorKey: "progress.aptitude_test",
       header: "Aptitude",
       cell: ({ row }) => {
@@ -62,6 +68,7 @@ export const interestedStudentColumns: ColumnDef<InterestedStudentApplication>[]
       },
     },
     {
+      id: 'coding_test',
       accessorKey: "progress.coding_test",
       header: "Coding",
       cell: ({ row }) => {
@@ -74,6 +81,7 @@ export const interestedStudentColumns: ColumnDef<InterestedStudentApplication>[]
       },
     },
     {
+      id: 'group_discussion',
       accessorKey: "progress.gd",
       header: "Group Discussion",
       cell: ({ row }) => {
@@ -86,6 +94,7 @@ export const interestedStudentColumns: ColumnDef<InterestedStudentApplication>[]
       },
     },
     {
+      id: 'technical_interview',
       accessorKey: "progress.technical_interview",
       header: "Technical",
       cell: ({ row }) => {
@@ -98,6 +107,7 @@ export const interestedStudentColumns: ColumnDef<InterestedStudentApplication>[]
       },
     },
     {
+      id: 'hr_interview',
       accessorKey: "progress.hr_interview",
       header: "HR",
       cell: ({ row }) => {
@@ -110,6 +120,7 @@ export const interestedStudentColumns: ColumnDef<InterestedStudentApplication>[]
       },
     },
     {
+      id: 'final_result',
       accessorKey: "progress.final_result",
       header: "Final Result",
       cell: ({ row }) => {

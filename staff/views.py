@@ -131,7 +131,6 @@ class EligibleButNotRegisteredView(generics.ListAPIView):
         company = get_object_or_404(CompanyRegistration, id=company_id)
 
         eligible_student_ids = set(get_eligible_students(company))
-
         registered_student_ids = set(
             StudentPlacementAppliedCompany.objects.filter(company=company).values_list(
                 "student_id", flat=True
@@ -139,7 +138,6 @@ class EligibleButNotRegisteredView(generics.ListAPIView):
         )
 
         eligible_not_registered_ids = eligible_student_ids - registered_student_ids
-
         return Student.objects.filter(
             id__in=eligible_not_registered_ids
         )

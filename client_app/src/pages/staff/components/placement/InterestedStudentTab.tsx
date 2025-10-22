@@ -4,8 +4,6 @@ import { XCircle } from "lucide-react";
 import {
   useQuery,
   useQueryClient,
-  QueryClient,
-  QueryClientProvider,
 } from "@tanstack/react-query";
 import {
   PaginationState,
@@ -32,10 +30,8 @@ const fetchStudents = async (
     throw new Error("Network response was not ok");
   }
   const data = await response.json();
-  console.log("Fetched data:", data);
   return data;
 };
-const queryClient = new QueryClient();
 
 function InterestedStudentsTabContent({ companyId }: { companyId: string }) {
   const queryClient = useQueryClient(); // Get client from context
@@ -55,7 +51,6 @@ function InterestedStudentsTabContent({ companyId }: { companyId: string }) {
     queryFn: () =>
       fetchStudents(companyId, pagination.pageIndex, pagination.pageSize),
   });
-  console.log("Query data:", data);
   const selectedApplicationIds = Object.keys(rowSelection)
     .map((index) => data?.results[Number(index)]?.application_id)
     .filter(Boolean);
@@ -107,8 +102,6 @@ function InterestedStudentsTabContent({ companyId }: { companyId: string }) {
 
 export function InterestedStudentsTab({ companyId }: { companyId: string }) {
   return (
-    <QueryClientProvider client={queryClient}>
       <InterestedStudentsTabContent companyId={companyId} />
-    </QueryClientProvider>
   );
 }

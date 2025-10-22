@@ -4,9 +4,10 @@ import {
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  Table as ReactTable, // Renamed to avoid conflict
+  getFilteredRowModel,
+  Table as ReactTable,
 } from "@tanstack/react-table";
-
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination } from "./data-table-pagination";
 import { Loader2 } from "lucide-react";
-
+import { Input } from "./ui/input";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -25,7 +26,13 @@ interface DataTableProps<TData, TValue> {
   // Add all the other props from useReactTable
   [key: string]: any;
 }
-
+import {
+  Select,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+} from "./ui/select";
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -37,12 +44,38 @@ export function DataTable<TData, TValue>({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
     ...props,
   });
-
+  const [selectedColumn, setSelectedColumn] = useState<string>("uid");
   return (
     <div>
       <div className="rounded-md border">
+        <div className="flex items-center p-4 gap-4">
+          <Select value={selectedColumn} onValueChange={setSelectedColumn}>
+            <SelectTrigger className="w-[180px] text-black bg-black/10 mb-2">
+              <SelectValue placeholder="Select Column" />
+            </SelectTrigger>
+            <SelectContent>
+              {table
+                .getAllLeafColumns()
+                .filter((col) => col.getCanFilter?.() ?? true)
+                .map((col) => (
+                  <SelectItem key={col.id} value={col.id as string}>
+                    {String(col.columnDef.header)}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+          <Input
+            placeholder={`Filter ${selectedColumn}...`}
+            value={(table.getColumn(selectedColumn)?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn(selectedColumn)?.setFilterValue(event.target.value)
+            }
+            className="w-[260px] text-black mb-2"
+          />
+        </div>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

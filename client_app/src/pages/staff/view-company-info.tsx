@@ -1,8 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InterestedStudentsTab } from "./components/placement/InterestedStudentTab";
 import { useSearchParams } from "react-router";
-// import { NotInterestedStudentsTab } from "./placement-components/NotInterestedStudentsTab";
-// import { EligibleStudentsTab } from "./placement-components/EligibleStudentsTab";
+import  NotInterestedStudentsTab  from "./components/placement/NotInterestedStudentsTab";
+import EligibleStudentsTab  from "./components/placement/EligibleStudentsTab";
 
 export default function ViewCompanyForm() {
   const [searchParams] = useSearchParams();
@@ -22,11 +22,11 @@ export default function ViewCompanyForm() {
         </TabsContent>
 
         <TabsContent value="not-interested">
-          {/* <NotInterestedStudentsTab companyId={companyId} /> */}
+          <NotInterestedStudentsTab companyId={companyId} />
         </TabsContent>
 
         <TabsContent value="eligible">
-          {/* <EligibleStudentsTab companyId={companyId} /> */}
+          <EligibleStudentsTab companyId={companyId} />
         </TabsContent>
       </Tabs>
     </div>
