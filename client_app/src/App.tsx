@@ -29,15 +29,12 @@ import DepartmentParent from "./pages/department_coordinator/DepartmentParent";
 import DepartmentDashboard from "./pages/department_coordinator/DepartmentHome";
 import DepartmentAttendance from "./pages/department_coordinator/DepartmentAttendance";
 import PlacementLayout from "./pages/placement_officer/PlacementLayout";
-import CompanyRegistrationForm from "./pages/placement_officer/CompanyRegisteration";
-import NoticeCreationForm from "./pages/placement_officer/NoticeCreation";
 import PlacementReport from "./pages/placement_officer/PlacementReport";
 import { CategoryDataStatistics } from "./pages/placement_officer/CategoryData";
 import { ComparativePlacementStatistics } from "./pages/placement_officer/ComparitivePlacementStatistic";
 import PlacementStats from "./pages/placement_officer";
 import Old from "./pages/placement_officer/Old";
 import JobVerification from "./pages/placement_officer/components/JobVerification";
-import PlacementAttendance from "./pages/placement_officer/PlacementAttendance";
 import TrainingLayout from "./pages/training_officer/TrainingLayout";
 import TrainingStats from "./pages/training_officer/TrainingStats";
 import TrainingNotice from "./pages/training_officer/TrainingNotice";
@@ -126,14 +123,8 @@ const App = () => {
         </Route>
         <Route path="/placement_officer" element={<PlacementLayout />}>
           <Route index element={<PlacementStats />} />
-          <Route
-            path="company_register"
-            element={<CompanyRegistrationForm />}
-          />
           <Route path="verify" element={<JobVerification />} />
-          <Route path="create_notice" element={<NoticeCreationForm />} />
           <Route path="report" element={<PlacementReport />} />
-          <Route path="attendance" element={<PlacementAttendance />} />
           <Route
             path="comparative_Placement_Statistics"
             element={
@@ -177,10 +168,6 @@ const App = () => {
           <Route path="placement_companies/register" element={<PlacementCompany />} />
           <Route path="placement_companies/view" element={<ViewCompanyInfo />} />
           <Route path="placement_companies/edit" element={<EditCompanyInfo />} />
-          <Route
-            path="placement/register"
-            element={<CompanyRegistrationForm />}
-          />
           <Route path="placement/verify" element={<JobVerification />} />
           <Route
             path="internship/register"

@@ -1,13 +1,11 @@
 import React from "react";
-import PlacementNotice from "../placement_officer/NoticeCreation";
 import InternshipNotice from "../internship_officer/InternShipNotice";
 import TrainingNotice from "../training_officer/TrainingNotice";
 import InfrastructureBooking from "./components/Infrastructure/InfraNotice";
 import DutyChart from "./components/DutyChart/DutyChart";
 const StaffNotice = () => {
-  const [noticeType, setNoticeType] = React.useState("placement");
+  const [noticeType, setNoticeType] = React.useState("internship");
   const noticeTypes = [
-    "placement",
     "internship",
     "training",
     "Infrastructure",
@@ -20,12 +18,12 @@ const StaffNotice = () => {
           <button
             onClick={() => setNoticeType(type)}
             className="border-white border-[2px] bg-orange-500"
+            key={type}
           >
             {type}
           </button>
         );
       })}
-      {noticeType === "placement" && <PlacementNotice />}
       {noticeType === "internship" && <InternshipNotice />}
       {noticeType === "training" && <TrainingNotice />}
       {noticeType === "Infrastructure" && <InfrastructureBooking />}

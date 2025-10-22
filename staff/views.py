@@ -151,7 +151,7 @@ class BulkUpdateProgressView(APIView):
         stage = request.data.get("stage")
         stage_status = request.data.get("status")
         final_result = request.data.get("final_result")
-
+        joined = request.data.get("joined")
         if not isinstance(application_ids, list) or not application_ids:
             return Response(
                 {"error": "application_ids must be a non-empty list."},
@@ -162,7 +162,7 @@ class BulkUpdateProgressView(APIView):
             with transaction.atomic():
                 applications = StudentPlacementAppliedCompany.objects.filter(
                     id__in=application_ids
-                ).select_related("student", "company", "job_offer", "progress")
+                ).select_related("student", "company", "job_offer", "application")
 
                 if not applications:
                     return Response(
@@ -181,17 +181,16 @@ class BulkUpdateProgressView(APIView):
 
                 if final_result:
                     update_data["final_result"] = final_result
-
-                if not update_data:
+                if not update_data and not joined:
+                    print(joined)
                     return Response(
                         {
                             "error": "No update data provided (stage/status or final_result)."
                         },
                         status=status.HTTP_400_BAD_REQUEST,
                     )
-
                 for app in applications:
-                    progress = app.progress
+                    progress = app.application
                     for field, value in update_data.items():
                         setattr(progress, field, value)
                     progress_records_to_update.append(progress)
@@ -207,10 +206,18 @@ class BulkUpdateProgressView(APIView):
                                 salary=app.job_offer.salary,
                                 role=app.job_offer.role,
                                 offer_type=offer_type,
-                                status="Pending",  # Default status
+                                status="offered",
                             )
                         )
-                if progress_records_to_update:
+                    if joined:
+                        StudentOffer.objects.update(
+                            student=app.student,
+                            company=app.company,
+                            status="joined",
+                        )
+                        app.student.joined_company = True
+                        app.student.save()
+                if progress_records_to_update and update_data:
                     PlacementCompanyProgress.objects.bulk_update(
                         progress_records_to_update, fields=update_data.keys()
                     )
@@ -228,9 +235,9 @@ class BulkUpdateProgressView(APIView):
             )
 
         except ValueError as e:
+            print("ValueError:", str(e))
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            # Catch other potential errors
             return Response(
                 {"error": f"An error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,

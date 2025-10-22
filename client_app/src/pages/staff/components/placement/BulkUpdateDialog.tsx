@@ -35,26 +35,12 @@ import { Loader2 } from "lucide-react";
 import { getCookie } from "@/utils";
 const formSchema = z
   .object({
-    updateType: z.enum(["stage", "result"]),
+    updateType: z.enum(["stage", "result","joined"]),
     stage: z.string().optional(),
     status: z.boolean().optional(),
     final_result: z.string().optional(),
+    joined: z.string().optional(),
   })
-  .refine(
-    (data) => {
-      if (data.updateType === "stage") {
-        return !!data.stage; // Stage must be selected
-      }
-      if (data.updateType === "result") {
-        return !!data.final_result; // Result must be selected
-      }
-      return true;
-    },
-    {
-      message: "Please select an option.",
-      path: ["stage"], // Show error on one of the fields
-    }
-  );
 
 interface BulkUpdateDialogProps {
   applicationIds: string[];
@@ -77,7 +63,6 @@ export function BulkUpdateDialog({
   });
 
   const updateType = form.watch("updateType");
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     const apiBody: {
@@ -85,15 +70,18 @@ export function BulkUpdateDialog({
       stage?: string;
       status?: boolean;
       final_result?: string;
+      joined?: string;
     } = { application_ids: applicationIds };
 
     if (values.updateType === "stage") {
       apiBody.stage = values.stage;
       apiBody.status = values.status;
-    } else {
+    } else if (values.updateType === "joined") {
+      apiBody.joined = "joined";
+    }
+     else {
       apiBody.final_result = values.final_result;
     }
-
     try {
       const csrfToken = getCookie("csrftoken");
       const response = await fetch("/api/staff/company/bulk-update-progress/", {
@@ -160,6 +148,7 @@ export function BulkUpdateDialog({
                     <SelectContent>
                       <SelectItem value="stage">Update a Stage</SelectItem>
                       <SelectItem value="result">Set Final Result</SelectItem>
+                      <SelectItem value="joined">Mark as Joined</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormItem>
@@ -186,6 +175,12 @@ export function BulkUpdateDialog({
                         <SelectContent>
                           <SelectItem value="aptitude_test">
                             Aptitude Test
+                          </SelectItem>
+                          <SelectItem value="coding_test">
+                            Coding Test
+                          </SelectItem>
+                          <SelectItem value="gd">
+                            Group Discussion
                           </SelectItem>
                           <SelectItem value="technical_interview">
                             Technical Interview
@@ -229,7 +224,7 @@ export function BulkUpdateDialog({
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="text-black">
                           <SelectValue placeholder="Select final result" />
                         </SelectTrigger>
                       </FormControl>

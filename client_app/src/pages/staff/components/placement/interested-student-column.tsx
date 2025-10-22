@@ -62,6 +62,54 @@ export const interestedStudentColumns: ColumnDef<InterestedStudentApplication>[]
       },
     },
     {
+      accessorKey: "progress.coding_test",
+      header: "Coding",
+      cell: ({ row }) => {
+        const passed = row.original.progress.coding_test;
+        return passed ? (
+          <Badge variant="default">Passed</Badge>
+        ) : (
+          <Badge variant="outline">Pending</Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "progress.gd",
+      header: "Group Discussion",
+      cell: ({ row }) => {
+        const passed = row.original.progress.gd;
+        return passed ? (
+          <Badge variant="default">Passed</Badge>
+        ) : (
+          <Badge variant="outline">Pending</Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "progress.technical_interview",
+      header: "Technical",
+      cell: ({ row }) => {
+        const passed = row.original.progress.technical_interview;
+        return passed ? (
+          <Badge variant="default">Passed</Badge>
+        ) : (
+          <Badge variant="outline">Pending</Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "progress.hr_interview",
+      header: "HR",
+      cell: ({ row }) => {
+        const passed = row.original.progress.hr_interview;
+        return passed ? (
+          <Badge variant="default">Passed</Badge>
+        ) : (
+          <Badge variant="outline">Pending</Badge>
+        );
+      },
+    },
+    {
       accessorKey: "progress.final_result",
       header: "Final Result",
       cell: ({ row }) => {

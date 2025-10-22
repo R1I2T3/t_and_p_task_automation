@@ -161,10 +161,10 @@ class Resume_Project(models.Model):
 
 class StudentOffer(models.Model):
     OFFER_STATUS_CHOICES = [
-        ("offered", "Offered"),      # Company offered the job
-        ("accepted", "Accepted"),    # Student accepted the job
-        ("rejected", "Rejected"),    # Student rejected the job
-        ("joined", "Joined"),        # Student joined the company
+        ("offered", "Offered"),
+        ("accepted", "Accepted"),
+        ("rejected", "Rejected"),
+        ("joined", "Joined"),
     ]
 
     OFFER_TYPE_CHOICES = [
@@ -257,6 +257,7 @@ class PlacementCompanyProgress(models.Model):
         StudentPlacementAppliedCompany,on_delete=models.CASCADE, related_name="application")
     registered = models.BooleanField(default=True)
     aptitude_test = models.BooleanField(default=False)
+    coding_test = models.BooleanField(default=False)
     technical_interview = models.BooleanField(default=False)
     hr_interview = models.BooleanField(default=False)
     gd = models.BooleanField(default=False)

@@ -15,6 +15,8 @@ export interface Student {
 
 export interface PlacementProgress {
   aptitude_test: boolean;
+  coding_test: boolean;
+  gd: boolean;
   technical_interview: boolean;
   hr_interview: boolean;
   final_result: "Pending" | "Selected" | "Rejected";
