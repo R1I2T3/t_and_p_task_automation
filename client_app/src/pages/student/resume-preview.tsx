@@ -1,14 +1,12 @@
 import { useEffect, useState, useRef } from "react";
-import { Box, Button, Container, CircularProgress, Alert } from "@mui/material";
 import { PrinterIcon } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getCookie } from "../../utils";
 import { ResumeData } from "./types";
-import { ResumeHeader } from "./components/resume/ResumeHeader";
-import { EducationSection } from "./components/resume/Education";
-import { WorkExperienceSection } from "./components/resume/WorkExperience";
-import { ProjectsSection } from "./components/resume/ProjectSection";
-import { SkillsSection } from "./components/resume/SkillSection";
+import ResumeDisplay from "./components/resume/ResumeDisplay";
+
 const ResumePreview = () => {
   const [resumeData, setResume] = useState<ResumeData>();
   const [loading, setLoading] = useState(true);
@@ -45,68 +43,41 @@ const ResumePreview = () => {
 
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <Alert severity="error">{error}</Alert>
-      </Box>
+      <div className="flex justify-center items-center min-h-screen">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
   if (!resumeData) return null;
   console.log(resumeData);
+
   return (
-    <Box sx={{ bgcolor: "grey.100", minHeight: "100vh", py: 4 }}>
-      <Container maxWidth="md">
+    <div className="bg-gray-100 min-h-screen py-8">
+      <div className="max-w-3xl mx-auto px-4">
         <Button
-          variant="contained"
-          startIcon={<PrinterIcon />}
           onClick={() => handlePrint()}
-          sx={{ mb: 3 }}
+          className="mb-6"
         >
+          <PrinterIcon className="mr-2 h-4 w-4" />
           Download PDF
         </Button>
 
-        <Box
-          ref={componentRef}
-          sx={{
-            bgcolor: "white",
-            borderRadius: 2,
-            overflow: "hidden",
-            width: "100%",
-          }}
-        >
-          <ResumeHeader
-            name={resumeData.name}
-            email={resumeData.email}
-            phone={resumeData.phone_no}
-            contacts={resumeData.contacts}
-          />
-          <Box sx={{ p: 4, display: "flex", flexDirection: "column", gap: 4 }}>
-            <EducationSection education={resumeData.education} />
-            <WorkExperienceSection workExperience={resumeData.workExperience} />
-            <ProjectsSection projects={resumeData.projects} />
-            <SkillsSection skills={resumeData.skills} />
-          </Box>
-        </Box>
-      </Container>
-    </Box>
+        <div ref={componentRef}>
+          <ResumeDisplay resumeData={resumeData} />
+        </div>
+      </div>
+    </div>
   );
 };
 

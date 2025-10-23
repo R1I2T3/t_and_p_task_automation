@@ -1,4 +1,4 @@
-.training-programme {
+n.training-programme {
   background-color: #ffffff;
   display: flex;
   flex-direction: row;
@@ -45,6 +45,7 @@
   top: 33px;
   width: 796px;
 }
+
 
 .training-programme .frame-2 {
   background-color: #ffffff;
