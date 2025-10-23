@@ -14,7 +14,7 @@ import {
   XCircle,
   Info,
 } from "lucide-react";
-
+import { SERVER_URL } from "@/constant";
 // This hook polls the task status
 const taskFetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -56,7 +56,7 @@ function TaskStatus({
         <AlertDescription className="flex justify-between items-center">
           Your file is ready to download.
           <Button asChild variant="outline" size="sm">
-            <a href={url} download onClick={onClose}>
+            <a href={`${SERVER_URL}${url}`} download onClick={onClose}>
               <Download className="mr-2 h-4 w-4" /> Download
             </a>
           </Button>

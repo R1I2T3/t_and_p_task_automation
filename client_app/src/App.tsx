@@ -56,7 +56,7 @@ import CompanyPage from "./pages/staff/placement_companies_view";
 import ViewCompanyInfo from "./pages/staff/view-company-info";
 import EditCompanyInfo from "./pages/staff/edit-comapny-info";
 import { QueryClientProvider } from "@tanstack/react-query";
-
+import { SERVER_URL } from "./constant";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -73,7 +73,7 @@ const App = () => {
         console.log(data);
         setUser(data);
       } else {
-        window.open("http://localhost:8000/auth/login", "_self");
+        window.open(`${SERVER_URL}/auth/login`, "_self");
       }
     };
     onAuthenticate();

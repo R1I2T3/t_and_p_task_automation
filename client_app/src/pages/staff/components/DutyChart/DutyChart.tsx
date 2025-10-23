@@ -55,7 +55,7 @@ const DutyChart = () => {
   ]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/get-duty-chart")
+    fetch("/api/get-duty-chart")
       .then((response) => response.json())
       .then((data) => setTableData(data.tableData || tableData))
       .catch((error) => console.error("Error fetching data:", error));

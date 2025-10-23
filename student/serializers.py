@@ -11,6 +11,7 @@ from .models import (
     Resume_Project,
     Resume_Skill,
     Resume_WorkExperience,
+    Resume_ActivitiesAndAchievement
 )
 from program_coordinator_api.models import AttendanceData
 from base.models import User
@@ -102,16 +103,21 @@ class ResumeWorkExperienceSerializer(serializers.ModelSerializer):
         model = Resume_WorkExperience
         fields = ["id", "company", "position", "start_date", "end_date", "description"]
 
+class ActivitiesAndAchievementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resume_ActivitiesAndAchievement
+        fields = ["id", "title", "description"]
 
 class ResumeSerializer(serializers.ModelSerializer):
     contacts = serializers.ListField(
-        child=serializers.URLField(), source="contact", write_only=True
+        child=serializers.URLField(), write_only=True
     )
     skills = serializers.ListField(
-        child=serializers.CharField(), source="skill", write_only=True
+        child=serializers.CharField(), write_only=True
     )
-    education = ResumeEducationSerializer(
-        many=True,
+    education = ResumeEducationSerializer(many=True)
+    activitiesAndAchievements = ActivitiesAndAchievementSerializer(
+        many=True, source="activities_and_achievements"
     )
     projects = ResumeProjectSerializer(many=True, source="project")
     workExperience = ResumeWorkExperienceSerializer(many=True, source="work")
@@ -124,77 +130,91 @@ class ResumeSerializer(serializers.ModelSerializer):
             "name",
             "email",
             "phone_no",
+            "profile_image",
             "contacts",
             "skills",
             "education",
             "projects",
             "workExperience",
+            "activitiesAndAchievements",
         ]
 
     def create(self, validated_data):
-        contacts = validated_data.pop("contact", [])
-        skills = validated_data.pop("skill", [])
+        contacts = validated_data.pop("contacts", [])
+        skills = validated_data.pop("skills", [])
         education_data = validated_data.pop("education", [])
         projects_data = validated_data.pop("project", [])
         work_experience_data = validated_data.pop("work", [])
+        achievements_data = validated_data.pop("activities_and_achievements", [])
 
         resume = Resume.objects.create(**validated_data)
 
-        for url in contacts:
-            Resume_Contact.objects.create(resume=resume, url=url)
-        for skill_name in skills:
-            Resume_Skill.objects.create(resume=resume, skill=skill_name)
-
-        for edu_data in education_data:
-            Resume_Education.objects.create(resume=resume, **edu_data)
-
-        for project_data in projects_data:
-            Resume_Project.objects.create(resume=resume, **project_data)
-        for work_data in work_experience_data:
-            Resume_WorkExperience.objects.create(resume=resume, **work_data)
+        # Create related objects
+        Resume_Contact.objects.bulk_create([
+            Resume_Contact(resume=resume, url=url) for url in contacts
+        ])
+        Resume_Skill.objects.bulk_create([
+            Resume_Skill(resume=resume, skill=s) for s in skills
+        ])
+        Resume_Education.objects.bulk_create([
+            Resume_Education(resume=resume, **e) for e in education_data
+        ])
+        Resume_Project.objects.bulk_create([
+            Resume_Project(resume=resume, **p) for p in projects_data
+        ])
+        Resume_WorkExperience.objects.bulk_create([
+            Resume_WorkExperience(resume=resume, **w) for w in work_experience_data
+        ])
+        Resume_ActivitiesAndAchievement.objects.bulk_create([
+            Resume_ActivitiesAndAchievement(resume=resume, **a) for a in achievements_data
+        ])
 
         return resume
 
     def update(self, instance, validated_data):
-        contacts = validated_data.pop("contact", [])
-        skills = validated_data.pop("skill", [])
+        contacts = validated_data.pop("contacts", [])
+        skills = validated_data.pop("skills", [])
         education_data = validated_data.pop("education", [])
         projects_data = validated_data.pop("project", [])
         work_experience_data = validated_data.pop("work", [])
+        achievements_data = validated_data.pop("activities_and_achievements", [])
 
-        instance.name = validated_data.get("name", instance.name)
-        instance.email = validated_data.get("email", instance.email)
-        instance.phone_number = validated_data.get(
-            "phone_number", instance.phone_number
-        )
+        # Update basic fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         instance.save()
 
+        # Replace related data
         instance.contact.all().delete()
-        for url in contacts:
-            Resume_Contact.objects.create(resume=instance, url=url)
         instance.skill.all().delete()
-        for skill_name in skills:
-            Resume_Skill.objects.create(resume=instance, skill=skill_name)
-
         instance.education.all().delete()
-        for edu_data in education_data:
-            Resume_Education.objects.create(resume=instance, **edu_data)
-
         instance.project.all().delete()
-        for project_data in projects_data:
-            Resume_Project.objects.create(resume=instance, **project_data)
-
         instance.work.all().delete()
-        for work_data in work_experience_data:
-            Resume_WorkExperience.objects.create(resume=instance, **work_data)
+        instance.activities_and_achievements.all().delete()
+
+        Resume_Contact.objects.bulk_create([
+            Resume_Contact(resume=instance, url=url) for url in contacts
+        ])
+        Resume_Skill.objects.bulk_create([
+            Resume_Skill(resume=instance, skill=s) for s in skills
+        ])
+        Resume_Education.objects.bulk_create([
+            Resume_Education(resume=instance, **e) for e in education_data
+        ])
+        Resume_Project.objects.bulk_create([
+            Resume_Project(resume=instance, **p) for p in projects_data
+        ])
+        Resume_WorkExperience.objects.bulk_create([
+            Resume_WorkExperience(resume=instance, **w) for w in work_experience_data
+        ])
+        Resume_ActivitiesAndAchievement.objects.bulk_create([
+            Resume_ActivitiesAndAchievement(resume=instance, **a) for a in achievements_data
+        ])
 
         return instance
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-
-        representation["contacts"] = [contact.url for contact in instance.contact.all()]
-
-        representation["skills"] = [skill.skill for skill in instance.skill.all()]
-
+        representation["contacts"] = [c.url for c in instance.contact.all()]
+        representation["skills"] = [s.skill for s in instance.skill.all()]
         return representation

@@ -117,6 +117,7 @@ class Resume(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone_number = models.CharField(max_length=15)
+    profile_image = models.ImageField(upload_to='profile_images/', null=True)
 
 
 class Resume_Contact(models.Model):
@@ -158,6 +159,14 @@ class Resume_Project(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="project")
     title = models.CharField(max_length=100)
     description = models.TextField(null=True)
+
+class Resume_ActivitiesAndAchievement(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    resume = models.ForeignKey(
+        Resume, on_delete=models.CASCADE, related_name="activities_and_achievements",null=True
+    )
+    title = models.CharField(max_length=200)
+    description = models.TextField()
 
 class StudentOffer(models.Model):
     OFFER_STATUS_CHOICES = [
