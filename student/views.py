@@ -3,27 +3,27 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from django.http import Http404
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.exceptions import PermissionDenied
-from django.db.models import Sum
-from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from .models import (
     Student,
-    AcademicAttendanceSemester,
-    TrainingAttendanceSemester,
     Resume,
     StudentPlacementAppliedCompany,
-    PlacementCompanyProgress
+    PlacementCompanyProgress,
+    StudentOffer
 )
 from .serializers import (
     ResumeSerializer,
     SessionAttendanceSerializer,
+    StudentSerializer
 )
 
 from program_coordinator_api.models import (
     AttendanceData,
 )
-from .utils import categorize,is_student_eligible
+from .utils import is_student_eligible
 from staff.models import CompanyRegistration,JobOffer
 
 class SessionAttendanceAPIView(APIView):
@@ -44,110 +44,28 @@ class SessionAttendanceAPIView(APIView):
             return Response({"error": "Student not found"}, status=404)
 
 
-class HomeAPIView(APIView):
+class StudentProfileView(RetrieveAPIView):
+    serializer_class = StudentSerializer
+
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        if request.user.role != "student":
-            raise PermissionDenied(
-                "You do not have permission to access this resource."
-            )
+    def get_object(self):
+        user = self.request.user
 
-        student = Student.objects.get(user=request.user)
-        academic_attendance = AcademicAttendanceSemester.objects.filter(student=student)
-        academic_performance = student.academic_performance.all()  # type: ignore
-        training_attendance = TrainingAttendanceSemester.objects.filter(student=student)
-        training_performance = student.training_performance.all()  # type: ignore
+        try:
+            student_profile = Student.objects.select_related(
+                'user'
+            ).prefetch_related(
+                'academic_performance',
+                'academic_attendance',
+                'training_performance',
+                'training_attendance'
+            ).get(user=user) # The key filter: user=request.user
 
-        academic_attendance_dict = {
-            item.semester: item.attendance for item in academic_attendance
-        }
-        academic_performance_dict = {
-            item.semester: item.performance for item in academic_performance
-        }
-        training_attendance_dict = {
-            item.semester: item.training_attendance for item in training_attendance
-        }
-        training_performance_dict = {
-            item.semester: item.training_performance for item in training_performance
-        }
+            return student_profile
 
-        return JsonResponse(
-            {
-                "academic_attendance": academic_attendance_dict,
-                "academic_performance": academic_performance_dict,
-                "training_attendance": training_attendance_dict,
-                "training_performance": training_performance_dict,
-            }
-        )
-
-
-class SdPAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        if request.user.role != "student":
-            raise PermissionDenied(
-                "You do not have permission to access this resource."
-            )
-
-        student = Student.objects.get(user=request.user)
-
-        academic_attendance_sum = student.academic_attendance.aggregate(
-            Sum("attendance")
-        ).get("attendance__sum")  # type: ignore
-        academic_attendance = (
-            academic_attendance_sum / student.academic_attendance.count()
-            if academic_attendance_sum is not None
-            else None
-        )
-
-        academic_performance_sum = student.academic_performance.aggregate(
-            Sum("performance")
-        ).get("performance__sum")  # type: ignore
-        academic_performance = (
-            academic_performance_sum / student.academic_performance.count()
-            if academic_performance_sum is not None
-            else None
-        )
-
-        training_attendance_sum = student.training_attendance.aggregate(
-            Sum("training_attendance")
-        ).get("training_attendance__sum")  # type: ignore
-        training_attendance = (
-            training_attendance_sum / student.training_attendance.count()
-            if training_attendance_sum is not None
-            else None
-        )
-
-        training_performance_sum = student.training_performance.aggregate(
-            Sum("training_performance")
-        ).get("training_performance__sum")  # type: ignore
-        training_performance = (
-            training_performance_sum / student.training_performance.count()
-            if training_performance_sum is not None
-            else None
-        )
-
-        category = categorize(
-            academic_attendance,
-            academic_performance,
-            training_attendance,
-            training_performance,
-            student.batch,
-        )
-
-        return JsonResponse(
-            {
-                "uid": student.uid,
-                "department": student.department,
-                "academic_year": student.academic_year,
-                "full_name": student.user.full_name,
-                "category": category,
-                "batch": student.batch,
-            }
-        )
-
+        except Student.DoesNotExist:
+            raise Http404("No Student profile found for this user.")
 
 class ResumeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -306,3 +224,104 @@ class PlacementCompanyAPIView(APIView):
                 {"message": "Internal Server Error"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class PlacementCard(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, *args, **kwargs):
+        try:
+            student = get_object_or_404(Student, user=request.user)
+        except Student.DoesNotExist:
+            return Response(
+                {"error": "No student profile found for this user."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        applications_qs = StudentPlacementAppliedCompany.objects.filter(
+            student=student
+        ).select_related(
+            'company',
+            'job_offer',
+            'application'
+        )
+
+        applied_companies_data = []
+        for app in applications_qs:
+
+            job_offer_details = None
+            if app.job_offer:
+                job_offer_details = {
+                    "id": app.job_offer.id,
+                    "role": getattr(app.job_offer, 'role', str(app.job_offer.id))
+                }
+
+            progress_details = {}
+            try:
+                progress = app.application
+                progress_details = {
+                    "id": progress.id,
+                    "registered": progress.registered,
+                    "aptitude_test": progress.aptitude_test,
+                    "coding_test": progress.coding_test,
+                    "technical_interview": progress.technical_interview,
+                    "hr_interview": progress.hr_interview,
+                    "gd": progress.gd,
+                    "final_result": progress.final_result,
+                }
+            except PlacementCompanyProgress.DoesNotExist:
+                progress_details = {
+                    "id": None,
+                    "registered": False,
+                    "aptitude_test": False,
+                    "coding_test": False,
+                    "technical_interview": False,
+                    "hr_interview": False,
+                    "gd": False,
+                    "final_result": "Pending",
+                }
+
+            app_data = {
+                "application_id": app.id,
+                "company_id": app.company.id,
+                "company_name": app.company.name,
+                "job_offer": job_offer_details,
+                "interested": app.interested,
+                "not_interested_reason": app.not_interested_reason,
+                "application_date": app.application_date.isoformat(),
+                "progress": progress_details
+            }
+            applied_companies_data.append(app_data)
+        offers_qs = StudentOffer.objects.filter(
+            student=student
+        ).select_related(
+            'company',
+            'job_offer'
+        )
+        offers_data = []
+        for offer in offers_qs:
+            job_offer_details = None
+            if offer.job_offer:
+                job_offer_details = {
+                    "id": offer.job_offer.id,
+                    "role": getattr(offer.job_offer, 'role', str(offer.job_offer.id))
+                }
+            offer_data = {
+                "offer_id": offer.id,
+                "company_id": offer.company.id,
+                "company_name": offer.company.name,
+                "job_offer": job_offer_details,
+                "offer_type": offer.get_offer_type_display(),
+                "status": offer.get_status_display(),
+                "salary": offer.salary,
+                "role": offer.role,
+                "offer_date": offer.offer_date.isoformat(),
+                "is_aedp_pli": offer.is_aedp_pli,
+                "is_aedp_ojt": offer.is_aedp_ojt,
+            }
+            offers_data.append(offer_data)
+        response_data = {
+            "applications": applied_companies_data,
+            "offers": offers_data,
+            "academic_year": student.academic_year,
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)

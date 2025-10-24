@@ -58,7 +58,7 @@ def is_student_eligible(student, company,offer):
         return False
     if offer_type == "PLACEMENT" and student.consent not in ["placement", "placement+aedp/pli"]:
         return False
-    if student.student_offers.filter(status="joined", offer_type="AEDP_PLI").exists():
+    if student.joined_company:
         return False
     job_offers = [offer]
     category = student.current_category

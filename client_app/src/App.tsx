@@ -35,7 +35,6 @@ import { CategoryDataStatistics } from "./pages/placement_officer/CategoryData";
 import { ComparativePlacementStatistics } from "./pages/placement_officer/ComparitivePlacementStatistic";
 import PlacementStats from "./pages/placement_officer";
 import Old from "./pages/placement_officer/Old";
-import JobVerification from "./pages/placement_officer/components/JobVerification";
 import TrainingLayout from "./pages/training_officer/TrainingLayout";
 import TrainingStats from "./pages/training_officer/TrainingStats";
 import TrainingNotice from "./pages/training_officer/TrainingNotice";
@@ -58,6 +57,7 @@ import EditCompanyInfo from "./pages/staff/edit-comapny-info";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { SERVER_URL } from "./constant";
 import SendPlacementMessage from "./pages/staff/SendPlacementMessage";
+import PlacementCard from "./pages/student/placement-card";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -109,6 +109,7 @@ const App = () => {
             path="placement/registration/:id"
             element={<PlacementRegistration />}
           />
+          <Route path="placement-card" element={<PlacementCard />} />
           <Route
             path="internship/registration/:id"
             element={<InternshipRegistration />}
@@ -128,7 +129,6 @@ const App = () => {
         </Route>
         <Route path="/placement_officer" element={<PlacementLayout />}>
           <Route index element={<PlacementStats />} />
-          <Route path="verify" element={<JobVerification />} />
           <Route path="report" element={<PlacementReport />} />
           <Route
             path="comparative_Placement_Statistics"
@@ -174,7 +174,6 @@ const App = () => {
           <Route path="placement_companies/view" element={<ViewCompanyInfo />} />
           <Route path="placement_companies/message" element={<SendPlacementMessage />} />
           <Route path="placement_companies/edit" element={<EditCompanyInfo />} />
-          <Route path="placement/verify" element={<JobVerification />} />
           <Route
             path="internship/register"
             element={<InternshipCompanyRegister />}
