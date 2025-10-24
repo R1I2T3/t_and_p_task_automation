@@ -14,7 +14,6 @@ import { getCookie } from "@/utils";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import toast from "react-hot-toast";
-import "./create-notification.css";
 
 const CreateNotification = () => {
   const [title, setTitle] = useState("");
@@ -181,8 +180,8 @@ const CreateNotification = () => {
           </Select>
           <Select
             className="w-full mb-2"
-            value={[type_notification]}
-            renderValue={(selected) => selected.join(", ")}
+            value={type_notification}
+            renderValue={(selected) => (typeof selected === "string" ? selected : String(selected))}
             onChange={handleTypeChange}
           >
             {type_notification_options.map((type, index) => (
@@ -190,6 +189,7 @@ const CreateNotification = () => {
                 {type}
               </MenuItem>
             ))}
+          </Select>
           <label htmlFor="file-input" className="file-label">
             <Button variant="outlined" component="span">
               {files ? "Change file" : "Upload file"}
@@ -205,7 +205,6 @@ const CreateNotification = () => {
               if (e.target.files) setFiles(e.target.files[0]);
             }}
             className="file-input"
-          />
           />
 
           {error && <Typography color="error">{error}</Typography>}

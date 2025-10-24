@@ -16,8 +16,6 @@ import Upload from "./pages/program_coordinator/Upload";
 import Attendance from "./pages/program_coordinator/Attendance";
 import StudentLayout from "./pages/student/student_layout";
 import SessionAttendance from "./pages/student/SessionAttendance";
-import ConsentForm from "./pages/student/ConsentForm";
-import PliForm from "./pages/student/PliForm";
 import InternShipSubmission from "./pages/student/InternShipSubmission";
 import StudentPersonalInfo from "./pages/student/student-personal-info";
 import PlacementRegistration from "./pages/student/PlacementRegistration";
@@ -60,6 +58,7 @@ import PlacementCompany from "./pages/staff/placement_company";
 import CompanyPage from "./pages/staff/placement_companies_view";
 import ViewCompanyInfo from "./pages/staff/view-company-info";
 import EditCompanyInfo from "./pages/staff/edit-comapny-info";
+import UploadInhouseInternship from "./pages/department_coordinator/UploadInhouseInternship";
 
 const App = () => {
   const setUser = useSetAtom(authAtom);
