@@ -1,351 +1,328 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useState } from "react";
-import {
-  Container,
-  TextField,
-  Button,
-  Typography,
-  Box,
-  IconButton,
-  Paper,
-  ThemeProvider,
-  InputLabel,
-  FormControl,
-  Select,
-  MenuItem,
-} from "@mui/material";
-import theme from "./components/theme";
-import { PlusCircle, MinusCircle } from "lucide-react";
-import { getCookie } from "@/utils";
+import { useForm, useFieldArray } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import toast from "react-hot-toast";
+import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill";
+import { getCookie } from "@/utils";
 import { useNavigate } from "react-router";
+import { SERVER_URL } from "@/constant";
+const resumeSchema = z.object({
+  name: z.string().min(1, "Name required"),
+  email: z.string().email("Invalid email"),
+  phone_no: z.string().min(10, "Invalid phone number"),
+  profile_image: z.any().optional(),
+  contacts: z
+    .array(z.string().url("Must be a valid URL"))
+    .min(1, "At least one contact"),
+  skills: z.array(z.string().min(1)).min(1, "At least one skill"),
 
-const initialFormData = {
-  name: "",
-  photo: null as File | null,
-  department: "",
-  email: "",
-  phone_no: "",
-  city: "",
-  education: [
-    {
-      degree: "",
-      institution: "",
-      start_date: "",
-      end_date: "",
-      percentage: "",
-    },
-  ],
-  skills: [""],
-  projects: [{ title: "", description: "" }],
-  workExperience: [
-    {
-      company: "",
-      position: "",
-      description: "",
-      start_date: "",
-      end_date: "",
-    },
-  ],
-  extracurricular: [""],
-};
+  education: z.array(
+    z.object({
+      institution: z.string(),
+      degree: z.string(),
+      start_date: z.string(),
+      end_date: z.string(),
+      percentage: z.string(),
+    })
+  ),
 
-const departments = [
-  "Computer Engineering",
-  "Information Technology",
-  "Electronics & Tele-Communication Engineering",
-  "Electronics & Computer Science",
-  "Mechanical Engineering",
-  "Civil Engineering",
-  "Computer Science & Engineering (Cyber Security)",
-  "Mechanical and Mechatronics Engineering",
-  "AI & ML",
-  "AI & DS",
-  "IOT",
-];
+  workExperience: z.array(
+    z.object({
+      company: z.string(),
+      position: z.string(),
+      start_date: z.string(),
+      end_date: z.string(),
+      description: z.string().optional(),
+    })
+  ),
 
-const Resume = () => {
-  const [_isSubmitted, setIsSubmitted] = useState(false);
+  projects: z.array(
+    z.object({
+      title: z.string(),
+      description: z.string().optional(),
+    })
+  ),
+
+  activitiesAndAchievements: z.array(
+    z.object({
+      title: z.string(),
+      description: z.string(),
+    })
+  ),
+});
+type ResumeFormData = z.infer<typeof resumeSchema>;
+
+export default function ResumeBuilderForm() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState(initialFormData);
+  const form = useForm<ResumeFormData>({
+    resolver: zodResolver(resumeSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone_no: "",
+      profile_image: null, // Use null for file/empty default
+      contacts: [""],
+      skills: [""],
+      education: [
+        {
+          institution: "",
+          degree: "",
+          start_date: "",
+          end_date: "",
+          percentage: "",
+        },
+      ],
+      workExperience: [
+        {
+          company: "",
+          position: "",
+          start_date: "",
+          end_date: "",
+          description: "",
+        },
+      ],
+      projects: [{ title: "", description: "" }],
+      activitiesAndAchievements: [{ title: "", description: "" }],
+    },
+  });
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { isSubmitting },
+  } = form;
+
+  const contactFields = useFieldArray({ control, name: "contacts" });
+  const skillFields = useFieldArray({ control, name: "skills" });
+  const educationFields = useFieldArray({ control, name: "education" });
+  const workFields = useFieldArray({ control, name: "workExperience" });
+  const projectFields = useFieldArray({ control, name: "projects" });
+  const activityFields = useFieldArray({
+    control,
+    name: "activitiesAndAchievements",
+  });
+  const [preview, setPreview] = useState<string | null>(null);
   const [isUpdate, setIsUpdate] = useState(false);
 
   useEffect(() => {
     const fetchResume = async () => {
-      try {
-        const res = await fetch("/api/student/resume/", {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "X-CSRF-Token": getCookie("csrftoken") || "",
-          },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          console.log("API Response Data:", data);
-          setFormData({
-            ...initialFormData,
-            ...data,
-            education: data.education || initialFormData.education,
-            skills: data.skills || initialFormData.skills,
-            projects: data.projects || initialFormData.projects,
-            workExperience: data.workExperience || initialFormData.workExperience,
-            extracurricular: data.extracurricular || initialFormData.extracurricular,
-          });
-          setIsUpdate(true);
-        } else {
-          console.log("API Error:", res.status, res.statusText);
+      const res = await fetch("/api/student/resume/", {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "X-CSRF-Token": getCookie("csrftoken") || "",
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setIsUpdate(true);
+        const formattedData = {
+          name: data.name,
+          email: data.email,
+          phone_no: data.phone_no,
+          profile_image: null,
+          contacts: data.contacts.length > 0 ? data.contacts : [""],
+          skills: data.skills.length > 0 ? data.skills : [""],
+          education: data.education.length > 0 ? data.education : [{ institution: "", degree: "", start_date: "", end_date: "", percentage: "" }],
+          workExperience: data.workExperience.length > 0 ? data.workExperience : [{ company: "", position: "", start_date: "", end_date: "", description: "" }],
+          projects: data.projects.length > 0 ? data.projects : [{ title: "", description: "" }],
+          activitiesAndAchievements: data.activitiesAndAchievements.length > 0
+            ? data.activitiesAndAchievements
+            : [{ title: "", description: "" }],
+        };
+        reset(formattedData);
+        if (data.profile_image) {
+          setPreview(data.profile_image);
         }
-      } catch (error) {
-        console.error("Fetch Error:", error);
       }
     };
     fetchResume();
   }, []);
-
-  const handleInputChange = (field: keyof typeof formData, value: string | File | null) => {
-    if (field === "photo" && value instanceof File) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64String = reader.result as string;
-        localStorage.setItem("profilePhoto", base64String); // Store base64 string in LocalStorage
-        setFormData({ ...formData, [field]: value }); // Keep File object for API
-      };
-      reader.readAsDataURL(value);
-    } else {
-      setFormData({ ...formData, [field]: value });
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setValue("profile_image", file);
+      setPreview(URL.createObjectURL(file));
     }
   };
-
-  const handleArrayChange = (
-    section: keyof typeof formData,
-    index: number,
-    key: string | null,
-    value: string
-  ) => {
-    const updatedArray = (formData[section] as any[]).map((item: any, i: number) =>
-      i === index ? (key ? { ...item, [key]: value } : value) : item
-    );
-    setFormData({ ...formData, [section]: updatedArray });
-  };
-
-  const addNewField = (section: keyof typeof formData, defaultValue: any) => {
-    setFormData({
-      ...formData,
-      [section]: [...(formData[section] as any[]), defaultValue],
-    });
-  };
-
-  const removeField = (section: keyof typeof formData, index: number) => {
-    const updatedArray = (formData[section] as any[]).filter((_: any, i: number) => i !== index);
-    setFormData({ ...formData, [section]: updatedArray });
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitted(true);
-    const formDataToSend = new FormData();
-    formDataToSend.append("name", formData.name);
-    if (formData.photo) {
-      formDataToSend.append("photo", formData.photo);
-    }
-    formDataToSend.append("department", formData.department);
-    formDataToSend.append("email", formData.email);
-    formDataToSend.append("phone_no", formData.phone_no);
-    formDataToSend.append("city", formData.city);
-    formDataToSend.append("education", JSON.stringify(formData.education));
-    formDataToSend.append("skills", JSON.stringify(formData.skills));
-    formDataToSend.append("projects", JSON.stringify(formData.projects));
-    formDataToSend.append("workExperience", JSON.stringify(formData.workExperience));
-    formDataToSend.append("extracurricular", JSON.stringify(formData.extracurricular));
-
+  const onSubmit = async (data: ResumeFormData) => {
     try {
-      const res = await fetch("/api/student/resume/", {
-        method: isUpdate ? "PUT" : "POST",
-        credentials: "include",
-        headers: {
-          "X-CSRFToken": getCookie("csrftoken") || "",
-        },
-        body: formDataToSend,
-      });
-      if (res.ok) {
-        toast.success(`Resume ${isUpdate ? "updated" : "created"} successfully`);
-      } else {
-        toast.error("Failed to save resume");
+      const formData = new FormData();
+      const { profile_image, ...restOfData } = data;
+      if (profile_image && profile_image instanceof File) {
+        formData.append("profile_image", profile_image);
       }
-    } catch (error) {
-      toast.error("Error submitting resume");
-      console.error("Submit Error:", error);
+      formData.append("data", JSON.stringify(restOfData));
+      let res;
+      if (isUpdate) {
+        res = await fetch("/api/student/resume/", {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "X-CSRFToken": getCookie("csrftoken") || "",
+          },
+          body: formData,
+        });
+        } else {
+        res = await fetch("/api/student/resume/", {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": getCookie("csrftoken") || "",
+          },
+          body: formData,
+        });
+      }
+      if (!res.ok) throw new Error("Failed to save resume");
+      toast.success("Resume saved successfully!");
+    } catch (err: any) {
+      toast.error(err.message); // Use toast.error for errors
     }
-    setIsSubmitted(false);
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h4" align="center" gutterBottom color="primary">
-            Resume Form
-          </Typography>
-          <form onSubmit={handleSubmit}>
-            {/* Name */}
-            <Box mb={2}>
-              <TextField
-                fullWidth
-                label="Name"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                required
-                color="primary"
+    <div className="w-full md:w-[50dvw] mx-auto py-10">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Personal Information</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div>
+              <Label>Name</Label>
+              <Input {...register("name")} />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input type="email" {...register("email")} />
+            </div>
+            <div>
+              <Label>Phone</Label>
+              <Input {...register("phone_no")} />
+            </div>
+            <div>
+              <Label>Profile Image</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
               />
-            </Box>
-
-            {/* Photo */}
-            <Box mb={2}>
-              <FormControl fullWidth>
-                <InputLabel shrink sx={{ bgcolor: "background.paper", px: 1 }}>
-                  Photo
-                </InputLabel>
-                <label htmlFor="photo-upload" style={{ display: "block", marginTop: "16px" }}>
-                  Upload Photo
-                </label>
-                <input
-                  id="photo-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleInputChange("photo", e.target.files?.[0] || null)}
-                  className="photo-upload-input"
-                  placeholder="Choose a photo"
+              {preview && (
+                <img
+                  src={`${SERVER_URL}${preview}`}
+                  alt="Profile preview"
+                  className="mt-2 w-24 h-24 rounded-full object-cover"
                 />
-              </FormControl>
-            </Box>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* Department */}
-            <Box mb={2}>
-              <FormControl fullWidth required>
-                <InputLabel>Department</InputLabel>
-                <Select
-                  value={formData.department}
-                  label="Department"
-                  onChange={(e) => handleInputChange("department", e.target.value as string)}
+        {/* Contacts */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Contact Links</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {contactFields.fields.map((field, index) => (
+              <div key={field.id} className="flex gap-2">
+                <Input
+                  {...register(`contacts.${index}`)}
+                  placeholder="https://github.com/yourname"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => contactFields.remove(index)}
                 >
-                  {departments.map((dept) => (
-                    <MenuItem key={dept} value={dept}>
-                      {dept}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
+                  Remove
+                </Button>
+              </div>
+            ))}
+            <Button type="button" onClick={() => contactFields.append("")}>
+              Add Contact
+            </Button>
+          </CardContent>
+        </Card>
 
-            {/* Email */}
-            <Box mb={2}>
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                required
-                color="primary"
-              />
-            </Box>
+        {/* Skills */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Skills</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {skillFields.fields.map((field, index) => (
+              <div key={field.id} className="flex gap-2">
+                <Input
+                  {...register(`skills.${index}`)}
+                  placeholder="React.js"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => skillFields.remove(index)}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+            <Button type="button" onClick={() => skillFields.append("")}>
+              Add Skill
+            </Button>
+          </CardContent>
+        </Card>
 
-            {/* Phone Number */}
-            <Box mb={2}>
-              <TextField
-                fullWidth
-                label="Phone Number"
-                value={formData.phone_no}
-                onChange={(e) => handleInputChange("phone_no", e.target.value)}
-                required
-                color="primary"
-              />
-            </Box>
-
-            {/* City */}
-            <Box mb={2}>
-              <TextField
-                fullWidth
-                label="City"
-                value={formData.city}
-                onChange={(e) => handleInputChange("city", e.target.value)}
-                required
-                color="primary"
-              />
-            </Box>
-
-            {/* Academic Qualifications */}
-            <Typography variant="h6" mt={4} color="primary">
-              Academic Qualifications
-            </Typography>
-            {Array.isArray(formData.education) &&
-              formData.education.map((edu: any, index: number) => (
-                <Box key={index} mb={2}>
-                  <TextField
-                    fullWidth
-                    label="Institute Name"
-                    value={edu.institution}
-                    onChange={(e) =>
-                      handleArrayChange("education", index, "institution", e.target.value)
-                    }
-                    required
-                    margin="dense"
+        {/* Education */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Education</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {educationFields.fields.map((field, index) => (
+              <div key={field.id} className="grid gap-2 border p-3 rounded-md">
+                <Input
+                  {...register(`education.${index}.institution`)}
+                  placeholder="Institution"
+                />
+                <Input
+                  {...register(`education.${index}.degree`)}
+                  placeholder="Degree"
+                />
+                <div className="flex gap-2">
+                  <Input
+                    {...register(`education.${index}.start_date`)}
+                    placeholder="Start Year"
                   />
-                  <TextField
-                    fullWidth
-                    label="Degree"
-                    value={edu.degree}
-                    onChange={(e) => handleArrayChange("education", index, "degree", e.target.value)}
-                    required
-                    margin="dense"
+                  <Input
+                    {...register(`education.${index}.end_date`)}
+                    placeholder="End Year"
                   />
-                  <TextField
-                    fullWidth
-                    label="Start Date"
-                    type="date"
-                    value={edu.start_date}
-                    onChange={(e) =>
-                      handleArrayChange("education", index, "start_date", e.target.value)
-                    }
-                    required
-                    margin="dense"
-                    InputLabelProps={{ shrink: true }}
-                  />
-                  <TextField
-                    fullWidth
-                    label="End Date"
-                    type="date"
-                    value={edu.end_date}
-                    onChange={(e) =>
-                      handleArrayChange("education", index, "end_date", e.target.value)
-                    }
-                    required
-                    margin="dense"
-                    InputLabelProps={{ shrink: true }}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Percentage/CGPA"
-                    value={edu.percentage}
-                    onChange={(e) =>
-                      handleArrayChange("education", index, "percentage", e.target.value)
-                    }
-                    margin="dense"
-                  />
-                  <IconButton
-                    onClick={() => removeField("education", index)}
-                    color="secondary"
-                    disabled={formData.education.length === 1}
-                  >
-                    <MinusCircle />
-                  </IconButton>
-                </Box>
-              ))}
+                </div>
+                <Input
+                  {...register(`education.${index}.percentage`)}
+                  placeholder="Percentage/CGPA"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => educationFields.remove(index)}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
             <Button
-              startIcon={<PlusCircle />}
+              type="button"
               onClick={() =>
-                addNewField("education", {
+                educationFields.append({
                   institution: "",
                   degree: "",
                   start_date: "",
@@ -353,225 +330,161 @@ const Resume = () => {
                   percentage: "",
                 })
               }
-              color="primary"
             >
-              Add Academic Qualification
+              Add Education
             </Button>
-
-            {/* Skills */}
-            <Typography variant="h6" mt={4} color="primary">
-              Skills
-            </Typography>
-            {Array.isArray(formData.skills) &&
-              formData.skills.map((skill: string, index: number) => (
-                <Box key={index} display="flex" alignItems="center" mb={2}>
-                  <TextField
-                    fullWidth
-                    label={`Skill ${index + 1}`}
-                    value={skill}
-                    onChange={(e) => handleArrayChange("skills", index, null, e.target.value)}
-                    required
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Work Experience</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {workFields.fields.map((field, index) => (
+              <div key={field.id} className="grid gap-2 border p-3 rounded-md">
+                <Input
+                  {...register(`workExperience.${index}.company`)}
+                  placeholder="Company"
+                />
+                <Input
+                  {...register(`workExperience.${index}.position`)}
+                  placeholder="Position"
+                />
+                <div className="flex gap-2">
+                  <Input
+                    {...register(`workExperience.${index}.start_date`)}
+                    placeholder="Start Date"
                   />
-                  <IconButton
-                    onClick={() => removeField("skills", index)}
-                    color="secondary"
-                    disabled={formData.skills.length === 1}
-                  >
-                    <MinusCircle />
-                  </IconButton>
-                </Box>
-              ))}
+                  <Input
+                    {...register(`workExperience.${index}.end_date`)}
+                    placeholder="End Date"
+                  />
+                </div>
+                <Label>Description</Label>
+                <ReactQuill
+                  theme="snow"
+                  value={form.getValues(`workExperience.${index}.description`)}
+                  onChange={(val) =>
+                    setValue(`workExperience.${index}.description`, val)
+                  }
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => workFields.remove(index)}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
             <Button
-              startIcon={<PlusCircle />}
-              onClick={() => addNewField("skills", "")}
-              color="primary"
-            >
-              Add Skill
-            </Button>
-
-            {/* Projects */}
-            <Typography variant="h6" mt={4} color="primary">
-              Projects
-            </Typography>
-            {Array.isArray(formData.projects) &&
-              formData.projects.map((project: any, index: number) => (
-                <Box key={index} mb={2}>
-                  <TextField
-                    fullWidth
-                    label="Project Title"
-                    value={project.title}
-                    onChange={(e) => handleArrayChange("projects", index, "title", e.target.value)}
-                    required
-                    margin="dense"
-                  />
-                  <TextField
-                    fullWidth
-                    label="Project Description"
-                    value={project.description}
-                    onChange={(e) =>
-                      handleArrayChange("projects", index, "description", e.target.value)
-                    }
-                    margin="dense"
-                    multiline
-                    rows={3}
-                  />
-                  <IconButton
-                    onClick={() => removeField("projects", index)}
-                    color="secondary"
-                    disabled={formData.projects.length === 1}
-                  >
-                    <MinusCircle />
-                  </IconButton>
-                </Box>
-              ))}
-            <Button
-              startIcon={<PlusCircle />}
-              onClick={() => addNewField("projects", { title: "", description: "" })}
-              color="primary"
-            >
-              Add Project
-            </Button>
-
-            {/* Work Experience */}
-            <Typography variant="h6" mt={4} color="primary">
-              Work Experience
-            </Typography>
-            {Array.isArray(formData.workExperience) &&
-              formData.workExperience.map((work: any, index: number) => (
-                <Box key={index} mb={2}>
-                  <TextField
-                    fullWidth
-                    label="Company Name"
-                    value={work.company}
-                    onChange={(e) =>
-                      handleArrayChange("workExperience", index, "company", e.target.value)
-                    }
-                    required
-                    margin="dense"
-                  />
-                  <TextField
-                    fullWidth
-                    label="Position"
-                    value={work.position}
-                    onChange={(e) =>
-                      handleArrayChange("workExperience", index, "position", e.target.value)
-                    }
-                    required
-                    margin="dense"
-                  />
-                  <TextField
-                    fullWidth
-                    label="Start Date"
-                    type="date"
-                    value={work.start_date}
-                    onChange={(e) =>
-                      handleArrayChange("workExperience", index, "start_date", e.target.value)
-                    }
-                    required
-                    margin="dense"
-                    InputLabelProps={{ shrink: true }}
-                  />
-                  <TextField
-                    fullWidth
-                    label="End Date"
-                    type="date"
-                    value={work.end_date}
-                    onChange={(e) =>
-                      handleArrayChange("workExperience", index, "end_date", e.target.value)
-                    }
-                    required
-                    margin="dense"
-                    InputLabelProps={{ shrink: true }}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Description"
-                    value={work.description}
-                    onChange={(e) =>
-                      handleArrayChange("workExperience", index, "description", e.target.value)
-                    }
-                    margin="dense"
-                    multiline
-                    rows={3}
-                  />
-                  <IconButton
-                    onClick={() => removeField("workExperience", index)}
-                    color="secondary"
-                    disabled={formData.workExperience.length === 1}
-                  >
-                    <MinusCircle />
-                  </IconButton>
-                </Box>
-              ))}
-            <Button
-              startIcon={<PlusCircle />}
+              type="button"
               onClick={() =>
-                addNewField("workExperience", {
+                workFields.append({
                   company: "",
                   position: "",
-                  description: "",
                   start_date: "",
                   end_date: "",
+                  description: "",
                 })
               }
-              color="primary"
             >
               Add Work Experience
             </Button>
+          </CardContent>
+        </Card>
 
-            {/* Co/Extra-Curricular Activities */}
-            <Typography variant="h6" mt={4} color="primary">
-              Co/Extra-Curricular Activities
-            </Typography>
-            {Array.isArray(formData.extracurricular) &&
-              formData.extracurricular.map((activity: string, index: number) => (
-                <Box key={index} display="flex" alignItems="center" mb={2}>
-                  <TextField
-                    fullWidth
-                    label={`Activity ${index + 1}`}
-                    value={activity}
-                    onChange={(e) =>
-                      handleArrayChange("extracurricular", index, null, e.target.value)
-                    }
-                    required
-                  />
-                  <IconButton
-                    onClick={() => removeField("extracurricular", index)}
-                    color="secondary"
-                    disabled={formData.extracurricular.length === 1}
-                  >
-                    <MinusCircle />
-                  </IconButton>
-                </Box>
-              ))}
+        {/* Projects */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Projects</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {projectFields.fields.map((field, index) => (
+              <div key={field.id} className="grid gap-2 border p-3 rounded-md">
+                <Input
+                  {...register(`projects.${index}.title`)}
+                  placeholder="Project Title"
+                />
+                <Label>Description</Label>
+                <ReactQuill
+                  theme="snow"
+                  value={form.getValues(`projects.${index}.description`)}
+                  onChange={(val) =>
+                    setValue(`projects.${index}.description`, val)
+                  }
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => projectFields.remove(index)}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
             <Button
-              startIcon={<PlusCircle />}
-              onClick={() => addNewField("extracurricular", "")}
-              color="primary"
+              type="button"
+              onClick={() =>
+                projectFields.append({ title: "", description: "" })
+              }
             >
-              Add Activity
+              Add Project
             </Button>
-
-            {/* Submit Button */}
-            <Box display="flex" justifyContent="space-between" mt={2} gap={2}>
-              <Button
-                type="button"
-                variant="contained"
-                color="primary"
-                sx={{ flex: 1 }}
-                onClick={() => navigate("/student/resume-preview")}
-              >
-                Preview
-              </Button>
-              <Button type="submit" variant="contained" sx={{ flex: 1 }}>
-                {isUpdate ? "Update" : "Submit"}
-              </Button>
-            </Box>
-          </form>
-        </Paper>
-      </Container>
-    </ThemeProvider>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Activities & Achievements</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {activityFields.fields.map((field, index) => (
+              <div key={field.id} className="grid gap-2 border p-3 rounded-md">
+                <Input
+                  {...register(`activitiesAndAchievements.${index}.title`)}
+                  placeholder="Title"
+                />
+                <Label>Description</Label>
+                <ReactQuill
+                  theme="snow"
+                  value={form.getValues(
+                    `activitiesAndAchievements.${index}.description`
+                  )}
+                  onChange={(val) =>
+                    setValue(
+                      `activitiesAndAchievements.${index}.description`,
+                      val
+                    )
+                  }
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => activityFields.remove(index)}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              onClick={() =>
+                activityFields.append({ title: "", description: "" })
+              }
+            >
+              Add Achievement
+            </Button>
+          </CardContent>
+        </Card>
+        <div className="flex justify-end">(
+           <Button onClick={()=>navigate('/student/resume-preview')} type="button" className="mr-4">
+            Show Preview
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save Resume"}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
-};
-
-export default Resume;
+}

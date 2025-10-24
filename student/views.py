@@ -1,3 +1,4 @@
+import json
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -234,21 +235,48 @@ class ResumeView(APIView):
     def post(self, request):
         try:
             student = Student.objects.get(user=request.user)
-            resume = Resume.objects.get(student=student)
-            serializer = ResumeSerializer(resume, data=request.data)
-        except Resume.DoesNotExist:
-            serializer = ResumeSerializer(data=request.data)
-
-        if serializer.is_valid():
-            serializer.save(student=student)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            data_str = request.data.get('data')
+            if not data_str:
+                return Response({'data': 'This field is required.'}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                data = json.loads(data_str)
+            except json.JSONDecodeError:
+                return Response({'data': 'Invalid JSON string.'}, status=status.HTTP_400_BAD_REQUEST)
+            profile_image = request.data.get('profile_image')
+            if profile_image:
+                data['profile_image'] = profile_image
+            serializer = ResumeSerializer(data=data, context={'request': request})
+            if serializer.is_valid():
+                serializer.save(student=student)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(f"[ERROR] ResumeView POST: {e}")
+            return Response(
+                {"message": "Internal Server Error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def put(self, request):
         try:
+            data_str = request.data.get('data')
+            if not data_str:
+                return Response({'data': 'This field is required.'}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                data = json.loads(data_str)
+            except json.JSONDecodeError:
+                return Response({'data': 'Invalid JSON string.'}, status=status.HTTP_400_BAD_REQUEST)
+            profile_image = request.data.get('profile_image')
+            if profile_image:
+                data['profile_image'] = profile_image
             student = Student.objects.get(user=request.user)
             resume = Resume.objects.get(student=student)
-            serializer = ResumeSerializer(resume, data=request.data)
+            serializer = ResumeSerializer(
+            instance=resume,
+            data=data,
+            context={'request': request},
+            partial=True
+        )
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)

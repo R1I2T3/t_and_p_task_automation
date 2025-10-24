@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router";
+import { QueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import Home from "./pages/home";
 import { getCookie } from "./utils";
@@ -29,15 +30,12 @@ import DepartmentParent from "./pages/department_coordinator/DepartmentParent";
 import DepartmentDashboard from "./pages/department_coordinator/DepartmentHome";
 import DepartmentAttendance from "./pages/department_coordinator/DepartmentAttendance";
 import PlacementLayout from "./pages/placement_officer/PlacementLayout";
-import CompanyRegistrationForm from "./pages/placement_officer/CompanyRegisteration";
-import NoticeCreationForm from "./pages/placement_officer/NoticeCreation";
 import PlacementReport from "./pages/placement_officer/PlacementReport";
 import { CategoryDataStatistics } from "./pages/placement_officer/CategoryData";
 import { ComparativePlacementStatistics } from "./pages/placement_officer/ComparitivePlacementStatistic";
 import PlacementStats from "./pages/placement_officer";
 import Old from "./pages/placement_officer/Old";
 import JobVerification from "./pages/placement_officer/components/JobVerification";
-import PlacementAttendance from "./pages/placement_officer/PlacementAttendance";
 import TrainingLayout from "./pages/training_officer/TrainingLayout";
 import TrainingStats from "./pages/training_officer/TrainingStats";
 import TrainingNotice from "./pages/training_officer/TrainingNotice";
@@ -58,8 +56,8 @@ import PlacementCompany from "./pages/staff/placement_company";
 import CompanyPage from "./pages/staff/placement_companies_view";
 import ViewCompanyInfo from "./pages/staff/view-company-info";
 import EditCompanyInfo from "./pages/staff/edit-comapny-info";
-import UploadInhouseInternship from "./pages/department_coordinator/UploadInhouseInternship";
-
+import { QueryClientProvider } from "@tanstack/react-query";
+import { SERVER_URL } from "./constant";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -76,12 +74,14 @@ const App = () => {
         console.log(data);
         setUser(data);
       } else {
-        window.open("http://localhost:8000/auth/login", "_self");
+        window.open(`${SERVER_URL}/auth/login`, "_self");
       }
     };
     onAuthenticate();
   }, []);
+  const queryClient = new QueryClient();
   return (
+    <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -125,18 +125,11 @@ const App = () => {
         <Route path="/department_coordinator" element={<DepartmentParent />}>
           <Route index element={<DepartmentDashboard />} />
           <Route path="attendance" element={<DepartmentAttendance />} />
-          <Route path="upload-inhouse-internship" element={<UploadInhouseInternship />} />
         </Route>
         <Route path="/placement_officer" element={<PlacementLayout />}>
           <Route index element={<PlacementStats />} />
-          <Route
-            path="company_register"
-            element={<CompanyRegistrationForm />}
-          />
           <Route path="verify" element={<JobVerification />} />
-          <Route path="create_notice" element={<NoticeCreationForm />} />
           <Route path="report" element={<PlacementReport />} />
-          <Route path="attendance" element={<PlacementAttendance />} />
           <Route
             path="comparative_Placement_Statistics"
             element={
@@ -181,10 +174,6 @@ const App = () => {
           <Route path="placement_companies/register" element={<PlacementCompany />} />
           <Route path="placement_companies/view" element={<ViewCompanyInfo />} />
           <Route path="placement_companies/edit" element={<EditCompanyInfo />} />
-          <Route
-            path="placement/register"
-            element={<CompanyRegistrationForm />}
-          />
           <Route path="placement/verify" element={<JobVerification />} />
           <Route
             path="internship/register"
@@ -200,6 +189,7 @@ const App = () => {
         />
       </Routes>
     </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 

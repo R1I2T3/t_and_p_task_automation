@@ -58,7 +58,6 @@ INSTALLED_APPS = [
     "department_coordinator",
     "placement_officer",
     "training_officer",
-    "placement_api",
     "notifications",
     "program_coordinator_api",
     "internship_api",
@@ -267,3 +266,10 @@ CORS_ALLOW_METHODS = (
     "POST",
     "PUT",
 )
+
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'

@@ -119,6 +119,7 @@ class Resume(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone_number = models.CharField(max_length=15)
+    profile_image = models.ImageField(upload_to='profile_images/', null=True)
 
 
 class Resume_Contact(models.Model):
@@ -161,12 +162,20 @@ class Resume_Project(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField(null=True)
 
+class Resume_ActivitiesAndAchievement(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    resume = models.ForeignKey(
+        Resume, on_delete=models.CASCADE, related_name="activities_and_achievements",null=True
+    )
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+
 class StudentOffer(models.Model):
     OFFER_STATUS_CHOICES = [
-        ("offered", "Offered"),      # Company offered the job
-        ("accepted", "Accepted"),    # Student accepted the job
-        ("rejected", "Rejected"),    # Student rejected the job
-        ("joined", "Joined"),        # Student joined the company
+        ("offered", "Offered"),
+        ("accepted", "Accepted"),
+        ("rejected", "Rejected"),
+        ("joined", "Joined"),
     ]
 
     OFFER_TYPE_CHOICES = [
@@ -259,6 +268,7 @@ class PlacementCompanyProgress(models.Model):
         StudentPlacementAppliedCompany,on_delete=models.CASCADE, related_name="application")
     registered = models.BooleanField(default=True)
     aptitude_test = models.BooleanField(default=False)
+    coding_test = models.BooleanField(default=False)
     technical_interview = models.BooleanField(default=False)
     hr_interview = models.BooleanField(default=False)
     gd = models.BooleanField(default=False)
