@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.core.files.storage import default_storage
 from weasyprint import HTML
 from .models import CompanyRegistration
-from student.models import StudentPlacementAppliedCompany
+from student.models import StudentPlacementAppliedCompany,Resume
 
 @shared_task
 def generate_excel_export_task(company_id):
@@ -71,12 +71,6 @@ def generate_resume_zip_task(company_id):
 
     applications = StudentPlacementAppliedCompany.objects.filter(
         company=company, interested=True
-    ).select_related(
-        'student__resume'
-    ).prefetch_related(
-        'student__resume__contacts', 'student__resume__skills',
-        'student__resume__work_experiences', 'student__resume__projects',
-        'student__resume__educations',
     )
 
     zip_buffer = io.BytesIO()
@@ -85,20 +79,23 @@ def generate_resume_zip_task(company_id):
             student = app.student
             if not hasattr(student, 'resume'):
                 continue
-
-            resume = student.resume
+            try:
+                resume = Resume.objects.get(student=student)
+            except Resume.DoesNotExist:
+                continue
             context = {
                 'student': student, 'resume': resume,
-                'contacts': resume.contacts.all(), 'skills': resume.skills.all(),
-                'work_exps': resume.work_experiences.all(), 'projects': resume.projects.all(),
-                'education': resume.educations.all(),
+                'contacts': resume.contact.all(), 'skills': resume.skill.all(),
+                'work_exps': resume.work.all(), 'projects': resume.project.all(),
+                'education': resume.education.all(),
+                'achievements': resume.activities_and_achievements.all(),
             }
-            html_string = render_to_string('resumes/resume_template.html', context)
+            html_string = render_to_string('resume_template.html', context)
             pdf_file = HTML(string=html_string).write_pdf()
             filename = f"{student.uid}_{student.user.full_name}.pdf"
             zf.writestr(filename, pdf_file)
 
     zip_buffer.seek(0)
-    filename = f"exports/resumes/{slugify('a')}_resumes.zip"
+    filename = f"exports/resumes/{slugify(company.name)}_resumes.zip"
     file_path = default_storage.save(filename, ContentFile(zip_buffer.read()))
     return {"file_url": default_storage.url(file_path)}
