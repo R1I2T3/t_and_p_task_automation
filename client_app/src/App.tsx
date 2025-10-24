@@ -57,6 +57,7 @@ import ViewCompanyInfo from "./pages/staff/view-company-info";
 import EditCompanyInfo from "./pages/staff/edit-comapny-info";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { SERVER_URL } from "./constant";
+import SendPlacementMessage from "./pages/staff/SendPlacementMessage";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -171,6 +172,7 @@ const App = () => {
           <Route path="placement_companies" element={<CompanyPage />} />
           <Route path="placement_companies/register" element={<PlacementCompany />} />
           <Route path="placement_companies/view" element={<ViewCompanyInfo />} />
+          <Route path="placement_companies/message" element={<SendPlacementMessage />} />
           <Route path="placement_companies/edit" element={<EditCompanyInfo />} />
           <Route path="placement/verify" element={<JobVerification />} />
           <Route

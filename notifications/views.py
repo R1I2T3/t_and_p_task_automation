@@ -57,8 +57,8 @@ class NotificationListCreate(generics.ListCreateAPIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
-        # Optionally customize how notifications are retrieved
-        return Notification.objects.all().order_by("-created_at")
+        user = self.request.user
+        return Notification.objects.filter(recipients=user).order_by("-created_at")
 
 
 class NotificationDetail(generics.RetrieveAPIView):

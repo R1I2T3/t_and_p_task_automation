@@ -82,7 +82,7 @@ const NotificationDetail = () => {
       >
         {notification.files && renderFile(notification.files)}
         <h2>{notification.title}</h2>
-        <p>{notification.message}</p>
+        <pre>{notification.message}</pre>
         <p>
           <small>
             Created at: {new Date(notification.created_at).toLocaleString()}

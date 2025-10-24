@@ -54,20 +54,7 @@ const CompanyPage = () => {
       .catch((err) => console.error("Error deleting company:", err));
   };
 
-  const handleSendNotification =async (id:string)=>{
-    const res = await fetch(`/api/staff/placement/company/send_notifications/${id}/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-         "X-CSRFToken":getCookie("csrftoken")||""
-      },
-    });
-    if(res.status===201){
-      toast.success("Notifications sent successfully");
-    } else {
-      toast.error("Failed to send notifications");
-    }
-  };
+
   return (
     <Container sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
@@ -115,7 +102,7 @@ const CompanyPage = () => {
                 <IconButton onClick={() => navigate(`/staff/placement_companies/view/?id=${company.id}`)}>
                   <Eye size={18} />
                 </IconButton>
-                <IconButton onClick={() => handleSendNotification(company.id)}>
+                <IconButton onClick={() => navigate(`/staff/placement_companies/message/?id=${company.id}`)}>
                   <Send size={18} />
                 </IconButton>
                 <IconButton onClick={() => navigate(`/staff/placement_companies/edit/?id=${company.id}`)}>
