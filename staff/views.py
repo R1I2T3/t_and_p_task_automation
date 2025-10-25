@@ -54,24 +54,36 @@ class SendPlacementNotificationApiView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         try:
             load_dotenv()
+            title = request.data.get("title")
+            content = request.data.get("content")
+            sendto = request.data.get("sendTo")
             company_id = self.kwargs.get("id")
-            print(type(company_id), company_id)
             company = get_object_or_404(CompanyRegistration, id=company_id)
-            print("Company fetched:", company)
-            eligible_student_ids = get_eligible_students(company)
-            if not eligible_student_ids:
-                return Response(
+            if sendto == "eligible":
+                eligible_student_ids = get_eligible_students(company)
+                if not eligible_student_ids:
+                    return Response(
                     {"message": "No eligible students found for this company."},
                     status=status.HTTP_404_NOT_FOUND,
+                    )
+                students = Student.objects.filter(id__in=eligible_student_ids)
+                recipients = [student.user for student in students]
+                message = (
+                    f"{content}\n\n"
+                    f"Dear Student,\n\nYou are eligible to apply for placement at {company.name}.\n"
+                    f"Apply link: {os.getenv('CLIENT_URL')}/student/placement/registration/{company.id}\n\nBest regards,\nTraining and Placement Team"
                 )
-            students = Student.objects.filter(id__in=eligible_student_ids)
-            recipients = [student.user for student in students]
-
-            title = f"Placement Opportunity: {company.name}"
-            message = (
-                f"Dear Student,\n\nYou are eligible to apply for placement at {company.name}.\n"
-                f"Apply link: {os.getenv('CLIENT_URL')}/student/placement/registration/{company.id}\n\nBest regards,\nTraining and Placement Team"
-            )
+            elif sendto == "registered":
+                applications = StudentPlacementAppliedCompany.objects.filter(
+                    company=company,interested=True
+                ).select_related("student")
+                recipients = [app.student.user for app in applications]
+                message = (
+                    f"{content}\n\n"
+                    f"Dear Student,\n\nThis is a notification regarding your application for placement at {company.name}.\n"
+                    f"Please check your dashboard for more details.\n\nBest regards,\nTraining and Placement Team"
+                )
+            print(f"Recipients count: {len(recipients)}")
             notification = Notification.objects.create(
                 title=title,
                 message=message,

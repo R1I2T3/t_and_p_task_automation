@@ -4,9 +4,13 @@ import noticeHeader from "@/assets/tcet header.jpg";
 import { BASE_URL } from "@/constant";
 import { FormDataType } from "@/pages/staff/placement_company";
 
+interface NoticeFormData extends FormDataType {
+  id: number;
+}
+
 const notice = forwardRef<
   HTMLDivElement,
-  { formData: FormDataType; isPlacement?: boolean }
+  { formData: NoticeFormData; isPlacement?: boolean }
 >(({ formData, isPlacement = true }, ref) => {
   const hasMultipleJobs = formData.job_offers.length > 1;
   const singleJob = !hasMultipleJobs ? formData.job_offers[0] : null;
@@ -125,7 +129,7 @@ const notice = forwardRef<
               <a
                 href={`${BASE_URL}/student/${
                   isPlacement ? "placement" : "internship"
-                }/registration/${formData.name}`}
+                }/registration/${formData.id}`}
               >
                 {formData.name} Registration Link
               </a>

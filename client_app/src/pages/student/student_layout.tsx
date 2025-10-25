@@ -35,6 +35,11 @@ const StudentLayout = () => {
       label: "Internship submission",
       href: "/student/internship-submission",
     },
+    {
+      icon:FileUser,
+      label:"Placement Card",
+      href:"/student/placement-card"
+    }
   ];
 
   return (

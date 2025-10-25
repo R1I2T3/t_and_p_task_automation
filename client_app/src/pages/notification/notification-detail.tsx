@@ -86,71 +86,47 @@ const NotificationDetail = () => {
   const expired = isExpired(notification.expires_at);
 
   return (
-    <Box display="flex" justifyContent="center" alignItems="center" mt={10}>
-      <Card
-        sx={{
-          maxWidth: 600,
-          width: "100%",
-          boxShadow: 4,
-          opacity: expired ? 0.75 : 1,
+    <div
+      style={{
+        padding: "20px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        marginTop: "90px",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "600px",
+          border: "1px solid #ccc",
+          padding: "20px",
+          borderRadius: "8px",
         }}
       >
-        <CardContent>
-          {notification.files && <Box mb={2}>{renderFile(notification.files)}</Box>}
-
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-            <Typography variant="h5" fontWeight="bold">
-              {notification.title}
-            </Typography>
-            {expired && (
-              <Chip label="Expired" color="error" variant="outlined" size="small" />
-            )}
-          </Box>
-
-          <Typography variant="body1" gutterBottom>
-            {notification.message}
-          </Typography>
-
-          {notification.link && (
-              <Box mt={2}>
-                <Typography variant="body2" fontWeight="bold">
-                  Link:
-                </Typography>
-                <a
-                  href={notification.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "#1976d2", wordBreak: "break-word" }}
-                >
-                  {notification.link}
-                </a>
-              </Box>
-          )}
-
-          <Divider sx={{ my: 2 }} />
-
-          <Typography variant="body2" color="text.secondary">
-            Created at: {formatDate(notification.created_at)}
-          </Typography>
-
-          {notification.expires_at && (
-            <Typography variant="body2" color="text.secondary">
-              Expiry date: {formatDate(notification.expires_at)}
-            </Typography>
-          )}
-
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={handleBack}
-            sx={{ mt: 3 }}
-          >
-            Back to Notifications
-          </Button>
-        </CardContent>
-      </Card>
-    </Box>
+        {notification.files && renderFile(notification.files)}
+        <h2>{notification.title}</h2>
+        <pre>{notification.message}</pre>
+        <p>
+          <small>
+            Created at: {new Date(notification.created_at).toLocaleString()}
+          </small>
+        </p>
+      </div>
+      <button
+        onClick={handleBack}
+        style={{
+          marginTop: "20px",
+          padding: "10px 20px",
+          backgroundColor: "#007bff",
+          color: "#fff",
+          border: "none",
+          borderRadius: "4px",
+          cursor: "pointer",
+        }}
+      >
+        Back to Notifications
+      </button>
+    </div>
   );
 };
 

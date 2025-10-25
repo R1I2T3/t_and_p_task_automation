@@ -1,57 +1,103 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Capitalize } from "@/utils";
 import { useEffect, useState } from "react";
+import axios from "axios";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
-interface StudentPersonalInfoProps {
-  full_name: string;
-  department: string;
-  year: string;
-  rollNo: string;
-  batch: string;
-}
-const StudentPersonalInfo = () => {
-  const [loading, setLoading] = useState(true);
-  const [StudentData, setStudentData] = useState<StudentPersonalInfoProps>({
-    full_name: "",
-    department: "",
-    year: "",
-    rollNo: "",
-    batch: "",
-  });
+export default function StudentDashboard() {
+  const [student, setStudent] = useState<any>(null);
+
   useEffect(() => {
-    const fetchPersonalInfo = async () => {
-      try {
-        const response = await fetch("/api/student/info/");
-        const data = await response.json();
-        console.log(data);
-        setLoading(false);
-        setStudentData(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPersonalInfo();
+    axios.get("/api/student/info", { withCredentials: true })
+      .then(res => setStudent(res.data))
+      .catch(err => console.error(err));
   }, []);
-  if (loading) return <div>Loading...</div>;
-  return (
-    <main className="w-[90%] md:w-3/4 p-6 space-y-4 mx-auto overflow-y-auto flex flex-col gap-3">
-      {Object.entries(StudentData).map(([key, value]) => (
-        <Card key={key}>
-          <CardContent className="text-black py-3">
-            <h1
-              className="text-xl font-bold"
-              style={{ fontFamily: "sans-serif" }}
-            >
-              {Capitalize(key)}
-            </h1>
-            <p className="text-gray-600">{Capitalize(value)}</p>
-          </CardContent>
-        </Card>
-      ))}
-    </main>
-  );
-};
 
-export default StudentPersonalInfo;
+  if (!student) return <p className="p-6">Loading your dashboard...</p>;
+
+  return (
+    <div className="p-8 space-y-6">
+      {/* Profile Info */}
+      <Card className="shadow-md">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold">Profile Information</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <p><strong>UID:</strong> {student.uid}</p>
+          <p><strong>Department:</strong> {student.department}</p>
+          <p><strong>Batch:</strong> {student.batch}</p>
+          <p><strong>Academic Year:</strong> {student.academic_year}</p>
+          <p><strong>Gender:</strong> {student.gender}</p>
+          <p><strong>DOB:</strong> {student.dob}</p>
+          <p><strong>Contact:</strong> {student.contact}</p>
+          <p><strong>Email:</strong> {student.personal_email}</p>
+          <p><strong>CGPA:</strong> {student.cgpa ?? "N/A"}</p>
+          <p><strong>Attendance:</strong> {student.attendance ?? "N/A"}%</p>
+          <p><strong>Card Type:</strong> {student.card}</p>
+          <p><strong>Category:</strong> {student.current_category}</p>
+          <p><strong>Consent:</strong> {student.consent}</p>
+          <p><strong>DSE Student:</strong> {student.is_dse_student ? "Yes" : "No"}</p>
+          <p><strong>KT:</strong> {student.is_kt ? "Yes" : "No"}</p>
+          <p><strong>Blacklisted:</strong> {student.is_blacklisted ? "Yes" : "No"}</p>
+        </CardContent>
+      </Card>
+
+      <Separator className="my-4" />
+
+      {/* Academic Performance */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Academic Performance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="list-disc ml-6">
+            {Object.entries(student.academic_performance).map(([sem, perf]) => (
+              <li key={sem}>{sem}: {perf}</li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+
+      {/* Academic Attendance */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Academic Attendance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="list-disc ml-6">
+            {Object.entries(student.academic_attendance).map(([sem, att]) => (
+              <li key={sem}>{sem}: {att}%</li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+
+      {/* Training Performance */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Training Performance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="list-disc ml-6">
+            {Object.entries(student.training_performance).map(([sem, tp]) => (
+              <li key={sem}>{sem}: {tp}</li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+
+      {/* Training Attendance */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Training Attendance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="list-disc ml-6">
+            {Object.entries(student.training_attendance).map(([sem, ta]) => (
+              <li key={sem}>{sem}: {ta}%</li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

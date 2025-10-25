@@ -30,70 +30,45 @@ class ProgramCoordinatorSerializer(serializers.ModelSerializer):
         ]  # Replace 'name' with actual fields in the ProgramCoordinator model
 
 
+
+class AcademicPerformanceSemesterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AcademicPerformanceSemester
+        fields = ["semester", "performance"]
+
+
+class AcademicAttendanceSemesterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AcademicAttendanceSemester
+        fields = ["semester", "attendance"]
+
+
+class TrainingPerformanceSemesterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrainingPerformanceSemester
+        fields = ["semester", "training_performance", "program"]
+
+
+class TrainingAttendanceSemesterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrainingAttendanceSemester
+        fields = ["semester", "training_attendance", "program"]
+
+
 class StudentSerializer(serializers.ModelSerializer):
-    user = UserSerializer()  # Nested user serializer
-
+    academic_performance = AcademicPerformanceSemesterSerializer(many=True, read_only=True)
+    academic_attendance = AcademicAttendanceSemesterSerializer(many=True, read_only=True)
+    training_performance = TrainingPerformanceSemesterSerializer(many=True, read_only=True)
+    training_attendance = TrainingAttendanceSemesterSerializer(many=True, read_only=True)
+    user = UserSerializer(read_only=True)
     class Meta:
         model = Student
-        fields = [
-            "id",
-            "user",
-            "uid",
-            "department",
-            "academic_year",
-            "current_category",
-            "consent",
-            "batch",
-            "is_pli",
-        ]
-
-class StudentConsentUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Student
-        fields = ['consent']
-
-class StudentPliUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Student
-        fields = ['is_pli']
+        fields = "__all__"
 
 class SessionAttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = AttendanceData
         fields = '__all__'
-
-class AcademicPerformanceSemesterSerializer(serializers.ModelSerializer):
-    student = StudentSerializer()  # Nested student serializer
-
-    class Meta:
-        model = AcademicPerformanceSemester
-        fields = ["id", "student", "performance", "semester"]
-
-
-class AcademicAttendanceSemesterSerializer(serializers.ModelSerializer):
-    student = StudentSerializer()  # Nested student serializer
-
-    class Meta:
-        model = AcademicAttendanceSemester
-        fields = ["id", "student", "attendance", "semester"]
-
-
-class TrainingPerformanceSemesterSerializer(serializers.ModelSerializer):
-    student = StudentSerializer()  # Nested student serializer
-    #program = ProgramCoordinatorSerializer()  # Nested program serializer
-
-    class Meta:
-        model = TrainingPerformanceSemester
-        fields = ["id", "student", "training_performance", "semester", "program"]
-
-
-class TrainingAttendanceSemesterSerializer(serializers.ModelSerializer):
-    student = StudentSerializer()  # Nested student serializer
-    #program = ProgramCoordinatorSerializer()  # Nested program serializer
-
-    class Meta:
-        model = TrainingAttendanceSemester
-        fields = ["id", "student", "training_attendance", "semester", "program"]
 
 
 class ResumeEducationSerializer(serializers.ModelSerializer):
