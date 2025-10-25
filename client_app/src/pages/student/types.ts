@@ -1,11 +1,13 @@
-export interface Education {
+// src/type.ts
+
+export type Education = {
   id: string;
-  institution: string;
   degree: string;
+  institution: string;
+  percentage: string;
   start_date: string;
   end_date: string;
-  percentage: string;
-}
+};
 
 export interface Project {
   id: string;
@@ -22,16 +24,29 @@ export interface WorkExperience {
   description: string;
 }
 
-export interface ResumeData {
+
+export interface Activity {
   id: string;
+  title: string;
+  description: string;
+}
+
+export interface ResumeData {
   name: string;
   email: string;
-  phone_no: string;
-  education: Education[];
-  projects: Project[];
-  workExperience: WorkExperience[];
-  contacts: string[];
-  skills: string[];
+  phone_no?: string;
+  address?: string;
+
+  // sections
+  education?: Education[];
+  skills?: string[];
+  projects?: Project[];
+  workExperience?: WorkExperience[];
+  activitiesAndAchievements?: Activity[];
+  contacts?: string[];
+
+  // assets
+  profile_image?: string;
 }
 
 export type StudentFormData = {

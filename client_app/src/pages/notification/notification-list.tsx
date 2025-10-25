@@ -11,6 +11,9 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Chip,
+  Divider,
+  SelectChangeEvent,
 } from "@mui/material";
 import axios from "axios";
 
@@ -21,13 +24,14 @@ interface NotificationProps {
   creator_name: string;
   created_at: string;
   type_notification: string;
+  expires_at?: string;
 }
 
 const type_notification_options = [
   "All",
   "General",
   "Training",
-  "placement",
+  "Placement",
   "Internship",
   "Resource",
 ];
@@ -42,9 +46,7 @@ const NotificationList = () => {
       try {
         const accessToken = localStorage.getItem("access_token");
         const response = await axios.get("/api/notifications/", {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
+          headers: { Authorization: `Bearer ${accessToken}` },
         });
         setNotifications(response.data);
       } catch (error) {
@@ -54,11 +56,30 @@ const NotificationList = () => {
     fetchNotifications();
   }, []);
 
+  const handleTypeChange = (event: SelectChangeEvent<string>) => {
+    setSelectedType(event.target.value);
+  };
+
   const handleViewNotification = (id: number) => {
     navigate(`/notifications/${id}`);
   };
 
-  // filter based on type
+  const isExpired = (date?: string) => {
+    if (!date) return false;
+    return new Date(date).getTime() < Date.now();
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const filteredNotifications =
     selectedType === "All"
       ? notifications
@@ -71,7 +92,6 @@ const NotificationList = () => {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        position: "relative",
         marginTop: "80px",
       }}
     >
@@ -88,13 +108,12 @@ const NotificationList = () => {
         Notifications
       </Typography>
 
-      {/* Filter dropdown */}
       <FormControl sx={{ mb: 3, minWidth: 200 }}>
         <InputLabel id="type-select-label">Filter by Type</InputLabel>
         <Select
           labelId="type-select-label"
           value={selectedType}
-          onChange={(e) => setSelectedType(e.target.value)}
+          onChange={handleTypeChange}
         >
           {type_notification_options.map((option) => (
             <MenuItem key={option} value={option}>
@@ -107,12 +126,7 @@ const NotificationList = () => {
       {filteredNotifications.length === 0 ? (
         <Typography variant="body1">No notifications available.</Typography>
       ) : (
-        <Grid
-          container
-          spacing={3}
-          direction="column"
-          sx={{ maxWidth: "600px", width: "100%" }}
-        >
+        <Grid container spacing={3} direction="column" sx={{ maxWidth: 600 }}>
           {filteredNotifications.map((notification) => (
             <Grid item key={notification.id}>
               <Card sx={{ boxShadow: 4, borderRadius: 2 }}>
@@ -134,11 +148,7 @@ const NotificationList = () => {
                       )}
                     </Box>
 
-                    <Typography
-                      variant="body2"
-                      color="textSecondary"
-                      gutterBottom
-                    >
+                    <Typography variant="body2" color="textSecondary" gutterBottom>
                       {notification.message}
                     </Typography>
 
@@ -162,6 +172,7 @@ const NotificationList = () => {
                     >
                       Created at: {formatDate(notification.created_at)}
                     </Typography>
+
                     <Typography
                       variant="caption"
                       sx={{ display: "block", mt: 1, fontWeight: "bold" }}

@@ -22,7 +22,8 @@ const CreateNotification = () => {
   const [error, setError] = useState("");
   const [year, setYear] = useState<string[]>(["FE"]);
   const [branch, setBranch] = useState<string[]>(["IT"]);
-  const [type_notification, setType_notification] = useState<string>("General");
+  const [type_notification, setType_notification] = useState<string>("");
+
 
   // Added missing state for optional form link and expiration
   const [generateLink, setGenerateLink] = useState<boolean>(false);
@@ -81,7 +82,7 @@ const CreateNotification = () => {
     setYear(typeof value === "string" ? value.split(",") : value);
   };
   const handleTypeChange = (
-    event: SelectChangeEvent<typeof type_notification_options>
+    event: SelectChangeEvent<string>
   ) => {
     setType_notification(event.target.value as string);
   };
@@ -178,7 +179,7 @@ const CreateNotification = () => {
               </MenuItem>
             ))}
           </Select>
-          <Select
+          <Select<string>
             className="w-full mb-2"
             value={type_notification}
             renderValue={(selected) => (typeof selected === "string" ? selected : String(selected))}
