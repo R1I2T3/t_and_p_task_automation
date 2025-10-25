@@ -30,9 +30,7 @@ import DepartmentParent from "./pages/department_coordinator/DepartmentParent";
 import DepartmentDashboard from "./pages/department_coordinator/DepartmentHome";
 import DepartmentAttendance from "./pages/department_coordinator/DepartmentAttendance";
 import PlacementLayout from "./pages/placement_officer/PlacementLayout";
-import PlacementReport from "./pages/placement_officer/PlacementReport";
 import { CategoryDataStatistics } from "./pages/placement_officer/CategoryData";
-import { ComparativePlacementStatistics } from "./pages/placement_officer/ComparitivePlacementStatistic";
 import PlacementStats from "./pages/placement_officer";
 import Old from "./pages/placement_officer/Old";
 import TrainingLayout from "./pages/training_officer/TrainingLayout";
@@ -58,6 +56,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { SERVER_URL } from "./constant";
 import SendPlacementMessage from "./pages/staff/SendPlacementMessage";
 import PlacementCard from "./pages/student/placement-card";
+import { ConsolidationReportPage } from "./pages/placement_officer/ConsolidatedReport";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -129,13 +128,12 @@ const App = () => {
         </Route>
         <Route path="/placement_officer" element={<PlacementLayout />}>
           <Route index element={<PlacementStats />} />
-          <Route path="report" element={<PlacementReport />} />
+          <Route path="placement-consolidated-report" element={<ConsolidationReportPage />} />
           <Route
             path="comparative_Placement_Statistics"
             element={
               <div>
                 <CategoryDataStatistics />
-                <ComparativePlacementStatistics />
               </div>
             }
           />
