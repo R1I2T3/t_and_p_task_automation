@@ -52,6 +52,7 @@ import PlacementCompany from "./pages/staff/placement_company";
 import CompanyPage from "./pages/staff/placement_companies_view";
 import ViewCompanyInfo from "./pages/staff/view-company-info";
 import EditCompanyInfo from "./pages/staff/edit-comapny-info";
+import StudentManager from "./pages/staff/student-management";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { SERVER_URL } from "./constant";
 import SendPlacementMessage from "./pages/staff/SendPlacementMessage";
@@ -180,6 +181,7 @@ const App = () => {
             path="internship/register"
             element={<InternshipCompanyRegister />}
           />
+          <Route path="student-management" element={<StudentManager />} />
           <Route path="internship/verify" element={<InternShipVerify />} />
         </Route>
         <Route path="/category-rule-form" element={<CategoryRuleForm />} />

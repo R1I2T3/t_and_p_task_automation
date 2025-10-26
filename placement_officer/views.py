@@ -11,6 +11,7 @@ from rest_framework.decorators import (
     permission_classes,
     authentication_classes,
 )
+from rest_framework.permissions import IsAuthenticated
 from staff.models import JobOffer,CompanyRegistration
 from collections import defaultdict
 from student.models import StudentOffer,StudentPlacementAppliedCompany,PlacementCompanyProgress
@@ -234,6 +235,7 @@ def students_by_category(request, category, batch):
 
 
 class ConsolidationReportAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, batch, *args, **kwargs):
         departments = [
             "COMP", "IT", "AI&DS", "AI&ML", "IoT", "CS&E",
@@ -284,6 +286,7 @@ class ConsolidationReportAPIView(APIView):
         return Response(report_list)
 
 class PlacementDashboardAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, batch, *args, **kwargs):
         offers = StudentOffer.objects.filter(student__batch=batch).annotate(
             salary_float=Cast('salary', FloatField())
@@ -380,7 +383,7 @@ class PlacementDashboardAPIView(APIView):
 
 
 class BranchwiseReportAPIView(APIView):
-
+    permission_classes = [IsAuthenticated]
     def get(self, request, batch, *args, **kwargs):
 
         companies = CompanyRegistration.objects.filter(batch=batch)
@@ -450,6 +453,7 @@ class BranchwiseReportAPIView(APIView):
 
 
 class StudentDetailReportAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
     def get(self, request, batch, *args, **kwargs):
         department = request.query_params.get('department', None)

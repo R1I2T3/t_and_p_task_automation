@@ -84,7 +84,7 @@ const PlacementCompany = () => {
     e.preventDefault();
     try {
       const csrfToken = getCookie("csrftoken");
-      const response = await fetch("/api/staff/placement/company", {
+      const response = await fetch("/api/staff/placement/company/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

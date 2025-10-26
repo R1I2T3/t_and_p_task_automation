@@ -12,11 +12,12 @@ from .views import (
     TriggerExcelExportView,
     TriggerResumeExportView,
     GetTaskStatusView,
+    StudentDetailUpdateView
 )
 
 urlpatterns = [
     path(
-        "placement/company", CompanyListCreateView.as_view(), name="company-list-create"
+        "placement/company/", CompanyListCreateView.as_view(), name="company-list-create"
     ),
     path(
         "placement/company/<str:id>/",
@@ -76,4 +77,5 @@ urlpatterns = [
         GetTaskStatusView.as_view(),
         name='get-task-status'
     ),
+    path('update/student/<str:uid>/', StudentDetailUpdateView.as_view(), name='student-detail-update'),
 ]

@@ -12,9 +12,10 @@ from student.models import Student
 from notifications.models import Notification
 from dotenv import load_dotenv
 from student.models import StudentPlacementAppliedCompany, PlacementCompanyProgress,StudentOffer
+from student.serializers import StudentSerializer
 from celery.result import AsyncResult
 from .tasks import generate_excel_export_task, generate_resume_zip_task
-
+from rest_framework.permissions import IsAuthenticated
 
 import os
 
@@ -22,12 +23,13 @@ import os
 class CompanyListCreateView(generics.CreateAPIView):
     queryset = CompanyRegistration.objects.all()
     serializer_class = FormDataSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class CompanyDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = FormDataSerializer
     lookup_field = "id"
-
+    permission_classes = [IsAuthenticated]
     def get_object(self):
         company_id = self.kwargs.get("id")
         return CompanyRegistration.objects.get(id=company_id)
@@ -35,13 +37,14 @@ class CompanyDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class CompanyByBatchView(generics.ListAPIView):
     serializer_class = FormDataSerializer
-
+    permission_classes = [IsAuthenticated]
     def get_queryset(self):
         batch = self.kwargs.get("batch")
         return CompanyRegistration.objects.filter(batch=batch)
 
 
 class CompanyBatchesView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         batches = CompanyRegistration.objects.values_list("batch", flat=True).distinct()
         return Response(batches)
@@ -50,7 +53,7 @@ class CompanyBatchesView(APIView):
 class SendPlacementNotificationApiView(generics.CreateAPIView):
     serializer_class = NotificationSerializer
     lookup_field = "id"
-
+    permission_classes = [IsAuthenticated]
     def create(self, request, *args, **kwargs):
         try:
             load_dotenv()
@@ -111,7 +114,7 @@ class StandardResultsSetPagination(PageNumberPagination):
 class PaginatedInterestedStudentsView(generics.ListAPIView):
     serializer_class = InterestedStudentApplicationSerializer
     pagination_class = StandardResultsSetPagination
-
+    permission_classes = [IsAuthenticated]
     def get_queryset(self):
         company_id = self.kwargs["company_id"]
         company = get_object_or_404(CompanyRegistration, id=company_id)
@@ -124,7 +127,7 @@ class PaginatedInterestedStudentsView(generics.ListAPIView):
 class PaginatedNotInterestedStudentsView(generics.ListAPIView):
     serializer_class = NotInterestedStudentApplicationSerializer
     pagination_class = StandardResultsSetPagination
-
+    permission_classes = [IsAuthenticated]
     def get_queryset(self):
         company_id = self.kwargs["company_id"]
         company = get_object_or_404(CompanyRegistration, id=company_id)
@@ -137,7 +140,7 @@ class PaginatedNotInterestedStudentsView(generics.ListAPIView):
 class EligibleButNotRegisteredView(generics.ListAPIView):
     serializer_class = BasicStudentSerializer
     pagination_class = StandardResultsSetPagination
-
+    permission_classes = [IsAuthenticated]
     def get_queryset(self):
         company_id = self.kwargs["company_id"]
         company = get_object_or_404(CompanyRegistration, id=company_id)
@@ -156,6 +159,7 @@ class EligibleButNotRegisteredView(generics.ListAPIView):
 
 
 class BulkUpdateProgressView(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request, *args, **kwargs):
         application_ids = request.data.get("application_ids", [])
         stage = request.data.get("stage")
@@ -254,6 +258,7 @@ class BulkUpdateProgressView(APIView):
             )
 
 class TriggerExcelExportView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, company_id, *args, **kwargs):
         task = generate_excel_export_task.delay(company_id)
 
@@ -263,6 +268,7 @@ class TriggerExcelExportView(APIView):
         )
 
 class TriggerResumeExportView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, company_id, *args, **kwargs):
         task = generate_resume_zip_task.delay(company_id)
 
@@ -272,6 +278,7 @@ class TriggerResumeExportView(APIView):
         )
 
 class GetTaskStatusView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, task_id, *args, **kwargs):
         result = AsyncResult(task_id)
 
@@ -284,3 +291,9 @@ class GetTaskStatusView(APIView):
         elif result.state == "FAILURE":
             response_data["error"] = str(result.info)
         return Response(response_data, status=status.HTTP_200_OK)
+
+class StudentDetailUpdateView(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
+    lookup_field = 'uid'

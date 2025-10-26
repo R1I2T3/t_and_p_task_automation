@@ -37,7 +37,7 @@ const CompanyPage = () => {
   // Fetch companies for selected batch
   useEffect(() => {
     if (selectedBatch) {
-      fetch(`/api/staff/placement/companies/batch/${selectedBatch}`)
+      fetch(`/api/staff/placement/companies/batch/${selectedBatch}/`)
         .then((res) => res.json())
         .then((data) => setCompanies(data))
         .catch((err) => console.error("Error fetching companies:", err));

@@ -25,13 +25,13 @@ const Sidebar = () => {
           <Building2 />
           <p>InternShip Company Form</p>
         </NavLink>
-        <NavLink to="placement/verify" className="menu-item gap-3">
-          <Verified />
-          <p>Verify Placement</p>
-        </NavLink>
         <NavLink to="internship/verify" className="menu-item gap-3">
           <Verified />
           <p>Verify Internship</p>
+        </NavLink>
+         <NavLink to="student-management" className="menu-item gap-3">
+          <Verified />
+          <p>Student Management</p>
         </NavLink>
         <NavLink to="/notifications/create" className="menu-item gap-3">
           <Send />

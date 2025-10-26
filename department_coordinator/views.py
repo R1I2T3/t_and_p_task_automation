@@ -10,11 +10,7 @@ from student.models import (
     Student,
     AcademicAttendanceSemester,
     AcademicPerformanceSemester,
-    TrainingAttendanceSemester,
-    TrainingPerformanceSemester,
 )
-import json
-import os
 from .utils import validate_file, importExcelAndReturnJSON
 from .serializers import DepartmentStatsSerializer
 from django.db import models
