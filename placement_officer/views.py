@@ -12,8 +12,9 @@ from rest_framework.decorators import (
     permission_classes,
     authentication_classes,
 )
-from staff.models import JobOffer
-from student.models import StudentOffer
+from staff.models import JobOffer,CompanyRegistration
+from collections import defaultdict
+from student.models import StudentOffer,StudentPlacementAppliedCompany
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
@@ -376,3 +377,72 @@ class PlacementDashboardAPIView(APIView):
             "topJobRoles": top_job_roles,
         }
         return Response(dashboard_data)
+
+
+class BranchwiseReportAPIView(APIView):
+
+    def get(self, request, batch, *args, **kwargs):
+
+        companies = CompanyRegistration.objects.filter(batch=batch)
+        company_map = {c.id: c.name for c in companies}
+
+        departments = Student.objects.filter(batch=batch).values_list(
+            'department', flat=True
+        ).distinct().order_by('department')
+        progress_fields = [
+            'registered', 'aptitude_test', 'coding_test',
+            'technical_interview', 'hr_interview', 'gd'
+        ]
+        def default_counts():
+            counts = {field: 0 for field in progress_fields}
+            counts['final'] = 0
+            return counts
+
+        report_data = defaultdict(lambda: defaultdict(default_counts))
+        applications = StudentPlacementAppliedCompany.objects.filter(
+            student__batch=batch
+        ).select_related(
+            'student', 'company', 'application'
+        )
+        for app in applications:
+            dept = app.student.department
+            comp_id = app.company_id
+
+            if comp_id not in company_map:
+                continue
+
+            try:
+                progress = app.application
+                for field in progress_fields:
+                    if getattr(progress, field):
+                        report_data[dept][comp_id][field] += 1
+
+            except StudentPlacementAppliedCompany.application.RelatedObjectDoesNotExist:
+                continue
+
+        offers = StudentOffer.objects.filter(student__batch=batch).select_related('student')
+
+        for offer in offers:
+            dept = offer.student.department
+            comp_id = offer.company_id
+
+            if comp_id in company_map:
+                report_data[dept][comp_id]['final'] += 1
+
+        final_report = []
+        for dept in departments:
+            row = {'department': dept}
+            for comp_id in company_map.keys():
+                counts = report_data[dept][comp_id]
+                for field in progress_fields:
+                    row[f'company_{comp_id}_{field}'] = counts[field]
+                row[f'company_{comp_id}_final'] = counts['final']
+            final_report.append(row)
+
+        all_report_fields = progress_fields + ['final']
+
+        return Response({
+            'company_headers': list(companies.values('id', 'name')),
+            'progress_fields': all_report_fields,
+            'report_data': final_report
+        })

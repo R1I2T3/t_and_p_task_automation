@@ -48,4 +48,9 @@ urlpatterns = [
         views.PlacementDashboardAPIView.as_view(),
         name="get_all_data",
     ),
+    path(
+        "branch_wise_report/<str:batch>/",
+        views.BranchwiseReportAPIView.as_view(),
+        name="branch_wise_report",
+    ),
 ]

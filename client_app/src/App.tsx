@@ -57,6 +57,7 @@ import { SERVER_URL } from "./constant";
 import SendPlacementMessage from "./pages/staff/SendPlacementMessage";
 import PlacementCard from "./pages/student/placement-card";
 import { ConsolidationReportPage } from "./pages/placement_officer/ConsolidatedReport";
+import {BranchWiseReport} from "./pages/placement_officer/BranchWiseReport";
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -128,6 +129,7 @@ const App = () => {
         </Route>
         <Route path="/placement_officer" element={<PlacementLayout />}>
           <Route index element={<PlacementDashboard />} />
+          <Route path="branch-wise-report" element={<BranchWiseReport />} />
           <Route path="placement-consolidated-report" element={<ConsolidationReportPage />} />
           <Route
             path="comparative_Placement_Statistics"
@@ -137,7 +139,7 @@ const App = () => {
               </div>
             }
           />
-          <Route path="/placement_officer/2024" element={<Old />} />
+          <Route path="placement_old" element={<Old />} />
         </Route>
         <Route path="/training_officer" element={<TrainingLayout />}>
           <Route index element={<TrainingStats />} />

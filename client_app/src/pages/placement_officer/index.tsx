@@ -17,7 +17,8 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, MenuItem,  } from "@mui/material";
+import { Select, MenuItem } from "@mui/material";
+import { NavLink } from "react-router";
 
 interface DashboardData {
   placementsOverTime: { month: string; placements: number }[];
@@ -44,11 +45,11 @@ export function PlacementDashboard() {
   const [batches, setBatches] = React.useState<string[]>([]);
 
   React.useEffect(() => {
-      fetch("/api/staff/companies/batches/")
-        .then((res) => res.json())
-        .then((data) => setBatches(data))
-        .catch((err) => console.error("Error fetching batches:", err));
-    }, []);
+    fetch("/api/staff/companies/batches/")
+      .then((res) => res.json())
+      .then((data) => setBatches(data))
+      .catch((err) => console.error("Error fetching batches:", err));
+  }, []);
   React.useEffect(() => {
     async function fetchData(batchToFetch: string) {
       if (!batchToFetch) return;
@@ -81,19 +82,20 @@ export function PlacementDashboard() {
       <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
         <div className="flex w-full max-w-sm items-center space-x-2 mt-10">
           <Select
-                    value={selectedBatch}
-                    onChange={(e) => setSelectedBatch(e.target.value)}
-                    displayEmpty
-                    sx={{ minWidth: 200 }}
-                  >
-                    <MenuItem value="">Select Batch</MenuItem>
-                    {batches.map((batch) => (
-                      <MenuItem key={batch} value={batch}>
-                        {batch}
-                      </MenuItem>
-                    ))}
-                  </Select>
+            value={selectedBatch}
+            onChange={(e) => setSelectedBatch(e.target.value)}
+            displayEmpty
+            sx={{ minWidth: 200 }}
+          >
+            <MenuItem value="">Select Batch</MenuItem>
+            {batches.map((batch) => (
+              <MenuItem key={batch} value={batch}>
+                {batch}
+              </MenuItem>
+            ))}
+          </Select>
         </div>
+        <NavLink to={'placement_old'} className={'bg-orange-600'}>Go to Old Placement Data</NavLink>
       </div>
 
       {/* Error */}
@@ -143,21 +145,21 @@ export function PlacementDashboard() {
           {data && <DepartmentChart data={data.departmentPerformance} />}
         </DashboardCard>
         <div className="w-full flex gap-3 col-span-3">
-        <DashboardCard
-          title="Top 10 Job Roles"
-          className="w-full "
-          loading={loading}
-        >
-          {data && <TopRolesChart data={data.topJobRoles} />}
-        </DashboardCard>
+          <DashboardCard
+            title="Top 10 Job Roles"
+            className="w-full "
+            loading={loading}
+          >
+            {data && <TopRolesChart data={data.topJobRoles} />}
+          </DashboardCard>
 
-        <DashboardCard
-          title="Top 10 Recruiters"
-          className="w-full"
-          loading={loading}
-        >
-          {data && <TopRecruitersChart data={data.topRecruiters} />}
-        </DashboardCard>
+          <DashboardCard
+            title="Top 10 Recruiters"
+            className="w-full"
+            loading={loading}
+          >
+            {data && <TopRecruitersChart data={data.topRecruiters} />}
+          </DashboardCard>
         </div>
       </div>
     </div>
@@ -211,7 +213,12 @@ function PlacementStatusChart({
         <YAxis />
         <Tooltip />
         <Legend />
-        <Bar dataKey="value" fill="#8884d8" name="Count" radius={[6, 6, 0, 0]} />
+        <Bar
+          dataKey="value"
+          fill="#8884d8"
+          name="Count"
+          radius={[6, 6, 0, 0]}
+        />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -231,7 +238,10 @@ function OfferCategoryChart({
       <Legend />
       <Bar dataKey="value" name="Offers">
         {data.map((_, index) => (
-          <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+          <Cell
+            key={`cell-${index}`}
+            fill={PIE_COLORS[index % PIE_COLORS.length]}
+          />
         ))}
       </Bar>
     </BarChart>
@@ -260,7 +270,12 @@ function PlacementsTimeChart({
   data: { month: string; placements: number }[];
 }) {
   return (
-    <LineChart data={data} height={250} width={200} style={{ margin: "0 auto" }}>
+    <LineChart
+      data={data}
+      height={250}
+      width={200}
+      style={{ margin: "0 auto" }}
+    >
       <CartesianGrid strokeDasharray="3 3" />
       <XAxis dataKey="month" />
       <YAxis />
@@ -296,23 +311,26 @@ function DepartmentChart({
 
 function TopRolesChart({ data }: { data: { role: string; count: number }[] }) {
   return (
-      <PieChart height={250} width={200} style={{ margin: "0 auto" }}>
-        <Pie
-          data={data}
-          dataKey="count"
-          nameKey="role"
-          cx="50%"
-          cy="50%"
-          outerRadius={80}
-          label
-        >
-          {data.map((_, index) => (
-            <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-          ))}
-        </Pie>
-        <Tooltip />
-        <Legend />
-      </PieChart>
+    <PieChart height={250} width={200} style={{ margin: "0 auto" }}>
+      <Pie
+        data={data}
+        dataKey="count"
+        nameKey="role"
+        cx="50%"
+        cy="50%"
+        outerRadius={80}
+        label
+      >
+        {data.map((_, index) => (
+          <Cell
+            key={`cell-${index}`}
+            fill={PIE_COLORS[index % PIE_COLORS.length]}
+          />
+        ))}
+      </Pie>
+      <Tooltip />
+      <Legend />
+    </PieChart>
   );
 }
 
@@ -322,22 +340,25 @@ function TopRecruitersChart({
   data: { company__name: string; hires: number }[];
 }) {
   return (
-      <PieChart height={250} width={200} style={{ margin: "0 auto" }}>
-        <Pie
-          data={data}
-          dataKey="hires"
-          nameKey="company__name"
-          cx="50%"
-          cy="50%"
-          outerRadius={80}
-          label
-        >
-          {data.map((_, index) => (
-            <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-          ))}
-        </Pie>
-        <Tooltip />
-        <Legend />
-      </PieChart>
+    <PieChart height={250} width={200} style={{ margin: "0 auto" }}>
+      <Pie
+        data={data}
+        dataKey="hires"
+        nameKey="company__name"
+        cx="50%"
+        cy="50%"
+        outerRadius={80}
+        label
+      >
+        {data.map((_, index) => (
+          <Cell
+            key={`cell-${index}`}
+            fill={PIE_COLORS[index % PIE_COLORS.length]}
+          />
+        ))}
+      </Pie>
+      <Tooltip />
+      <Legend />
+    </PieChart>
   );
 }
