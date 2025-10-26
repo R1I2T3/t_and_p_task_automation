@@ -1,110 +1,170 @@
-import { useForm } from "react-hook-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
 import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
+  TextField,
+  Button,
+  Typography,
   Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+  MenuItem,
+  SelectChangeEvent,
+} from "@mui/material";
+import axios from "axios";
+import { getCookie } from "@/utils";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import toast from "react-hot-toast";
+const CreateNotification = () => {
+  const [title, setTitle] = useState("");
+  const [message, setMessage] = useState("");
+  const [files, setFiles] = useState<File | null>(null);
+  const [error, setError] = useState("");
+  const [year, setYear] = useState<string[]>(["FE"]);
+  const [branch, setBranch] = useState<string[]>(["IT"]);
+  const [type_notification, setType_notification] = useState<string>("General");
 
-export default function SendMessage() {
-  const form = useForm({
-    defaultValues: {
-      title: "",
-      sendTo: "",
-      content: "",
-    },
-  });
+  const year_options = ["FE", "SE", "TE", "BE"];
+  const branch_options = [
+    "Computer",
+    "IT",
+    "EXTC",
+    "Mechanical",
+    "Civil",
+    "AIML",
+    "AI&DS",
+    "MME",
+  ];
+  const type_notification_options = [
+    "General",
+    "Training",
+    "Placement",
+    "Internship",
+    "Resource",
+  ];
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("message", message);
+    formData.append("academic_year", year.join(","));
+    formData.append("department", branch.join(","));
+    formData.append("type_notification", type_notification);
+    if (files) formData.append("files", files);
 
-  const onSubmit = (data: { title: string; sendTo: string; content: string }) => {
-    console.log("Form submitted:", data);
-    // You can make API call here using fetch/axios
+    try {
+      const csrfToken = getCookie("csrftoken");
+      const response = await axios.post("/api/notifications/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "X-CSRFToken": csrfToken || "",
+        },
+        withCredentials: true,
+      });
+      console.log("Notification created:", response.data);
+      toast.success("Notification created successfully");
+      // Handle successful notification creation
+    } catch (error) {
+      console.error("Error creating notification:", error);
+      setError("Error creating notification");
+    }
+  };
+
+  const handleYearChange = (e: SelectChangeEvent<typeof year_options>) => {
+    const {
+      target: { value },
+    } = e;
+    setYear(typeof value === "string" ? value.split(",") : value);
+  };
+  const handleTypeChange = (
+    event: SelectChangeEvent<typeof type_notification_options>
+  ) => {
+    setType_notification(event.target.value as string);
+  };
+  const handleDepartmentChange = (
+    e: SelectChangeEvent<typeof year_options>
+  ) => {
+    const {
+      target: { value },
+    } = e;
+    setBranch(typeof value === "string" ? value.split(",") : value);
   };
 
   return (
-    <Card className="max-w-lg mx-auto mt-10 shadow-md">
-      <CardHeader>
-        <CardTitle>Send Message</CardTitle>
-      </CardHeader>
+    <Card className="w-full max-w-md mx-auto flex justify-center items-center mt-[20dvh]">
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Title Field */}
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter title" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Send To Field */}
-            <FormField
-              control={form.control}
-              name="sendTo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Send To</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select audience" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="registered">Send to Registered</SelectItem>
-                      <SelectItem value="eligible">Send to Eligible Students</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Content Field */}
-            <FormField
-              control={form.control}
-              name="content"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Content</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Write your message here..."
-                      rows={5}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Submit Button */}
-            <Button type="submit" className="w-full">
-              Send Notification
-            </Button>
-          </form>
-        </Form>
+        <Typography variant="h4">Create Notification</Typography>
+        <form onSubmit={handleSubmit}>
+          <TextField
+            label="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <Select
+            className="w-full mb-2"
+            multiple
+            value={year}
+            renderValue={(selected) => selected.join(", ")}
+            onChange={handleYearChange}
+          >
+            {year_options.map((year, index) => (
+              <MenuItem key={index} value={year}>
+                {year}
+              </MenuItem>
+            ))}
+          </Select>
+          <Select
+            className="w-full mb-2"
+            multiple
+            value={branch}
+            renderValue={(selected) => selected.join(", ")}
+            onChange={handleDepartmentChange}
+          >
+            {branch_options.map((branch, index) => (
+              <MenuItem key={index} value={branch}>
+                {branch}
+              </MenuItem>
+            ))}
+          </Select>
+          <Select
+            className="w-full mb-2"
+            value={[type_notification]}
+            renderValue={(selected) => selected.join(", ")}
+            onChange={handleTypeChange}
+          >
+            {type_notification_options.map((type, index) => (
+              <MenuItem key={index} value={type}>
+                {type}
+              </MenuItem>
+            ))}
+          </Select>
+          <input
+            type="file"
+            onChange={(e) => {
+              if (e.target.files) {
+                setFiles(e.target.files[0]);
+              }
+            }}
+            style={{ margin: "20px 0" }}
+          />
+          {error && <Typography color="error">{error}</Typography>}
+          <Button
+            type="submit"
+            variant="contained"
+            className="w-full  text-white"
+          >
+            Create
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );
-}
+};
+
+export default CreateNotification;

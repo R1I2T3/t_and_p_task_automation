@@ -1,11 +1,10 @@
-from django.shortcuts import render, HttpResponse
-from django.db.models import Count, Sum, Avg, Max, Min,F
+from django.db.models import Count, Q, Case, When, Sum,FloatField,Avg, F, Value, CharField
+from django.db.models.functions import TruncMonth, Cast
+from django.db.models.functions import Cast
 from django.http import JsonResponse
 import json
 from placement_officer.models import CategoryRule
 from student.models import Student
-from django.views.decorators.csrf import ensure_csrf_cookie
-import re
 from datetime import datetime
 from student.utils import categorize
 from rest_framework.decorators import (
@@ -13,28 +12,14 @@ from rest_framework.decorators import (
     permission_classes,
     authentication_classes,
 )
+from staff.models import JobOffer,CompanyRegistration
+from collections import defaultdict
+from student.models import StudentOffer,StudentPlacementAppliedCompany
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.response import Response
 from rest_framework import status
-
-
-# @api_view(["GET"])
-# @authentication_classes([SessionAuthentication, BasicAuthentication])
-# @permission_classes([IsAuthenticated])
-# def get_top_companies_with_offers(request):
-#     try:
-#         top_companies = list(
-#             Offers.objects.values("company__name")
-#             .annotate(count=Count("id"))
-#             .order_by("-count")[:10]
-#         )
-#     except Exception as e:
-#         print(f"Error fetching top companies with offers: {e}")
-#         top_companies = []
-
-#     return JsonResponse({"top_companies": top_companies})
 
 
 @api_view(["GET"])
@@ -154,42 +139,6 @@ def get_category_by_department(request, department, year=None):
     return JsonResponse({"category": category})
 
 
-# @api_view(["GET"])
-# @authentication_classes([SessionAuthentication, BasicAuthentication])
-# @permission_classes([IsAuthenticated])
-# def get_all_companies(request):
-#     try:
-#         companies = list(
-#             CompanyRegistration.objects.values_list("name", flat=True).distinct()
-#         )
-#     except Exception as e:
-#         print(f"Error fetching company names: {e}")
-#         companies = []
-#     return JsonResponse({"companies": companies})
-
-
-# @api_view(["GET"])
-# @authentication_classes([SessionAuthentication, BasicAuthentication])
-# @permission_classes([IsAuthenticated])
-# def get_offers_by_department(request, department, year=None):
-#     year = year or get_current_year()
-#     batch_year_suffix = str(year)[-2:]
-#     try:
-#         offer_ids = Student.objects.filter(
-#             department__startswith=department,
-#         ).values_list("uid", flat=True)
-#         print(f"Offer IDs: {offer_ids}")
-#         offers = list(
-#             Offers.objects.filter(id__in=offer_ids)
-#             .values("company__name")
-#             .annotate(count=Count("id"))
-#         )
-#     except Exception as e:
-#         print(f"Error fetching offers by department: {e}")
-#         offers = []
-#     return JsonResponse({"offers": offers})
-
-
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
@@ -205,128 +154,30 @@ def get_data_by_year(request, year):
     return JsonResponse({"data": student_data})
 
 
-
-
-# @api_view(["GET"])
-# @authentication_classes([SessionAuthentication, BasicAuthentication])
-# @permission_classes([IsAuthenticated])
-# def consolidated(request):
-#     try:
-#         acceptances = jobAcceptance.objects.all()
-
-#         # Get the total number of distinct placed students
-#         placed_students = acceptances.values("student").distinct().count()
-
-#         # Get total number of accepted offers
-#         total_accepted_offers = acceptances.count()
-
-#         # Get the total salary accepted
-#         total_salary_accepted = acceptances.aggregate(total_salary=Sum("salary"))["total_salary"]
-
-#         # Get average salary accepted
-#         avg_salary_accepted = acceptances.aggregate(avg_salary=Avg("salary"))["avg_salary"]
-
-#         # Get the maximum salary accepted
-#         max_salary_accepted = acceptances.aggregate(max_salary=Max("salary"))["max_salary"]
-
-#         # Get the minimum salary accepted
-#         min_salary_accepted = acceptances.aggregate(min_salary=Min("salary"))["min_salary"]
-
-#         # Prepare company data with branch-wise statistics
-#         company_data = {}
-#         companies = CompanyRegistration.objects.values("name").distinct()
-
-#         for company in companies:
-#             company_name = company["name"]
-
-#             # Get distinct branches for the company
-#             branches = acceptances.filter(company__name=company_name).values("student__department").distinct()
-#             print(f"Branches for company {company_name}: {branches}")
-
-#             branch_data = {}
-#             for branch in branches:
-#                 branch_name = branch["student__department"]
-
-#                 # Fetching selected students where is_sel=1 (True in TinyInt)
-#                 selected = acceptances.filter(
-#                     company__name=company_name,
-#                     student__department=branch_name,
-#                     is_sel=1  # Checking for TinyInt value 1 (True)
-#                 ).count()
-
-#                 # Fetching registered students where is_reg=1 (True in TinyInt)
-#                 registered = acceptances.filter(
-#                     company__name=company_name,
-#                     student__department=branch_name,
-#                     is_reg=1  # Checking for TinyInt value 1 (True)
-#                 ).count()
-
-#                 # Store selected and registered count in the branch data
-#                 branch_data[branch_name] = {
-#                     "selected": selected,
-#                     "registered": registered
-#                 }
-
-#             # Adding the total selected and registered for each company
-#             company_data[company_name] = {
-#                 "branch_data": branch_data,
-#                 "total_selected": sum(branch["selected"] for branch in branch_data.values()),
-#                 "total_registered": sum(branch["registered"] for branch in branch_data.values())
-#             }
-
-#         # Fetching student data (student UID, department, company name, and salary)
-#         student_data = list(
-#             acceptances.values(
-#                 "student__uid",
-#                 "student__department",
-#                 "company__name",
-#                 "salary",
-#                 "company__is_pli"
-#             )
-#         )
-
-#         # Prepare the final context to return as JSON response
-#         context = {
-#             "total_placed_students": placed_students,
-#             "total_accepted_offers": total_accepted_offers,
-#             "total_salary_accepted": total_salary_accepted,
-#             "avg_salary_accepted": avg_salary_accepted,
-#             "max_salary_accepted": max_salary_accepted,
-#             "min_salary_accepted": min_salary_accepted,
-#             "company_data": company_data,
-#             "student_data": student_data,
-#         }
-
-#         # Return the context as JSON response with status 200
-#         return JsonResponse(context, status=200)
-
-#     except Exception as e:
-#         # Handle any exceptions and return a JSON response with error details
-#         print(f"[ERROR] consolidated view: {str(e)}")
-#         return JsonResponse(
-#             {
-#                 "error": "Internal server error occurred while generating report.",
-#                 "details": str(e)
-#             },
-#             status=500
-#         )
-
-
-
 @api_view(["POST"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def calculateCategory(request):
     try:
-        batch = request.data.get('batch', 'BE_2024')  # Get batch from request or use default
+        batch = request.data.get(
+            "batch", "BE_2024"
+        )  # Get batch from request or use default
         students = Student.objects.filter(academic_year="BE")
 
         for student in students:
             # Calculate averages
-            academic_attendance = calculate_average(student.academic_attendance, 'attendance')
-            academic_performance = calculate_average(student.academic_performance, 'performance')
-            training_attendance = calculate_average(student.training_attendance, 'training_attendance')
-            training_performance = calculate_average(student.training_performance, 'training_performance')
+            academic_attendance = calculate_average(
+                student.academic_attendance, "attendance"
+            )
+            academic_performance = calculate_average(
+                student.academic_performance, "performance"
+            )
+            training_attendance = calculate_average(
+                student.training_attendance, "training_attendance"
+            )
+            training_performance = calculate_average(
+                student.training_performance, "training_performance"
+            )
 
             # Calculate category using the new dynamic rules
             category = categorize(
@@ -334,7 +185,7 @@ def calculateCategory(request):
                 academic_performance,
                 training_attendance,
                 training_performance,
-                batch
+                batch,
             )
 
             student.current_category = category
@@ -345,8 +196,9 @@ def calculateCategory(request):
         print(e)
         return JsonResponse({"error": str(e)}, status=500)
 
+
 def calculate_average(queryset, field_name):
-    sum_value = queryset.aggregate(Sum(field_name)).get(f'{field_name}__sum')
+    sum_value = queryset.aggregate(Sum(field_name)).get(f"{field_name}__sum")
     count = queryset.count()
     return sum_value / count if sum_value is not None and count > 0 else None
 
@@ -356,9 +208,12 @@ def calculate_average(queryset, field_name):
 def create_category_rule(request):
     try:
         CategoryRule.objects.create(**request.data)
-        return JsonResponse({"message": "Category rule created successfully"}, status=201)
+        return JsonResponse(
+            {"message": "Category rule created successfully"}, status=201
+        )
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -366,12 +221,228 @@ def list_category_rules(request):
     rules = CategoryRule.objects.all().values()
     return Response(list(rules))  # Convert to list here as well for consistency
 
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def students_by_category(request, category, batch):
     try:
         students = Student.objects.filter(current_category=category, batch=batch)
-        student_data = students.values('id', 'current_category', 'academic_year')
+        student_data = students.values("id", "current_category", "academic_year")
         return Response(list(student_data))  # Convert ValuesQuerySet to list
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ConsolidationReportAPIView(APIView):
+    def get(self, request, batch, *args, **kwargs):
+        departments = [
+            "COMP", "IT", "AI&DS", "AI&ML", "IoT", "CS&E",
+            "E&CS", "E&TC", "Mech", "MME", "CIVIL"
+        ]
+
+        annotations_to_add = {}
+        for dept in departments:
+            dept_key = dept.lower().replace('&', '').replace(' ', '_').replace('-', '_')
+
+            annotations_to_add[f'applied_{dept_key}'] = Count(
+                'offer',
+                filter=Q(offer__student__department=dept, offer__student__batch=batch),
+                distinct=True
+            )
+
+            annotations_to_add[f'selected_{dept_key}'] = Count(
+                'student_offers',
+                filter=Q(student_offers__student__department=dept),
+                distinct=True
+            )
+
+        base_fields = [
+            'id',
+            'role',
+            'salary',
+            'form__name',
+            'form__notice__date'
+        ]
+
+        report_data = (
+            JobOffer.objects
+            .select_related('form', 'form__notice')
+            .annotate(**annotations_to_add)
+            .values(*base_fields, *annotations_to_add.keys())
+        )
+        report_list = []
+        for item in report_data:
+            salary = int(item.get("salary") or 0)
+            if salary < 500000:
+                emp_type = "Normal"
+            elif salary < 1000000:
+                emp_type = "Dream"
+            else:
+                emp_type = "Super Dream"
+            item["employee_type"] = emp_type
+            report_list.append(item)
+        return Response(report_list)
+
+class PlacementDashboardAPIView(APIView):
+    def get(self, request, batch, *args, **kwargs):
+        offers = StudentOffer.objects.filter(student__batch=batch).annotate(
+            salary_float=Cast('salary', FloatField())
+        )
+        offer_category_case = Case(
+            When(salary_float__lt=5, then=Value('Normal')),
+            When(salary_float__gte=5, salary_float__lte=10, then=Value('Dream')),
+            When(salary_float__gt=10, then=Value('Super Dream')),
+            default=Value('N/A'),
+            output_field=CharField(),
+        )
+
+        salary_histogram_case = Case(
+            When(salary_float__lt=5, then=Value('0-5 LPA')),
+            When(salary_float__gte=5, salary_float__lt=7, then=Value('5-7 LPA')),
+            When(salary_float__gte=7, salary_float__lt=10, then=Value('7-10 LPA')),
+            When(salary_float__gte=10, salary_float__lt=15, then=Value('10-15 LPA')),
+            When(salary_float__gte=15, then=Value('15+ LPA')),
+            default=Value('Other'),
+            output_field=CharField(),
+        )
+
+        placements_over_time_query = offers.annotate(
+            month=TruncMonth('offer_date')
+        ).values('month').annotate(
+            placements=Count('id')
+        ).order_by('month')
+
+        placements_over_time = [
+            {'month': item['month'].strftime('%b %Y'), 'placements': item['placements']}
+            for item in placements_over_time_query
+        ]
+
+        department_performance = list(
+            Student.objects.filter(batch=batch)
+            .values('department')
+            .annotate(
+                total=Count('id'),
+                placed=Count('student_offers', distinct=True),
+                avg_salary=Avg('student_offers__salary'),
+            )
+            .order_by('-placed')
+        )
+
+        salary_distribution = list(
+            offers.annotate(range=salary_histogram_case)
+            .values('range')
+            .annotate(count=Count('id'))
+            .order_by('range')
+        )
+
+        offer_category_breakdown = list(
+            offers.annotate(name=offer_category_case)
+            .values('name')
+            .annotate(value=Count('id'))
+            .order_by('name')
+        )
+
+        total_students = Student.objects.filter(batch=batch).count()
+        placed_students = (
+            Student.objects.filter(batch=batch, student_offers__isnull=False)
+            .distinct()
+            .count()
+        )
+
+        placement_status_funnel = [
+            {"name": "Total Students", "value": total_students},
+            {"name": "Placed", "value": placed_students},
+            {"name": "Unplaced", "value": total_students - placed_students},
+        ]
+
+        top_recruiters = list(
+            offers.values('company__name')
+            .annotate(hires=Count('student_id', distinct=True))
+            .order_by('-hires')[:10]
+        )
+
+        top_job_roles = list(
+            offers.values('role')
+            .annotate(count=Count('id'))
+            .order_by('-count')[:10]
+        )
+
+        dashboard_data = {
+            "placementsOverTime": placements_over_time,
+            "departmentPerformance": department_performance,
+            "salaryDistribution": salary_distribution,
+            "offerCategoryBreakdown": offer_category_breakdown,
+            "placementStatusFunnel": placement_status_funnel,
+            "topRecruiters": top_recruiters,
+            "topJobRoles": top_job_roles,
+        }
+        return Response(dashboard_data)
+
+
+class BranchwiseReportAPIView(APIView):
+
+    def get(self, request, batch, *args, **kwargs):
+
+        companies = CompanyRegistration.objects.filter(batch=batch)
+        company_map = {c.id: c.name for c in companies}
+
+        departments = Student.objects.filter(batch=batch).values_list(
+            'department', flat=True
+        ).distinct().order_by('department')
+        progress_fields = [
+            'registered', 'aptitude_test', 'coding_test',
+            'technical_interview', 'hr_interview', 'gd'
+        ]
+        def default_counts():
+            counts = {field: 0 for field in progress_fields}
+            counts['final'] = 0
+            return counts
+
+        report_data = defaultdict(lambda: defaultdict(default_counts))
+        applications = StudentPlacementAppliedCompany.objects.filter(
+            student__batch=batch
+        ).select_related(
+            'student', 'company', 'application'
+        )
+        for app in applications:
+            dept = app.student.department
+            comp_id = app.company_id
+
+            if comp_id not in company_map:
+                continue
+
+            try:
+                progress = app.application
+                for field in progress_fields:
+                    if getattr(progress, field):
+                        report_data[dept][comp_id][field] += 1
+
+            except StudentPlacementAppliedCompany.application.RelatedObjectDoesNotExist:
+                continue
+
+        offers = StudentOffer.objects.filter(student__batch=batch).select_related('student')
+
+        for offer in offers:
+            dept = offer.student.department
+            comp_id = offer.company_id
+
+            if comp_id in company_map:
+                report_data[dept][comp_id]['final'] += 1
+
+        final_report = []
+        for dept in departments:
+            row = {'department': dept}
+            for comp_id in company_map.keys():
+                counts = report_data[dept][comp_id]
+                for field in progress_fields:
+                    row[f'company_{comp_id}_{field}'] = counts[field]
+                row[f'company_{comp_id}_final'] = counts['final']
+            final_report.append(row)
+
+        all_report_fields = progress_fields + ['final']
+
+        return Response({
+            'company_headers': list(companies.values('id', 'name')),
+            'progress_fields': all_report_fields,
+            'report_data': final_report
+        })

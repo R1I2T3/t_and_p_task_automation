@@ -38,25 +38,19 @@ urlpatterns = [
         views.get_category_by_department,
         name="get_category_data_by_department",
     ),
-    # path(
-    #     "get_top_companies_with_offers/<int:year>/",
-    #     views.get_top_companies_with_offers,
-    #     name="get_top_companies_with_offers_by_year",
-    # ),
-    # path(
-    #     "get_top_companies_with_offers/",
-    #     views.get_top_companies_with_offers,
-    #     name="get_top_companies_with_offers",
-    # ),
-    # path("get_all_companies/", views.get_all_companies, name="get_all_companies"),
-    # path(
-    #     "get_offers_by_department/<str:department>/<int:year>/",
-    #     views.get_offers_by_department,
-    #     name="get_offers_by_department_by_year",
-    # ),
-    # path("consolidated/", views.consolidated, name="consolidated"),
-    # path("calculate_category/", views.calculateCategory, name="calculate_category"),
-    # path('category-rules/create/', views.create_category_rule, name='create-category-rule'),
-    # path('category-rules/list/', views.list_category_rules, name='list-category-rules'),
-    # path('students/by-category/<str:category>/<str:batch>/', views.students_by_category, name='students_by_category'),
+    path(
+        "get_data_by_year/<str:batch>/",
+        views.ConsolidationReportAPIView.as_view(),
+        name="get_data_by_year",
+    ),
+    path(
+        "dashboard/<str:batch>/",
+        views.PlacementDashboardAPIView.as_view(),
+        name="get_all_data",
+    ),
+    path(
+        "branch_wise_report/<str:batch>/",
+        views.BranchwiseReportAPIView.as_view(),
+        name="branch_wise_report",
+    ),
 ]
