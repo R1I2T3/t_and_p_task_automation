@@ -15,9 +15,6 @@ import {
 } from "@/components/ui/table";
 import { Select, MenuItem, Button, Stack } from "@mui/material";
 import Papa from "papaparse";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
-
 type ReportData = {
   id: number;
   role: string;
@@ -149,31 +146,6 @@ export function ConsolidationReportPage() {
     link.click();
   };
 
-  const handleExportPDF = () => {
-    const doc = new jsPDF({ orientation: "landscape" });
-    doc.text(`Consolidation Report - Batch ${selectedBatch}`, 14, 10);
-
-    const headers = table
-      .getAllLeafColumns()
-      .map((col) => col.columnDef.header?.toString() || "");
-
-    const rows = data.map((row) =>
-      table.getAllLeafColumns().map((col) => {
-        const key = col.columnDef.accessorKey as string;
-        return key ? row[key] ?? "" : "";
-      })
-    );
-
-    doc.autoPrint({
-      head: [headers],
-      body: rows,
-      startY: 20,
-      styles: { fontSize: 7 },
-    });
-
-    doc.save(`consolidation_report_${selectedBatch}.pdf`);
-  };
-
   return (
     <div>
       <div
@@ -207,14 +179,6 @@ export function ConsolidationReportPage() {
             onClick={handleExportCSV}
           >
             Export CSV
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            disabled={!data.length}
-            onClick={handleExportPDF}
-          >
-            Export PDF
           </Button>
         </Stack>
       </div>

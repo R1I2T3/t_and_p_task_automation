@@ -1,12 +1,10 @@
-from django.shortcuts import render, HttpResponse
-from django.db.models import Count, Q, Case, When, Value, CharField, Sum,F,IntegerField
+from django.db.models import Count, Q, Case, When, Sum,FloatField,Avg, F, Value, CharField
+from django.db.models.functions import TruncMonth, Cast
 from django.db.models.functions import Cast
 from django.http import JsonResponse
 import json
 from placement_officer.models import CategoryRule
 from student.models import Student
-from django.views.decorators.csrf import ensure_csrf_cookie
-import re
 from datetime import datetime
 from student.utils import categorize
 from rest_framework.decorators import (
@@ -15,6 +13,7 @@ from rest_framework.decorators import (
     authentication_classes,
 )
 from staff.models import JobOffer
+from student.models import StudentOffer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
@@ -282,3 +281,98 @@ class ConsolidationReportAPIView(APIView):
             item["employee_type"] = emp_type
             report_list.append(item)
         return Response(report_list)
+
+class PlacementDashboardAPIView(APIView):
+    def get(self, request, batch, *args, **kwargs):
+        offers = StudentOffer.objects.filter(student__batch=batch).annotate(
+            salary_float=Cast('salary', FloatField())
+        )
+        offer_category_case = Case(
+            When(salary_float__lt=5, then=Value('Normal')),
+            When(salary_float__gte=5, salary_float__lte=10, then=Value('Dream')),
+            When(salary_float__gt=10, then=Value('Super Dream')),
+            default=Value('N/A'),
+            output_field=CharField(),
+        )
+
+        salary_histogram_case = Case(
+            When(salary_float__lt=5, then=Value('0-5 LPA')),
+            When(salary_float__gte=5, salary_float__lt=7, then=Value('5-7 LPA')),
+            When(salary_float__gte=7, salary_float__lt=10, then=Value('7-10 LPA')),
+            When(salary_float__gte=10, salary_float__lt=15, then=Value('10-15 LPA')),
+            When(salary_float__gte=15, then=Value('15+ LPA')),
+            default=Value('Other'),
+            output_field=CharField(),
+        )
+
+        placements_over_time_query = offers.annotate(
+            month=TruncMonth('offer_date')
+        ).values('month').annotate(
+            placements=Count('id')
+        ).order_by('month')
+
+        placements_over_time = [
+            {'month': item['month'].strftime('%b %Y'), 'placements': item['placements']}
+            for item in placements_over_time_query
+        ]
+
+        department_performance = list(
+            Student.objects.filter(batch=batch)
+            .values('department')
+            .annotate(
+                total=Count('id'),
+                placed=Count('student_offers', distinct=True),
+                avg_salary=Avg('student_offers__salary'),
+            )
+            .order_by('-placed')
+        )
+
+        salary_distribution = list(
+            offers.annotate(range=salary_histogram_case)
+            .values('range')
+            .annotate(count=Count('id'))
+            .order_by('range')
+        )
+
+        offer_category_breakdown = list(
+            offers.annotate(name=offer_category_case)
+            .values('name')
+            .annotate(value=Count('id'))
+            .order_by('name')
+        )
+
+        total_students = Student.objects.filter(batch=batch).count()
+        placed_students = (
+            Student.objects.filter(batch=batch, student_offers__isnull=False)
+            .distinct()
+            .count()
+        )
+
+        placement_status_funnel = [
+            {"name": "Total Students", "value": total_students},
+            {"name": "Placed", "value": placed_students},
+            {"name": "Unplaced", "value": total_students - placed_students},
+        ]
+
+        top_recruiters = list(
+            offers.values('company__name')
+            .annotate(hires=Count('student_id', distinct=True))
+            .order_by('-hires')[:10]
+        )
+
+        top_job_roles = list(
+            offers.values('role')
+            .annotate(count=Count('id'))
+            .order_by('-count')[:10]
+        )
+
+        dashboard_data = {
+            "placementsOverTime": placements_over_time,
+            "departmentPerformance": department_performance,
+            "salaryDistribution": salary_distribution,
+            "offerCategoryBreakdown": offer_category_breakdown,
+            "placementStatusFunnel": placement_status_funnel,
+            "topRecruiters": top_recruiters,
+            "topJobRoles": top_job_roles,
+        }
+        return Response(dashboard_data)

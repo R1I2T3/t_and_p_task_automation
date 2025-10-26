@@ -43,4 +43,9 @@ urlpatterns = [
         views.ConsolidationReportAPIView.as_view(),
         name="get_data_by_year",
     ),
+    path(
+        "dashboard/<str:batch>/",
+        views.PlacementDashboardAPIView.as_view(),
+        name="get_all_data",
+    ),
 ]

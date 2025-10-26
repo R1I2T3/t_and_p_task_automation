@@ -31,7 +31,7 @@ import DepartmentDashboard from "./pages/department_coordinator/DepartmentHome";
 import DepartmentAttendance from "./pages/department_coordinator/DepartmentAttendance";
 import PlacementLayout from "./pages/placement_officer/PlacementLayout";
 import { CategoryDataStatistics } from "./pages/placement_officer/CategoryData";
-import PlacementStats from "./pages/placement_officer";
+import {PlacementDashboard} from "./pages/placement_officer";
 import Old from "./pages/placement_officer/Old";
 import TrainingLayout from "./pages/training_officer/TrainingLayout";
 import TrainingStats from "./pages/training_officer/TrainingStats";
@@ -127,7 +127,7 @@ const App = () => {
           <Route path="attendance" element={<DepartmentAttendance />} />
         </Route>
         <Route path="/placement_officer" element={<PlacementLayout />}>
-          <Route index element={<PlacementStats />} />
+          <Route index element={<PlacementDashboard />} />
           <Route path="placement-consolidated-report" element={<ConsolidationReportPage />} />
           <Route
             path="comparative_Placement_Statistics"

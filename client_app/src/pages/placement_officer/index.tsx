@@ -1,531 +1,343 @@
-import { useState, useEffect } from "react";
+import * as React from "react";
 import {
-  Grid,
-  Box,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Typography,
-  SelectChangeEvent,
-} from "@mui/material";
-import { Bar, Pie } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
+  Bar,
+  BarChart,
+  CartesianGrid,
   Legend,
-} from "chart.js";
-import axios from "axios";
-import { Link } from "react-router";
-import { Button } from "@/components/ui/button";
-import { getCookie } from "@/utils";
-import toast from "react-hot-toast";
-// import "./placement.css";
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  ArcElement,
-  Title,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
   Tooltip,
-  Legend
-);
-const PlacementStats = () => {
-  const [year] = useState("BE");
-  const [selectedDepartment, setSelectedDepartment] = useState("");
-  const [departments, setDepartments] = useState([]);
-  interface ConsentData extends ChartDataItem {
-    consent: string;
-    count: number;
-  }
-  const [consentData, setConsentData] = useState<ConsentData[]>([]);
-  const [departmentData, setDepartmentData] = useState([]);
-  interface CategoryData {
-    current_category: string;
-    count: number;
-  }
-  const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
-  interface TopCompanyData {
-    company__name: string;
-    count: number;
-  }
-  const [topCompanies, setTopCompanies] = useState<TopCompanyData[]>([]);
-  const [companies, setCompanies] = useState([]);
-  useEffect(() => {
-    // if (year === 2024) {
-    //   window.location.href = '/placement/2024';
-    // }
+  XAxis,
+  YAxis,
+  Cell,
+} from "recharts";
 
-    const fetchData = async () => {
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Select, MenuItem,  } from "@mui/material";
+
+interface DashboardData {
+  placementsOverTime: { month: string; placements: number }[];
+  departmentPerformance: {
+    department: string;
+    total: number;
+    placed: number;
+    avg_salary: string | null;
+  }[];
+  salaryDistribution: { range: string; count: number }[];
+  offerCategoryBreakdown: { name: string; value: number }[];
+  placementStatusFunnel: { name: string; value: number }[];
+  topRecruiters: { company__name: string; hires: number }[];
+  topJobRoles: { role: string; count: number }[];
+}
+
+const PIE_COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+
+export function PlacementDashboard() {
+  const [data, setData] = React.useState<DashboardData | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [selectedBatch, setSelectedBatch] = React.useState<string>("");
+  const [batches, setBatches] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+      fetch("/api/staff/companies/batches/")
+        .then((res) => res.json())
+        .then((data) => setBatches(data))
+        .catch((err) => console.error("Error fetching batches:", err));
+    }, []);
+  React.useEffect(() => {
+    async function fetchData(batchToFetch: string) {
+      if (!batchToFetch) return;
+
+      setLoading(true);
+      setError(null);
       try {
-        const consentResponse = await axios.get(
-          `/api/placement_officer/consent/${year}/`
+        const response = await fetch(
+          `/api/placement_officer/dashboard/${batchToFetch}/`
         );
-        const data = consentResponse.data;
-        if (data.consent_graph) {
-          setConsentData(JSON.parse(data.consent_graph));
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        if (data.consent_counts_by_branch) {
-          setDepartmentData(JSON.parse(data.consent_counts_by_branch));
-        }
-      } catch (error) {
-        console.error("Error fetching consent data:", error);
+        const jsonData: DashboardData = await response.json();
+        setData(jsonData);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "An unknown error occurred");
+        setData(null);
+      } finally {
+        setLoading(false);
       }
-    };
-
-    const fetchDepartments = async () => {
-      try {
-        const response = await axios.get(
-          `/api/placement_officer/unique-departments/${year}/`
-        );
-        setDepartments(response.data.unique_departments);
-      } catch (error) {
-        console.error("Error fetching unique departments:", error);
-      }
-    };
-
-    const fetchCategoryData = async () => {
-      try {
-        const response = await axios.get(
-          `/api/placement_officer/get_category_data/${year}/`
-        );
-        setCategoryData(response.data.category);
-      } catch (error) {
-        console.error("Error fetching category data:", error);
-      }
-    };
-
-    const fetchTopCompaniesWithOffers = async () => {
-      try {
-        const response = await axios.get(
-          `/api/placement_officer/get_top_companies_with_offers/`
-        );
-        setTopCompanies(response.data.top_companies);
-      } catch (error) {
-        console.error("Error fetching top companies:", error);
-      }
-    };
-
-    const fetchCompaniesName = async () => {
-      try {
-        const response = await axios.get(
-          `/api/placement_officer/get_all_companies/`
-        );
-        setCompanies(response.data.companies);
-      } catch (error) {
-        console.error("Error fetching company names:", error);
-      }
-    };
-
-    fetchData();
-    fetchDepartments();
-    fetchCategoryData();
-    fetchTopCompaniesWithOffers();
-    fetchCompaniesName();
-  }, [year]);
-  const handleDepartmentChange = async (e: SelectChangeEvent) => {
-    const selectedDept = e.target.value;
-    setSelectedDepartment(selectedDept);
-
-    try {
-      const consentUrl = selectedDept
-        ? `/api/placement_officer/filter/${selectedDept}/${year}/`
-        : `/api/placement_officer/consent/${year}/`;
-
-      const categoryUrl = selectedDept
-        ? `/api/placement_officer/get_category_data_by_department/${selectedDept}/${year}/`
-        : `/api/placement_officer/get_category_data/${year}/`;
-
-      const consentResponse = await axios.get(consentUrl);
-      if (selectedDept && consentResponse.data.filtered_data) {
-        setConsentData(JSON.parse(consentResponse.data.filtered_data));
-      } else {
-        const data = consentResponse.data;
-        if (data.consent_graph) {
-          setConsentData(JSON.parse(data.consent_graph));
-        }
-        if (data.consent_counts_by_branch) {
-          setDepartmentData(JSON.parse(data.consent_counts_by_branch));
-        }
-      }
-
-      const categoryResponse = await axios.get(categoryUrl);
-      setCategoryData(categoryResponse.data.category);
-    } catch (error) {
-      console.error("Error fetching data:", error);
     }
-  };
 
-  interface ChartDataItem {
-    [key: string]: string | number;
-  }
+    fetchData(selectedBatch);
+  }, [selectedBatch]);
 
-  const getChartData = (
-    data: ChartDataItem[],
-    labelKey: string,
-    valueKey: string
-  ) => {
-    if (!data || data.length === 0) return { labels: [], datasets: [] };
-
-    const total = data.reduce((sum, item) => sum + Number(item[valueKey]), 0);
-    return {
-      labels: data.map((item) => item[labelKey]),
-      datasets: [
-        {
-          label: "Percentage",
-          data: data.map((item) =>
-            ((Number(item[valueKey]) / total) * 100).toFixed(2)
-          ),
-          backgroundColor: [
-            "rgba(75, 192, 192, 1)",
-            "rgba(255, 99, 132, 1)",
-            "rgba(255, 206, 86, 1)",
-            "rgba(54, 162, 235, 1)",
-            "rgba(153, 102, 255, 1)",
-            "rgba(255, 159, 64, 1)",
-          ],
-          borderColor: [
-            "rgba(75, 192, 192, 1)",
-            "rgba(255, 99, 132, 1)",
-            "rgba(255, 206, 86, 1)",
-            "rgba(54, 162, 235, 1)",
-            "rgba(153, 102, 255, 1)",
-            "rgba(255, 159, 64, 1)",
-          ],
-          borderWidth: 1,
-        },
-      ],
-    };
-  };
-  const calculateCategory = async () => {
-    try {
-      const response = await fetch(
-        `/api/placement_officer/calculate_category/`,
-        {
-          method: "POST",
-          headers: {
-            "X-CSRFToken": getCookie("csrftoken") || "",
-          },
-        }
-      );
-      if (response.status === 200) {
-        toast.success("Category calculated successfully");
-      } else {
-        toast.error("Error calculating category");
-      }
-    } catch (error) {
-      console.error("Error fetching category data:", error);
-    }
-  };
   return (
-    <div>
-      <div className="main-content">
-        <Typography variant="h4" gutterBottom>
-          Placement Statistics
-        </Typography>
-      </div>
-
-      <div className="statistic">
-        <div className="w-full flex justify-between items-center">
-          <Button
-            className="bg-orange-500 text-white p-2 rounded-md"
-            onClick={calculateCategory}
-          >
-            Calculate Category
-          </Button>
-          <Link
-            to="/placement_officer/2024"
-            className="text-end bg-orange-500 text-white p-2  rounded-md"
-          >
-            View old Data
-          </Link>
-        </div>
-        <br />
-        <br />
-        <br />
-        {consentData ? (
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Box
-                sx={{
-                  height: "400px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  marginBottom: 4,
-                }}
-              >
-                <FormControl fullWidth sx={{ marginBottom: 2 }}>
-                  <InputLabel id="department-select-label">
-                    Select Department
-                  </InputLabel>
-                  <Select
-                    labelId="department-select-label"
-                    id="department-select"
-                    value={selectedDepartment}
-                    onChange={handleDepartmentChange}
+    <div className="p-4 md:p-8 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <div className="flex w-full max-w-sm items-center space-x-2 mt-10">
+          <Select
+                    value={selectedBatch}
+                    onChange={(e) => setSelectedBatch(e.target.value)}
+                    displayEmpty
+                    sx={{ minWidth: 200 }}
                   >
-                    <MenuItem value="">All Departments</MenuItem>
-                    {departments.map((dept) => (
-                      <MenuItem key={dept} value={dept}>
-                        {dept}
+                    <MenuItem value="">Select Batch</MenuItem>
+                    {batches.map((batch) => (
+                      <MenuItem key={batch} value={batch}>
+                        {batch}
                       </MenuItem>
                     ))}
                   </Select>
-                </FormControl>
-                <Pie
-                  data={getChartData(consentData, "consent", "count")}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        labels: { color: "#000000" },
-                      },
-                      title: {
-                        display: true,
-                        text: "Placement Consent Distribution",
-                        color: "#000000",
-                      },
-                    },
-                  }}
-                />
-              </Box>
-              {consentData && (
-                <Box sx={{ marginTop: 2 }}>
-                  <Typography variant="h6">Consent Data:</Typography>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Consent</th>
-                        <th>Count</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {consentData.map((item, index) => (
-                        <tr key={index}>
-                          <td>{item.consent}</td>
-                          <td>{item.count}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </Box>
+        </div>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <Card className="bg-destructive text-destructive-foreground">
+          <CardHeader>
+            <CardTitle>Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Failed to load dashboard data: {error}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <DashboardCard title="Placement Status" loading={loading}>
+          {data && (
+            <PlacementStatusChart
+              data={data.placementStatusFunnel.filter(
+                (d) => d.name !== "Total Students"
               )}
-            </Grid>
-            {selectedDepartment === "" && departmentData && (
-              <Grid item xs={12} md={6}>
-                <Box
-                  sx={{
-                    height: "400px",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    marginBottom: 4,
-                  }}
-                >
-                  <Bar
-                    data={getChartData(departmentData, "department", "count")}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          labels: { color: "#000000" },
-                          position: "top",
-                        },
-                        title: {
-                          display: true,
-                          text: "Department-Wise Distribution",
-                          color: "#000000",
-                        },
-                      },
-                      scales: {
-                        x: { ticks: { color: "#000000" } },
-                        y: { ticks: { color: "#000000" } },
-                      },
-                    }}
-                  />
-                </Box>
-              </Grid>
-            )}
-            <Grid item xs={12} md={6}>
-              <Box
-                sx={{
-                  height: "400px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  marginTop: 8,
-                }}
-              >
-                <Typography variant="h6" gutterBottom>
-                  Category Data
-                </Typography>
-                {categoryData ? (
-                  <Bar
-                    data={getChartData(
-                      // @ts-expect-error - ChartJS types are not up-to-date
-                      categoryData,
-                      "current_category",
-                      "count"
-                    )}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          labels: { color: "#000000" },
-                          position: "top",
-                        },
-                        title: {
-                          display: true,
-                          text: "Category-Wise Distribution",
-                          color: "#000000",
-                        },
-                      },
-                      scales: {
-                        x: { ticks: { color: "#000000" } },
-                        y: { ticks: { color: "#000000" } },
-                      },
-                    }}
-                  />
-                ) : (
-                  <Typography>Loading category data...</Typography>
-                )}
-                {categoryData ? (
-                  <div>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Category</th>
-                          <th>Count</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {categoryData.map((item, index) => (
-                          <tr key={index}>
-                            <td>{item.current_category}</td>
-                            <td>{item.count}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <Typography>Loading category data...</Typography>
-                )}
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Box
-                sx={{
-                  height: "400px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  marginTop: 18,
-                }}
-              >
-                <Typography variant="h6" gutterBottom>
-                  Top Companies
-                </Typography>
-                {topCompanies ? (
-                  <Bar
-                    // @ts-expect-error - ChartJS types are not up-to-date
-                    data={getChartData(topCompanies, "company__name", "count")}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          labels: { color: "#000000" },
-                          position: "top",
-                        },
-                        title: {
-                          display: true,
-                          text: "Top Companies by Offers",
-                          color: "#000000",
-                        },
-                      },
-                      scales: {
-                        x: { ticks: { color: "#000000" } },
-                        y: { ticks: { color: "#000000" } },
-                      },
-                    }}
-                  />
-                ) : (
-                  <Typography>Loading company data...</Typography>
-                )}
-                {topCompanies ? (
-                  <div>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Company</th>
-                          <th>Count</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {topCompanies.map((item, index) => (
-                          <tr key={index}>
-                            <td>{item.company__name}</td>
-                            <td>{item.count}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <Typography>Loading company data...</Typography>
-                )}
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Box
-                sx={{
-                  height: "400px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  marginTop: 28,
-                }}
-              >
-                {companies ? (
-                  <div>
-                    <Typography variant="h6">All Companies:</Typography>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Company Name</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {companies.map((company, index) => (
-                          <tr key={index}>
-                            <td>{company}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <Typography>Loading company data...</Typography>
-                )}
-              </Box>
-            </Grid>
-          </Grid>
-        ) : (
-          <Typography>Loading...</Typography>
-        )}
+            />
+          )}
+        </DashboardCard>
+
+        <DashboardCard title="Offer Type Breakdown" loading={loading}>
+          {data && <OfferCategoryChart data={data.offerCategoryBreakdown} />}
+        </DashboardCard>
+
+        <DashboardCard title="Salary Distribution" loading={loading}>
+          {data && <SalaryDistributionChart data={data.salaryDistribution} />}
+        </DashboardCard>
+
+        <DashboardCard
+          title="Placements Over Time"
+          className="lg:col-span-3"
+          loading={loading}
+        >
+          {data && <PlacementsTimeChart data={data.placementsOverTime} />}
+        </DashboardCard>
+
+        <DashboardCard
+          title="Department Performance"
+          className="lg:col-span-3"
+          loading={loading}
+        >
+          {data && <DepartmentChart data={data.departmentPerformance} />}
+        </DashboardCard>
+        <div className="w-full flex gap-3 col-span-3">
+        <DashboardCard
+          title="Top 10 Job Roles"
+          className="w-full "
+          loading={loading}
+        >
+          {data && <TopRolesChart data={data.topJobRoles} />}
+        </DashboardCard>
+
+        <DashboardCard
+          title="Top 10 Recruiters"
+          className="w-full"
+          loading={loading}
+        >
+          {data && <TopRecruitersChart data={data.topRecruiters} />}
+        </DashboardCard>
+        </div>
       </div>
     </div>
   );
-};
+}
 
-export default PlacementStats;
+function DashboardCard({
+  title,
+  children,
+  className = "",
+  loading,
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+  loading: boolean;
+}) {
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <Skeleton className="h-[250px] w-full" />
+        ) : (
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              {children}
+            </ResponsiveContainer>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function PlacementStatusChart({
+  data,
+}: {
+  data: { name: string; value: number }[];
+}) {
+  return (
+    <ResponsiveContainer width={250} height={250}>
+      <BarChart
+        data={data}
+        margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Bar dataKey="value" fill="#8884d8" name="Count" radius={[6, 6, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function OfferCategoryChart({
+  data,
+}: {
+  data: { name: string; value: number }[];
+}) {
+  return (
+    <BarChart data={data} height={250} width={200} style={{ margin: "0 auto" }}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+      <YAxis />
+      <Tooltip />
+      <Legend />
+      <Bar dataKey="value" name="Offers">
+        {data.map((_, index) => (
+          <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+        ))}
+      </Bar>
+    </BarChart>
+  );
+}
+
+function SalaryDistributionChart({
+  data,
+}: {
+  data: { range: string; count: number }[];
+}) {
+  return (
+    <BarChart data={data} height={250} width={200} style={{ margin: "0 auto" }}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="range" />
+      <YAxis />
+      <Tooltip />
+      <Bar dataKey="count" fill="#8884d8" name="Students" />
+    </BarChart>
+  );
+}
+
+function PlacementsTimeChart({
+  data,
+}: {
+  data: { month: string; placements: number }[];
+}) {
+  return (
+    <LineChart data={data} height={250} width={200} style={{ margin: "0 auto" }}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="month" />
+      <YAxis />
+      <Tooltip />
+      <Legend />
+      <Line
+        type="monotone"
+        dataKey="placements"
+        stroke="#8884d8"
+        activeDot={{ r: 6 }}
+      />
+    </LineChart>
+  );
+}
+
+function DepartmentChart({
+  data,
+}: {
+  data: { department: string; total: number; placed: number }[];
+}) {
+  return (
+    <BarChart data={data} height={250} width={200} style={{ margin: "0 auto" }}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="department" />
+      <YAxis />
+      <Tooltip />
+      <Legend />
+      <Bar dataKey="total" fill="#82ca9d" name="Total Students" />
+      <Bar dataKey="placed" fill="#8884d8" name="Placed" />
+    </BarChart>
+  );
+}
+
+function TopRolesChart({ data }: { data: { role: string; count: number }[] }) {
+  return (
+      <PieChart height={250} width={200} style={{ margin: "0 auto" }}>
+        <Pie
+          data={data}
+          dataKey="count"
+          nameKey="role"
+          cx="50%"
+          cy="50%"
+          outerRadius={80}
+          label
+        >
+          {data.map((_, index) => (
+            <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip />
+        <Legend />
+      </PieChart>
+  );
+}
+
+function TopRecruitersChart({
+  data,
+}: {
+  data: { company__name: string; hires: number }[];
+}) {
+  return (
+      <PieChart height={250} width={200} style={{ margin: "0 auto" }}>
+        <Pie
+          data={data}
+          dataKey="hires"
+          nameKey="company__name"
+          cx="50%"
+          cy="50%"
+          outerRadius={80}
+          label
+        >
+          {data.map((_, index) => (
+            <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip />
+        <Legend />
+      </PieChart>
+  );
+}
