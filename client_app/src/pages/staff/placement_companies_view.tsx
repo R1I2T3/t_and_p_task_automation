@@ -13,8 +13,6 @@ import {
 } from "@mui/material";
 import { Plus, Eye, Pencil, Trash2, Send } from "lucide-react"; // Lucide icons
 import { useNavigate,  } from "react-router";
-import { getCookie } from "@/utils";
-import toast from "react-hot-toast";
 
 type Company = {
   id: string;

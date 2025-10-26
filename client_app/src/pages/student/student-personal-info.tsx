@@ -4,7 +4,30 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 export default function StudentDashboard() {
-  const [student, setStudent] = useState<any>(null);
+  interface Student {
+    uid: string;
+    department: string;
+    batch: string;
+    academic_year: string;
+    gender: string;
+    dob: string;
+    contact: string;
+    personal_email: string;
+    cgpa?: number;
+    attendance?: number;
+    card: string;
+    current_category: string;
+    consent: string;
+    is_dse_student: boolean;
+    is_kt: boolean;
+    is_blacklisted: boolean;
+    academic_performance: Record<string, string | number>;
+    academic_attendance: Record<string, number>;
+    training_performance: Record<string, string | number>;
+    training_attendance: Record<string, number>;
+  }
+
+  const [student, setStudent] = useState<Student | null>(null);
 
   useEffect(() => {
     axios.get("/api/student/info", { withCredentials: true })
@@ -28,7 +51,6 @@ export default function StudentDashboard() {
           <p><strong>Academic Year:</strong> {student.academic_year}</p>
           <p><strong>Gender:</strong> {student.gender}</p>
           <p><strong>DOB:</strong> {student.dob}</p>
-          <p><strong>Contact:</strong> {student.contact}</p>
           <p><strong>Email:</strong> {student.personal_email}</p>
           <p><strong>CGPA:</strong> {student.cgpa ?? "N/A"}</p>
           <p><strong>Attendance:</strong> {student.attendance ?? "N/A"}%</p>

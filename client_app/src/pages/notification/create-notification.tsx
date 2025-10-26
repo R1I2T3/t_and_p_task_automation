@@ -1,4 +1,3 @@
-import React from "react";
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,7 @@ export default function SendMessage() {
     },
   });
 
-  const onSubmit = (data) => {
+  const onSubmit = (data: { title: string; sendTo: string; content: string }) => {
     console.log("Form submitted:", data);
     // You can make API call here using fetch/axios
   };

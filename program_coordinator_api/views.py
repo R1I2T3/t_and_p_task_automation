@@ -1,3 +1,11 @@
+import io
+import openpyxl
+from django.http import JsonResponse, HttpResponse
+from django.db import transaction
+from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -18,7 +26,293 @@ from student.models import (
     TrainingAttendanceSemester,
     TrainingPerformanceSemester,
 )
+from .models import TrainingPerformance, TrainingPerformanceCategory  # assuming you added these
+from django.conf import settings
 
+# --- training config (single source of truth for subcategories) ---
+TRAINING_CONFIG = {
+    "Aptitude": [
+        "Arithmetic",
+        "Logical Reasoning",
+        "Probability",
+        "Verbal Ability",
+        "Verbal Reasoning",
+    ],
+    "Technical": ["OS", "DBMS", "DSA", "CN", "OOPS"],
+    "Coding": ["Coding Marks"],
+}
+
+# base headers expected for every template (order matters)
+BASE_HEADERS = ["UID", "Full Name", "Branch_Div", "Year", "Semester"]
+
+
+# Helper: normalize header string
+def _normalize_header(h):
+    if h is None:
+        return ""
+    return str(h).strip()
+
+
+# -------------------------
+# GET headers for a training type
+# -------------------------
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def get_training_headers(request, training_type: str):
+    """
+    Return the expected header list for the requested training_type (Aptitude/Technical/Coding).
+    """
+    training_type = str(training_type).strip()
+    if training_type not in TRAINING_CONFIG:
+        return JsonResponse({"error": "Unknown training_type", "valid_types": list(TRAINING_CONFIG.keys())}, status=400)
+
+    headers = BASE_HEADERS + TRAINING_CONFIG[training_type]
+    return JsonResponse({"training_type": training_type, "headers": headers})
+
+
+# -------------------------
+# GET template Excel for a training type
+# -------------------------
+@api_view(["GET"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def download_training_template(request, training_type: str):
+    """
+    Dynamically generate an Excel template for the training_type and return it as a downloadable file.
+    """
+    training_type = str(training_type).strip()
+    if training_type not in TRAINING_CONFIG:
+        return JsonResponse({"error": "Unknown training_type", "valid_types": list(TRAINING_CONFIG.keys())}, status=400)
+
+    # Permission check: only ProgramCoordinator (or staff)
+    user = request.user
+    try:
+        is_coordinator = user.is_staff or user.groups.filter(name="ProgramCoordinator").exists()
+    except Exception:
+        is_coordinator = user.is_staff
+
+    if not is_coordinator:
+        return JsonResponse({"error": "Permission denied. Program coordinators only."}, status=403)
+
+    headers = BASE_HEADERS + TRAINING_CONFIG[training_type]
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f"{training_type}_Template"
+    ws.append(headers)
+
+    # add one sample row (you may adapt sample data)
+    sample_row = ["101", "John Doe", "CSE_A", 2025, "SEM-1"]
+    # add a sample mark value for each subcategory
+    sample_row += [75 for _ in TRAINING_CONFIG[training_type]]
+    ws.append(sample_row)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    filename = f"training_template_{training_type}.xlsx"
+    response = HttpResponse(output.read(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+# -------------------------
+# POST upload handler
+# -------------------------
+@api_view(["POST"])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def upload_training_performance(request):
+    """
+    Accepts multipart/form-data with fields:
+      - file: uploaded Excel (.xlsx)
+      - training_type: e.g., 'Aptitude' (required)
+      - optional: semester, year (but prefer values in file)
+    Parses, validates, and stores TrainingPerformance + TrainingPerformanceCategory rows.
+    Returns summary and row-level errors.
+    """
+    user = request.user
+
+    # Permission check: only ProgramCoordinator (or staff)
+    try:
+        is_coordinator = user.is_staff or user.groups.filter(name="ProgramCoordinator").exists()
+    except Exception:
+        is_coordinator = user.is_staff
+
+    if not is_coordinator:
+        return JsonResponse({"error": "Permission denied. Program coordinators only."}, status=403)
+
+    training_type = request.POST.get("training_type", None)
+    if not training_type:
+        return JsonResponse({"error": "training_type is required in POST body (Aptitude/Technical/Coding)."}, status=400)
+
+    training_type = str(training_type).strip()
+    if training_type not in TRAINING_CONFIG:
+        return JsonResponse({"error": "Unknown training_type", "valid_types": list(TRAINING_CONFIG.keys())}, status=400)
+
+    file = request.FILES.get("file", None)
+    if not file:
+        return JsonResponse({"error": "No file uploaded (form field 'file')."}, status=400)
+
+    # Accept only Excel
+    if not (file.name.endswith(".xlsx") or file.name.endswith(".xls")):
+        return JsonResponse({"error": "Invalid file format. Please upload an .xlsx file."}, status=400)
+
+    expected_headers = BASE_HEADERS + TRAINING_CONFIG[training_type]
+
+    try:
+        wb = openpyxl.load_workbook(file, data_only=True)
+        sheet = wb.active
+
+        # read header row (first row)
+        header_cells = next(sheet.iter_rows(min_row=1, max_row=1, values_only=False))
+        read_headers = [_normalize_header(c.value) for c in header_cells]
+
+        # trim read_headers to expected length (in case sheet has extra cols)
+        read_headers_trim = read_headers[: len(expected_headers)]
+
+        # Check header match exactly (order + names)
+        if read_headers_trim != expected_headers:
+            return JsonResponse({
+                "error": "Invalid header format for chosen training_type.",
+                "training_type": training_type,
+                "expected": expected_headers,
+                "found_prefix": read_headers_trim
+            }, status=400)
+
+        errors = []
+        processed = 0
+        created_tp = 0
+        updated_tp = 0
+        created_cat = 0
+        updated_cat = 0
+
+        # We'll parse all rows first into memory for validation, then write in a transaction
+        parsed_rows = []
+        for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+            # make sure row has at least base header columns
+            row_list = list(row)
+            # pad row_list so indexing won't fail
+            if len(row_list) < len(expected_headers):
+                row_list += [None] * (len(expected_headers) - len(row_list))
+
+            uid = row_list[0]
+            full_name = row_list[1]
+            branch_div = row_list[2]
+            year = row_list[3]
+            semester = row_list[4]
+            sub_vals = row_list[5: 5 + len(TRAINING_CONFIG[training_type])]
+
+            row_errs = []
+            if uid is None or str(uid).strip() == "":
+                row_errs.append("UID is required.")
+            if full_name is None or str(full_name).strip() == "":
+                row_errs.append("Full Name is required.")
+            if branch_div is None or str(branch_div).strip() == "":
+                row_errs.append("Branch_Div is required.")
+            if year is None:
+                row_errs.append("Year is required.")
+            else:
+                # coerce to int if possible
+                try:
+                    year_val = int(year)
+                except Exception:
+                    row_errs.append("Year must be an integer.")
+            if semester is None or str(semester).strip() == "":
+                row_errs.append("Semester is required.")
+
+            # validate subcategory marks
+            sub_marks = []
+            for j, val in enumerate(sub_vals):
+                cat_name = TRAINING_CONFIG[training_type][j]
+                if val is None or str(val).strip() == "":
+                    row_errs.append(f"Marks required for category '{cat_name}'.")
+                else:
+                    try:
+                        m = float(val)
+                        # optionally enforce 0-100
+                        if m < 0 or m > 100:
+                            row_errs.append(f"Marks out of range (0-100) for '{cat_name}'.")
+                        sub_marks.append((cat_name, m))
+                    except Exception:
+                        row_errs.append(f"Marks must be numeric for '{cat_name}'.")
+
+            if row_errs:
+                errors.append({"row": row_idx, "errors": row_errs})
+            else:
+                parsed_rows.append({
+                    "row": row_idx,
+                    "uid": str(uid).strip(),
+                    "full_name": str(full_name).strip(),
+                    "branch_div": str(branch_div).strip(),
+                    "year": int(year),
+                    "semester": str(semester).strip(),
+                    "sub_marks": sub_marks,
+                })
+
+        # If you prefer to abort on any error, uncomment this block:
+        # if errors:
+        #     return JsonResponse({"error": "Validation errors found.", "errors": errors}, status=400)
+
+        # Now write to DB in a transaction
+        with transaction.atomic():
+            for item in parsed_rows:
+                uid = item["uid"]
+                semester = item["semester"]
+                # update_or_create TrainingPerformance
+                tp_defaults = {
+                    "full_name": item["full_name"],
+                    "branch_div": item["branch_div"],
+                    "year": item["year"],
+                    "uploaded_by_id": user.pk if user and user.is_authenticated else None,
+                }
+                tp_obj, created_flag = TrainingPerformance.objects.update_or_create(
+                    uid=uid,
+                    training_type=training_type,
+                    semester=semester,
+                    defaults=tp_defaults
+                )
+                if created_flag:
+                    created_tp += 1
+                else:
+                    updated_tp += 1
+
+                processed += 1
+
+                # Now for each subcategory, update_or_create category rows
+                for cat_name, marks in item["sub_marks"]:
+                    cat_defaults = {"marks": marks}
+                    cat_obj, cat_created_flag = TrainingPerformanceCategory.objects.update_or_create(
+                        performance=tp_obj,
+                        category_name=cat_name,
+                        defaults=cat_defaults
+                    )
+                    if cat_created_flag:
+                        created_cat += 1
+                    else:
+                        updated_cat += 1
+
+        resp = {
+            "message": "Upload processed",
+            "training_type": training_type,
+            "processed_rows": processed,
+            "created_training_performance": created_tp,
+            "updated_training_performance": updated_tp,
+            "created_category_rows": created_cat,
+            "updated_category_rows": updated_cat,
+            "errors_count": len(errors),
+            "errors": errors
+        }
+        status_code = 201 if len(errors) == 0 else 207
+        return JsonResponse(resp, status=status_code)
+
+    except openpyxl.utils.exceptions.InvalidFileException:
+        return JsonResponse({"error": "Invalid Excel file; cannot read."}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": f"Server error: {str(e)}"}, status=500)
 
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])

@@ -2,13 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import axios from "axios";
 import {
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Box,
-  Divider,
-  Chip,
+  Typography
 } from "@mui/material";
 
 const NotificationDetail = () => {
@@ -47,13 +41,7 @@ const NotificationDetail = () => {
     navigate("/notifications");
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-GB"); // Format: DD/MM/YYYY
-  };
 
-  const isExpired = (expiresAt?: string) =>
-    expiresAt && new Date(expiresAt) < new Date();
 
   const renderFile = (fileUrl: string) => {
     // @ts-expect-error Property 'split' does not exist on type 'string'.
@@ -83,7 +71,6 @@ const NotificationDetail = () => {
     );
   }
 
-  const expired = isExpired(notification.expires_at);
 
   return (
     <div

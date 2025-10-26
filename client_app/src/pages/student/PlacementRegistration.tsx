@@ -30,6 +30,7 @@ const PlacementRegistration = () => {
   };
 
   const [data, setData] = useState<FormDataType>({
+    id: 0, // Add default value for id
     name: "",
     min_tenth_marks: "",
     min_higher_secondary_marks: "",
@@ -70,6 +71,7 @@ const PlacementRegistration = () => {
 
         const data = await response.json();
         setData({
+          id: data.id,
           name: data.name,
           min_tenth_marks: data.min_tenth_marks,
           min_higher_secondary_marks: data.min_higher_secondary_marks,

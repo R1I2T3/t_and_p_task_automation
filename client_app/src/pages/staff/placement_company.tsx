@@ -29,6 +29,7 @@ export interface NoticeType {
 }
 
 export interface FormDataType {
+  id: number;
   name: string;
   min_tenth_marks: string;
   min_higher_secondary_marks: string;
@@ -57,6 +58,7 @@ const PlacementCompany = () => {
     deadline: "",
   };
   const [formData, setFormData] = useState<FormDataType>({
+    id: 0,
     name: "",
     min_tenth_marks: "",
     min_higher_secondary_marks: "",

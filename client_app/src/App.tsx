@@ -59,6 +59,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { SERVER_URL } from "./constant";
 import SendPlacementMessage from "./pages/staff/SendPlacementMessage";
 import PlacementCard from "./pages/student/placement-card";
+
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -83,113 +84,113 @@ const App = () => {
   const queryClient = new QueryClient();
   return (
     <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/notifications" element={<NotificationParent />}>
-          <Route index element={<NotificationList />} />
-          <Route path="create" element={<CreateNotification />} />
-          <Route path=":id" element={<NotificationDetail />} />
-        </Route>
-        <Route
-          path="/program_coordinator"
-          element={<ProgramCoordinatorLayout />}
-        >
-          <Route path="session-creation" element={<Session />} />
-          <Route path="attendance-and-marks" element={<Attendance />} />
-          <Route path="update-attendance" element={<Update />} />
-          <Route path="upload-file" element={<Upload />} />
-          <Route index element={<ProgramHome />} />
-        </Route>
-        <Route path="/student" element={<StudentLayout />}>
-          <Route path="session-attendance" element={<SessionAttendance />} />
-          <Route index element={<StudentPersonalInfo />} />
-          <Route path="resume" element={<Resume />} />
-          <Route path="resume-preview" element={<ResumePreview />} />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/notifications" element={<NotificationParent />}>
+            <Route index element={<NotificationList />} />
+            <Route path="create" element={<CreateNotification />} />
+            <Route path=":id" element={<NotificationDetail />} />
+          </Route>
           <Route
-            path="placement/registration/:id"
-            element={<PlacementRegistration />}
-          />
-          <Route path="placement-card" element={<PlacementCard />} />
+            path="/program_coordinator"
+            element={<ProgramCoordinatorLayout />}
+          >
+            <Route path="session-creation" element={<Session />} />
+            <Route path="attendance-and-marks" element={<Attendance />} />
+            <Route path="update-attendance" element={<Update />} />
+            <Route path="upload-file" element={<Upload />} />
+            <Route index element={<ProgramHome />} />
+          </Route>
+          <Route path="/student" element={<StudentLayout />}>
+            <Route path="session-attendance" element={<SessionAttendance />} />
+            <Route index element={<StudentPersonalInfo />} />
+            <Route path="resume" element={<Resume />} />
+            <Route path="resume-preview" element={<ResumePreview />} />
+            <Route
+              path="placement/registration/:id"
+              element={<PlacementRegistration />}
+            />
+            <Route path="placement-card" element={<PlacementCard />} />
+            <Route
+              path="internship/registration/:id"
+              element={<InternshipRegistration />}
+            />
+            <Route
+              path="internship-submission"
+              element={<InternShipSubmission />}
+            />
+          </Route>
+          <Route path="/faculty_coordinator" element={<FacultyLayout />}>
+            <Route index element={<FacultyHome />} />
+            <Route path="attendance" element={<FacultyTablePage />} />
+          </Route>
+          <Route path="/department_coordinator" element={<DepartmentParent />}>
+            <Route index element={<DepartmentDashboard />} />
+            <Route path="attendance" element={<DepartmentAttendance />} />
+          </Route>
+          <Route path="/placement_officer" element={<PlacementLayout />}>
+            <Route index element={<PlacementStats />} />
+            <Route path="report" element={<PlacementReport />} />
+            <Route
+              path="comparative_Placement_Statistics"
+              element={
+                <div>
+                  <CategoryDataStatistics />
+                  <ComparativePlacementStatistics />
+                </div>
+              }
+            />
+            <Route path="/placement_officer/2024" element={<Old />} />
+          </Route>
+          <Route path="/training_officer" element={<TrainingLayout />}>
+            <Route index element={<TrainingStats />} />
+            <Route path="notice" element={<TrainingNotice />} />
+          </Route>
+          <Route path="/internship_officer" element={<InternshipLayout />}>
+            <Route index element={<InternshipStats />} />
+            <Route path="notice" element={<InternShipNotice />} />
+            <Route
+              path="company_register"
+              element={<InternshipCompanyRegister />}
+            />
+            <Route path="verify" element={<InternShipVerify />} />
+            <Route path="report" element={<OnePageReport />} />
+            <Route path="internship-reports" element={<InternshipReport />} />
+          </Route>
+          <Route path="/principal" element={<PrincipalLayout />}>
+            <Route index element={<TrainingStats />} />
+            <Route
+              path="placement"
+              element={
+                <div>
+                  <Old />
+                </div>
+              }
+            />
+            <Route path="internship" element={<InternshipStats />} />
+          </Route>
+          <Route path="/staff" element={<StaffLayout />}>
+            <Route index element={<StaffNotice />} />
+            <Route path="placement_companies" element={<CompanyPage />} />
+            <Route path="placement_companies/register" element={<PlacementCompany />} />
+            <Route path="placement_companies/view" element={<ViewCompanyInfo />} />
+            <Route path="placement_companies/message" element={<SendPlacementMessage />} />
+            <Route path="placement_companies/edit" element={<EditCompanyInfo />} />
+            <Route
+              path="internship/register"
+              element={<InternshipCompanyRegister />}
+            />
+            <Route path="internship/verify" element={<InternShipVerify />} />
+          </Route>
+          <Route path="/category-rule-form" element={<CategoryRuleForm />} />
+          <Route path="/category-rules/list" element={<CategoryRuleList />} />
           <Route
-            path="internship/registration/:id"
-            element={<InternshipRegistration />}
+            path="/category-rules/students/:category/:batch"
+            element={<StudentByCategory />}
           />
-          <Route
-            path="internship-submission"
-            element={<InternShipSubmission />}
-          />
-        </Route>
-        <Route path="/faculty_coordinator" element={<FacultyLayout />}>
-          <Route index element={<FacultyHome />} />
-          <Route path="attendance" element={<FacultyTablePage />} />
-        </Route>
-        <Route path="/department_coordinator" element={<DepartmentParent />}>
-          <Route index element={<DepartmentDashboard />} />
-          <Route path="attendance" element={<DepartmentAttendance />} />
-        </Route>
-        <Route path="/placement_officer" element={<PlacementLayout />}>
-          <Route index element={<PlacementStats />} />
-          <Route path="report" element={<PlacementReport />} />
-          <Route
-            path="comparative_Placement_Statistics"
-            element={
-              <div>
-                <CategoryDataStatistics />
-                <ComparativePlacementStatistics />
-              </div>
-            }
-          />
-          <Route path="/placement_officer/2024" element={<Old />} />
-        </Route>
-        <Route path="/training_officer" element={<TrainingLayout />}>
-          <Route index element={<TrainingStats />} />
-          <Route path="notice" element={<TrainingNotice />} />
-        </Route>
-        <Route path="/internship_officer" element={<InternshipLayout />}>
-          <Route index element={<InternshipStats />} />
-          <Route path="notice" element={<InternShipNotice />} />
-          <Route
-            path="company_register"
-            element={<InternshipCompanyRegister />}
-          />
-          <Route path="verify" element={<InternShipVerify />} />
-          <Route path="report" element={<OnePageReport />} />
-          <Route path="internship-reports" element={<InternshipReport />} />
-        </Route>
-        <Route path="/principal" element={<PrincipalLayout />}>
-          <Route index element={<TrainingStats />} />
-          <Route
-            path="placement"
-            element={
-              <div>
-                <Old />
-              </div>
-            }
-          />
-          <Route path="internship" element={<InternshipStats />} />
-        </Route>
-        <Route path="/staff" element={<StaffLayout />}>
-          <Route index element={<StaffNotice />} />
-          <Route path="placement_companies" element={<CompanyPage />} />
-          <Route path="placement_companies/register" element={<PlacementCompany />} />
-          <Route path="placement_companies/view" element={<ViewCompanyInfo />} />
-          <Route path="placement_companies/message" element={<SendPlacementMessage />} />
-          <Route path="placement_companies/edit" element={<EditCompanyInfo />} />
-          <Route
-            path="internship/register"
-            element={<InternshipCompanyRegister />}
-          />
-          <Route path="internship/verify" element={<InternShipVerify />} />
-        </Route>
-        <Route path="/category-rule-form" element={<CategoryRuleForm />} />
-        <Route path="/category-rules/list" element={<CategoryRuleList />} />
-        <Route
-          path="/category-rules/students/:category/:batch"
-          element={<StudentByCategory />}
-        />
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 };
