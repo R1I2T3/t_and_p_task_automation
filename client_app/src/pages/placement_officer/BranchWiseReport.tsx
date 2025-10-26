@@ -7,7 +7,6 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Select, MenuItem, Button, Stack } from "@mui/material";
 import {
   Table,
   TableBody,
@@ -21,8 +20,19 @@ import {
   Card,
   CardContent,
   CardHeader,
+  CardTitle,
+  CardDescription
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Papa from "papaparse";
+
 interface CompanyHeader {
   id: number;
   name: string;
@@ -34,10 +44,9 @@ interface ApiData {
   report_data: Record<string, any>[];
 }
 
-
 function formatHeader(field: string): string {
-  if (field === 'gd') return 'GD';
-  if (field === 'final') return 'Final';
+  if (field === "gd") return "GD";
+  if (field === "final") return "Final";
   return field
     .replace(/_/g, " ")
     .split(" ")
@@ -65,14 +74,15 @@ export function BranchWiseReport() {
   const [apiData, setApiData] = React.useState<ApiData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-   const [selectedBatch, setSelectedBatch] = React.useState<string>("");
-    const [batches, setBatches] = React.useState<string[]>([]);
-    React.useEffect(() => {
-        fetch("/api/staff/companies/batches/")
-          .then((res) => res.json())
-          .then((data) => setBatches(data))
-          .catch((err) => console.error("Error fetching batches:", err));
-      }, []);
+  const [selectedBatch, setSelectedBatch] = React.useState<string>("");
+  const [batches, setBatches] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    fetch("/api/staff/companies/batches/")
+      .then((res) => res.json())
+      .then((data) => setBatches(data))
+      .catch((err) => console.error("Error fetching batches:", err));
+  }, []);
 
   React.useEffect(() => {
     async function fetchData(fetchBatch: string) {
@@ -82,7 +92,9 @@ export function BranchWiseReport() {
       setApiData(null);
 
       try {
-        const response = await fetch(`/api/placement_officer/branch_wise_report/${selectedBatch}/`);
+        const response = await fetch(
+          `/api/placement_officer/branch_wise_report/${selectedBatch}/`
+        );
         if (!response.ok) {
           throw new Error(`Failed to fetch report: ${response.statusText}`);
         }
@@ -101,11 +113,9 @@ export function BranchWiseReport() {
     if (!apiData) return [];
 
     const staticColumn: ColumnDef<Record<string, any>> = {
-      id: 'department',
+      id: "department",
       accessorKey: "department",
       header: "Branch / Div",
-      headerClassName: "sticky left-0 bg-background z-10 text-left",
-      cellClassName: "",
       size: 150,
     };
 
@@ -127,7 +137,6 @@ export function BranchWiseReport() {
       return {
         id: `company-${company.id}`,
         header: company.name,
-        headerClassName: "text-center",
         columns: progressColumns,
       };
     });
@@ -141,12 +150,11 @@ export function BranchWiseReport() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-
   const handleExportCSV = () => {
     if (!apiData) return;
     const { company_headers, progress_fields, report_data } = apiData;
     const headerRow1: string[] = ["Branch / Div"];
-    company_headers.forEach(company => {
+    company_headers.forEach((company) => {
       headerRow1.push(company.name);
       for (let i = 0; i < progress_fields.length - 1; i++) {
         headerRow1.push("");
@@ -158,11 +166,11 @@ export function BranchWiseReport() {
     company_headers.forEach(() => {
       headerRow2.push(...formattedFields);
     });
-    const dataRows = report_data.map(row => {
+    const dataRows = report_data.map((row) => {
       const csvRow: (string | number)[] = [row.department];
 
-      company_headers.forEach(company => {
-        progress_fields.forEach(field => {
+      company_headers.forEach((company) => {
+        progress_fields.forEach((field) => {
           const key = `company_${company.id}_${field}`;
           csvRow.push(row[key] ?? 0);
         });
@@ -184,46 +192,43 @@ export function BranchWiseReport() {
 
   return (
     <Card className="m-4">
-      <CardHeader className="flex flex-col md:flex-row justify-between items-center">
-             <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    marginBottom: 16,
-                    marginTop: 100,
-                  }}
-                >
-                  <Select
-                    value={selectedBatch}
-                    onChange={(e) => setSelectedBatch(e.target.value)}
-                    displayEmpty
-                    sx={{ minWidth: 200 }}
-                  >
-                    <MenuItem value="">Select Batch</MenuItem>
-                    {batches.map((batch) => (
-                      <MenuItem key={batch} value={batch}>
-                        {batch}
-                      </MenuItem>
-                    ))}
-                  </Select>
+      <CardHeader>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <CardTitle>Branch-wise Progress Report</CardTitle>
+            <CardDescription>
+              {selectedBatch
+                ? `Showing results for Batch: ${selectedBatch}`
+                : "Select a batch to view report"}
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={selectedBatch} onValueChange={setSelectedBatch}>
+              <SelectTrigger className="w-40 text-black bg-gray-100">
+                <SelectValue placeholder="Select Batch" />
+              </SelectTrigger>
+              <SelectContent>
+                {batches.map((batch) => (
+                  <SelectItem key={batch} value={batch}>
+                    {batch}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-                  <Stack direction="row" spacing={2}>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      disabled={!apiData?.company_headers.length}
-                      onClick={handleExportCSV}
-                    >
-                      Export CSV
-                    </Button>
-                  </Stack>
-                </div>
+            <Button
+              disabled={!apiData?.company_headers.length}
+              onClick={handleExportCSV}
+            >
+              Export CSV
+            </Button>
+          </div>
+        </div>
       </CardHeader>
 
       <CardContent>
-        <div className="rounded-md border overflow-x-auto relative">
-          <Table className="min-w-max">
+        <div className="rounded-md border overflow-x-auto">
+          <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
@@ -231,7 +236,6 @@ export function BranchWiseReport() {
                     <TableHead
                       key={header.id}
                       colSpan={header.colSpan}
-                      style={{ width: header.getSize() }}
                       className="text-center"
                     >
                       {header.isPlaceholder
@@ -247,7 +251,9 @@ export function BranchWiseReport() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableSkeletonLoader columns={table.getAllLeafColumns().length} />
+                <TableSkeletonLoader
+                  columns={table.getAllLeafColumns().length}
+                />
               ) : error ? (
                 <TableRow>
                   <TableCell
@@ -259,16 +265,9 @@ export function BranchWiseReport() {
                 </TableRow>
               ) : table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
+                  <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className={'sticky left-0 bg-background z-10 font-medium text-center'}
-                        style={{ width: cell.column.getSize() }}
-                      >
+                      <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -283,7 +282,7 @@ export function BranchWiseReport() {
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    No data found for this batch.
+                    No data found for this batch
                   </TableCell>
                 </TableRow>
               )}
