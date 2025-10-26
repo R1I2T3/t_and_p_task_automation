@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import CategoryRule
 from student.models import Student
-
+from staff.utils import is_student_eligible
 class CategoryRuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = CategoryRule
@@ -58,13 +58,7 @@ class StudentDetailReportSerializer(serializers.ModelSerializer):
             comp_key = f"company_{company.id}"
             progress = progress_map.get(company.id)
             offer = offer_map.get(company.id)
-            is_eligible = (
-                get_safe_float(instance.cgpa) >= get_safe_float(company.min_cgpa) and
-                get_safe_float(instance.tenth_grade) >= get_safe_float(company.min_tenth_marks) and
-                get_safe_float(instance.higher_secondary_grade) >= get_safe_float(company.min_higher_secondary_marks) and
-                (instance.department in company.selected_departments) and
-                (not instance.is_kt or company.accepted_kt)
-            )
+            is_eligible = is_student_eligible(instance, company)
             data[f"{comp_key}_eligible"] = is_eligible
             data[f"{comp_key}_registered"] = progress.registered if progress else False
             data[f"{comp_key}_aptitude_test"] = progress.aptitude_test if progress else False
@@ -73,5 +67,4 @@ class StudentDetailReportSerializer(serializers.ModelSerializer):
             data[f"{comp_key}_gd"] = progress.gd if progress else False
             data[f"{comp_key}_hr_interview"] = progress.hr_interview if progress else False
             data[f"{comp_key}_selected"] = (offer is not None)
-
         return data
