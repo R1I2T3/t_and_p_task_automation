@@ -32,6 +32,64 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils.timezone import now
+from program_coordinator_api.models import TrainingPerformance, TrainingPerformanceCategory
+
+class StudentTrainingPerformanceAPIView(APIView):
+    """
+    Returns the logged-in student's training performance
+    (only UID + performance data, no name or extra fields).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            # Get current logged-in student's UID
+            student = Student.objects.get(user=request.user)
+            uid = student.uid
+
+            # Fetch all TrainingPerformance records for this UID
+            performances = TrainingPerformance.objects.filter(uid=uid).prefetch_related("categories")
+
+            if not performances.exists():
+                return Response(
+                    {"message": "No training performance records found for this student."},
+                    status=status.HTTP_200_OK
+                )
+
+            # Build clean minimal response
+            data = {
+                "uid": uid,
+                "training_performance": [],
+            }
+
+            for perf in performances:
+                # Get all category marks for this training type
+                categories = TrainingPerformanceCategory.objects.filter(performance=perf)
+                category_data = [
+                    {"category_name": c.category_name, "marks": c.marks}
+                    for c in categories
+                ]
+
+                data["training_performance"].append({
+                    "training_type": perf.training_type,
+                    "categories": category_data
+                })
+
+            return Response(data, status=status.HTTP_200_OK)
+
+        except Student.DoesNotExist:
+            return Response(
+                {"error": "Student profile not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            print(f"[ERROR] StudentTrainingPerformanceAPIView: {e}")
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
 
 class StudentDataView(APIView):
     def get(self, request):

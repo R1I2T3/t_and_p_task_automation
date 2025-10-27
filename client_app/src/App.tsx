@@ -59,6 +59,9 @@ import SendPlacementMessage from "./pages/staff/SendPlacementMessage";
 import PlacementCard from "./pages/student/placement-card";
 import { ConsolidationReportPage } from "./pages/placement_officer/ConsolidatedReport";
 import {BranchWiseReport} from "./pages/placement_officer/BranchWiseReport";
+import TrainingPerformanceUpload from "./pages/program_coordinator/TrainingPerformanceUpload";
+import StudentTrainingPerformance from "./pages/student/StudentTrainingPerformance";
+
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -187,6 +190,14 @@ const App = () => {
           path="/category-rules/students/:category/:batch"
           element={<StudentByCategory />}
         />
+        <Route
+            path="/program-coordinator/training-performance-upload"
+            element={<TrainingPerformanceUpload />}
+          />
+          <Route
+              path="/student/student-training-performance"
+              element={<StudentTrainingPerformance />}
+            />
       </Routes>
     </BrowserRouter>
     </QueryClientProvider>

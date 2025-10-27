@@ -107,13 +107,18 @@ class AttendanceRecord(models.Model):
 class TrainingPerformance(models.Model):
     """
     Holds one record per student per training type.
-    Example: UID 101, Aptitude, SEM-1.
+    Example: UID 101, Aptitude.
     """
     uid = models.CharField(max_length=50)
     full_name = models.CharField(max_length=150)
     branch_div = models.CharField(max_length=100)
-    year = models.IntegerField()
-    semester = models.CharField(max_length=100, choices=SEM_OPTIONS)
+
+    # Made optional (since not included in upload)
+    year = models.IntegerField(null=True, blank=True)
+    semester = models.CharField(
+        max_length=100, choices=SEM_OPTIONS, null=True, blank=True
+    )
+
     training_type = models.CharField(max_length=50)  # Aptitude / Technical / Coding
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
@@ -125,7 +130,7 @@ class TrainingPerformance(models.Model):
         unique_together = ("uid", "training_type", "semester")
 
     def __str__(self):
-        return f"{self.uid} - {self.training_type} - {self.semester}"
+        return f"{self.uid} - {self.training_type}"
 
 
 class TrainingPerformanceCategory(models.Model):

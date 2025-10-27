@@ -27,6 +27,11 @@ const StudentLayout = () => {
       label: "Session Attendance",
       href: "/student/session-attendance",
     },
+    {
+      icon: CalendarCheck,
+      label: "Student Training Performance",
+      href: "/student/student-training-performance",
+    },
 
     { icon: FileUser, label: "Resume", href: "/student/resume" },
     { icon: MessageCircle, label: "Notifications", href: "/notifications/" },
