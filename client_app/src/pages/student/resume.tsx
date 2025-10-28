@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import toast from "react-hot-toast";
-import "react-quill/dist/quill.snow.css";
 import ReactQuill from "react-quill";
 import { getCookie } from "@/utils";
 import { useNavigate } from "react-router";
@@ -112,6 +111,7 @@ export default function ResumeBuilderForm() {
   });
   const [preview, setPreview] = useState<string | null>(null);
   const [isUpdate, setIsUpdate] = useState(false);
+
   useEffect(() => {
     const fetchResume = async () => {
       const res = await fetch("/api/student/resume/", {

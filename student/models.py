@@ -11,12 +11,14 @@ class Student(models.Model):
         ("Category 2", "category 2"),
         ("Category 3", "category 3"),
         ("No category", "No category"),
-    ]
+    ] 
     consent_Type = [
         ("placement", "placement"),
         ("placement+aedp/pli", "placement+aedp/pli"),
         ("Higher studies", "Higher studies"),
+        ("Entrepreneurship", "Entrepreneurship"),
     ]
+
     CARD_TYPE = [
         ("Green", "Green"),
         ("Yellow", "Yellow"),

@@ -16,7 +16,6 @@ from .models import (
 from program_coordinator_api.models import AttendanceData
 from base.models import User
 
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

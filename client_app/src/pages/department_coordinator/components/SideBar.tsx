@@ -6,6 +6,7 @@ import Logo from "@/assets/img/logo.png";
 import StatIcon from "@/assets/img/Placement_statics.png";
 import ProfileIcon from "@/assets/img/user_profile.png";
 import LogoutIcon from "@/assets/img/logout.png";
+import InternshipBadgeIcon from "@/assets/icons/InternshipBadgeIcon";
 const Sidebar = () => {
   return (
     <aside className="sidebar">
@@ -22,6 +23,14 @@ const Sidebar = () => {
           />
           <p>Students</p>
         </NavLink>
+        <NavLink to="student-data" className="menu-item">
+          <img
+            src={StatIcon}
+            alt="Placement Statistics"
+            className="menu-icon"
+          />
+          <p>Students Data</p>
+        </NavLink>
         <NavLink to="attendance" className="menu-item">
           <img
             src={StatIcon}
@@ -37,6 +46,10 @@ const Sidebar = () => {
         <NavLink to="/notifications/create" className="menu-item gap-3">
           <Send />
           <p>Notification</p>
+        </NavLink>
+        <NavLink to="upload-inhouse-internship" className="menu-item gap-3">
+          <InternshipBadgeIcon size={24} color="#153F74" />
+          <p>Upload Inhouse Internship Data</p>
         </NavLink>
       </ul>
       <div className="bottom-menu">

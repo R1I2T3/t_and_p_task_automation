@@ -25,6 +25,7 @@ const EditCompanyInfo = () => {
     deadline: "",
   };
   const [formData, setFormData] = useState<FormDataType>({
+    id: 0, // Added the missing 'id' property
     name: "",
     min_tenth_marks: "",
     min_higher_secondary_marks: "",
@@ -59,6 +60,7 @@ const EditCompanyInfo = () => {
         }
         const data = await response.json();
         setFormData({
+          id: data.id || 0, // Ensure 'id' is included
           name: data.name,
           min_tenth_marks: data.min_tenth_marks,
           min_higher_secondary_marks: data.min_higher_secondary_marks,
@@ -69,7 +71,7 @@ const EditCompanyInfo = () => {
           is_aedp_or_pli: data.is_aedp_or_pli,
           is_aedp_or_ojt: data.is_aedp_or_ojt,
           selected_departments: data.selected_departments,
-          job_offers: data.job_offers.length>0?data.job_offers:[{ role: "", salary: "", skills: "" }],
+          job_offers: data.job_offers.length > 0 ? data.job_offers : [{ role: "", salary: "", skills: "" }],
           batch: data.batch,
           notice: data.notice || Notice,
         });

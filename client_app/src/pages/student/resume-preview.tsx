@@ -8,16 +8,17 @@ import { ResumeData } from "./types";
 import ResumeDisplay from "./components/resume/ResumeDisplay";
 
 const ResumePreview = () => {
-  const [resumeData, setResume] = useState<ResumeData>();
+  const [resumeData, setResume] = useState<ResumeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const componentRef = useRef(null);
+  const componentRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
   });
 
   useEffect(() => {
+    // Fetch resume data from API
     const fetchResume = async () => {
       try {
         const res = await fetch("/api/student/resume/", {
@@ -27,9 +28,20 @@ const ResumePreview = () => {
             "X-CSRF-Token": getCookie("csrftoken") || "",
           },
         });
+
         if (res.ok) {
           const data = await res.json();
-          setResume(data);
+
+          // Make sure optional fields exist
+          const safeData: ResumeData = {
+            ...data,
+            profile_image: data.profile_image || "",
+            activitiesAndAchievements: data.activitiesAndAchievements || [],
+          };
+
+          setResume(safeData);
+        } else {
+          setError("Failed to fetch resume");
         }
       } catch (error) {
         console.error(error);
@@ -38,6 +50,7 @@ const ResumePreview = () => {
         setLoading(false);
       }
     };
+
     fetchResume();
   }, []);
 
@@ -60,15 +73,11 @@ const ResumePreview = () => {
   }
 
   if (!resumeData) return null;
-  console.log(resumeData);
 
   return (
     <div className="bg-gray-100 min-h-screen py-8">
       <div className="max-w-3xl mx-auto px-4">
-        <Button
-          onClick={() => handlePrint()}
-          className="mb-6"
-        >
+        <Button onClick={() => handlePrint()} className="mb-6">
           <PrinterIcon className="mr-2 h-4 w-4" />
           Download PDF
         </Button>

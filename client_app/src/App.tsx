@@ -40,6 +40,7 @@ import InternshipLayout from "./pages/internship_officer/InternshipLayout";
 import InternShipNotice from "./pages/internship_officer/InternShipNotice";
 import InternshipCompanyRegister from "./pages/internship_officer/InternshipCompanyRegister";
 import InternShipVerify from "./pages/internship_officer/InternShipVerify";
+import InternshipReport from "./pages/internship_officer/internship_report";
 import InternshipStats from "./pages/internship_officer/Stats";
 import OnePageReport from "./pages/internship_officer/OnePageReport";
 import PrincipalLayout from "./pages/principal/PrincipalLayout";
@@ -59,6 +60,9 @@ import SendPlacementMessage from "./pages/staff/SendPlacementMessage";
 import PlacementCard from "./pages/student/placement-card";
 import { ConsolidationReportPage } from "./pages/placement_officer/ConsolidatedReport";
 import {BranchWiseReport} from "./pages/placement_officer/BranchWiseReport";
+import TrainingPerformanceUpload from "./pages/program_coordinator/TrainingPerformanceUpload";
+import StudentTrainingPerformance from "./pages/student/StudentTrainingPerformance";
+
 import {StudentStatusReport} from "./pages/placement_officer/StudentPerformance";
 const App = () => {
   const setUser = useSetAtom(authAtom);
@@ -190,6 +194,14 @@ const App = () => {
           path="/category-rules/students/:category/:batch"
           element={<StudentByCategory />}
         />
+        <Route
+            path="/program-coordinator/training-performance-upload"
+            element={<TrainingPerformanceUpload />}
+          />
+          <Route
+              path="/student/student-training-performance"
+              element={<StudentTrainingPerformance />}
+            />
       </Routes>
     </BrowserRouter>
     </QueryClientProvider>

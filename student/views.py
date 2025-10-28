@@ -8,6 +8,7 @@ from rest_framework.generics import RetrieveAPIView
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from .models import (
+    User,
     Student,
     Resume,
     StudentPlacementAppliedCompany,
@@ -25,6 +26,130 @@ from program_coordinator_api.models import (
 )
 from .utils import is_student_eligible
 from staff.models import CompanyRegistration,JobOffer
+
+from datetime import datetime
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.utils.timezone import now
+from program_coordinator_api.models import TrainingPerformance, TrainingPerformanceCategory
+
+class StudentTrainingPerformanceAPIView(APIView):
+    """
+    Returns the logged-in student's training performance
+    (only UID + performance data, no name or extra fields).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            # Get current logged-in student's UID
+            student = Student.objects.get(user=request.user)
+            uid = student.uid
+
+            # Fetch all TrainingPerformance records for this UID
+            performances = TrainingPerformance.objects.filter(uid=uid).prefetch_related("categories")
+
+            if not performances.exists():
+                return Response(
+                    {"message": "No training performance records found for this student."},
+                    status=status.HTTP_200_OK
+                )
+
+            # Build clean minimal response
+            data = {
+                "uid": uid,
+                "training_performance": [],
+            }
+
+            for perf in performances:
+                # Get all category marks for this training type
+                categories = TrainingPerformanceCategory.objects.filter(performance=perf)
+                category_data = [
+                    {"category_name": c.category_name, "marks": c.marks}
+                    for c in categories
+                ]
+
+                data["training_performance"].append({
+                    "training_type": perf.training_type,
+                    "categories": category_data
+                })
+
+            return Response(data, status=status.HTTP_200_OK)
+
+        except Student.DoesNotExist:
+            return Response(
+                {"error": "Student profile not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            print(f"[ERROR] StudentTrainingPerformanceAPIView: {e}")
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+
+class StudentDataView(APIView):
+    def get(self, request):
+        try:
+            student = Student.objects.get(user=request.user)
+            response_serializer = StudentSerializer(student)
+            student_data = response_serializer.data
+            return Response({"student": student_data})
+        except Student.DoesNotExist:
+            return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class StudentFormView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, id):
+        try:
+            student = Student.objects.get(user=request.user)
+            notification_obj = Notification.objects.get(id=id)
+
+            if not notification_obj.link:
+                return Response(
+                    {'error': 'Page Not Found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            if notification_obj.expires_at and now() > notification_obj.expires_at:
+                return Response(
+                    {"error": "This form has expired. Please contact the TNP."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            if "consent" in request.path:
+                serializer = StudentConsentUpdateSerializer(student, data=request.data, partial=True)
+            elif "pli" in request.path:
+                serializer = StudentPliUpdateSerializer(student, data=request.data, partial=True)
+            else:
+                return Response({'error': 'Invalid form type'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if serializer.is_valid():
+                serializer.save()
+
+                if "pli" in request.path:
+                    response_serializer = StudentSerializer(student)
+                    student_data = response_serializer.data
+                    return Response({"student": student_data})
+                
+                return Response(serializer.data)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Student.DoesNotExist:
+            return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Notification.DoesNotExist:
+            return Response({'error': 'Page not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class SessionAttendanceAPIView(APIView):
     permission_classes = [IsAuthenticated]

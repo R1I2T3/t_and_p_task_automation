@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from student.models import SEM_OPTIONS
 
 
@@ -102,3 +103,49 @@ class AttendanceRecord(models.Model):
 
     def __str__(self):
         return f"Attendance record for {self.program_name} - {self.year}"
+    
+class TrainingPerformance(models.Model):
+    """
+    Holds one record per student per training type.
+    Example: UID 101, Aptitude.
+    """
+    uid = models.CharField(max_length=50)
+    full_name = models.CharField(max_length=150)
+    branch_div = models.CharField(max_length=100)
+
+    # Made optional (since not included in upload)
+    year = models.IntegerField(null=True, blank=True)
+    semester = models.CharField(
+        max_length=100, choices=SEM_OPTIONS, null=True, blank=True
+    )
+
+    training_type = models.CharField(max_length=50)  # Aptitude / Technical / Coding
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "training_performance"
+        unique_together = ("uid", "training_type", "semester")
+
+    def __str__(self):
+        return f"{self.uid} - {self.training_type}"
+
+
+class TrainingPerformanceCategory(models.Model):
+    """
+    Holds marks for each subcategory (Arithmetic, OS, etc.)
+    """
+    performance = models.ForeignKey(
+        TrainingPerformance, on_delete=models.CASCADE, related_name="categories"
+    )
+    category_name = models.CharField(max_length=100)
+    marks = models.FloatField()
+
+    class Meta:
+        db_table = "training_performance_category"
+        unique_together = ("performance", "category_name")
+
+    def __str__(self):
+        return f"{self.performance.uid} - {self.category_name}: {self.marks}"

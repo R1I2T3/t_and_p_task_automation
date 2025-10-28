@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import axios from "axios";
+import {
+  Typography
+} from "@mui/material";
 
 const NotificationDetail = () => {
   const { id } = useParams();
@@ -8,8 +11,10 @@ const NotificationDetail = () => {
     title: string;
     message: string;
     created_at: string;
+    expires_at?: string;
     files?: string;
-  }
+    link?: string; // <-- Add this
+  }  
 
   const [notification, setNotification] = useState<Notification | null>(null);
   const navigate = useNavigate();
@@ -23,7 +28,7 @@ const NotificationDetail = () => {
             Authorization: `Bearer ${accessToken}`,
           },
         });
-        console.log("Notification data:", response.data); // Log the response data
+        console.log("Notification data:", response.data)
         setNotification(response.data);
       } catch (error) {
         console.error("Error fetching notification:", error);
@@ -36,9 +41,7 @@ const NotificationDetail = () => {
     navigate("/notifications");
   };
 
-  if (!notification) {
-    return <p>Loading...</p>;
-  }
+
 
   const renderFile = (fileUrl: string) => {
     // @ts-expect-error Property 'split' does not exist on type 'string'.
@@ -47,8 +50,8 @@ const NotificationDetail = () => {
       return (
         <img
           src={`${fileUrl}`}
-          alt={notification.title}
-          style={{ width: "100%", height: "auto" }}
+          alt="Notification"
+          style={{ width: "100%", height: "auto", borderRadius: "8px" }}
         />
       );
     } else if (fileExtension === "pdf") {
@@ -61,6 +64,13 @@ const NotificationDetail = () => {
       return <p>Unsupported file type</p>;
     }
   };
+
+  if (!notification) {
+    return (
+      <Typography sx={{ mt: 10, textAlign: "center" }}>Loading...</Typography>
+    );
+  }
+
 
   return (
     <div

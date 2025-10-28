@@ -1,4 +1,3 @@
-import React from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +32,7 @@ export default function SendPlacementMessage() {
     },
   });
 
-  const handleSendNotification = async (data) => {
+  const handleSendNotification = async (data: { title: string; sendTo: string; content: string }) => {
     const res = await fetch(
       `/api/staff/placement/company/send_notifications/${companyId}/`,
       {

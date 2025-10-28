@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from rest_framework.decorators import (
     api_view,
     permission_classes,
@@ -27,6 +27,8 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 from student.models import Student
 from base.models import User
 from datetime import datetime
+import pandas as pd
+import io
 
 
 @api_view(["POST"])

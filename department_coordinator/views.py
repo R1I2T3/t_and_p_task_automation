@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Avg, FloatField
@@ -12,8 +13,14 @@ from student.models import (
     AcademicPerformanceSemester,
 )
 from .utils import validate_file, importExcelAndReturnJSON
-from .serializers import DepartmentStatsSerializer
+from .serializers import DepartmentStatsSerializer, DepartmentStudentSerializer
 from django.db import models
+import pandas as pd
+from internship_api.models import InternshipAcceptance
+from django.db import transaction
+from datetime import datetime
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.views import APIView
 
 
 class IsDepartmentCoordinator(BasePermission):

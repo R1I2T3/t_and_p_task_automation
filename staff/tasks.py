@@ -7,7 +7,7 @@ from django.template.loader import render_to_string
 from django.utils.text import slugify
 from django.shortcuts import get_object_or_404
 from django.core.files.storage import default_storage
-from weasyprint import HTML
+# from weasyprint import HTML
 from .models import CompanyRegistration
 from student.models import StudentPlacementAppliedCompany,Resume
 
@@ -93,7 +93,7 @@ def generate_resume_zip_task(company_id):
             html_string = render_to_string('resume_template.html', context)
             pdf_file = HTML(string=html_string).write_pdf()
             filename = f"{student.uid}_{student.user.full_name}.pdf"
-            zf.writestr(filename, pdf_file)
+            # zf.writestr(filename, pdf_file)
 
     zip_buffer.seek(0)
     filename = f"exports/resumes/{slugify(company.name)}_resumes.zip"

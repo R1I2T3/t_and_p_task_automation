@@ -38,6 +38,11 @@ const Sidebar = () => {
           icon={ImageIcon}
         />
         <MenuItem
+          to="/program-coordinator/training-performance-upload"
+          label="Training Performance Upload"
+          icon={ImageIcon}
+        />
+        <MenuItem
           to="/program_coordinator/update-attendance"
           label="Grievance"
           icon={FillOut}

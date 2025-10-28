@@ -1,4 +1,3 @@
-# filepath: backend/notifications/models.py
 from django.db import models
 from base.models import User
 
@@ -16,4 +15,4 @@ class Notification(models.Model):
     type_notification = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
-        return self.title
+        return self.title 

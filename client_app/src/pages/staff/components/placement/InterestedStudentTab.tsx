@@ -53,7 +53,7 @@ function InterestedStudentsTabContent({ companyId }: { companyId: string }) {
   });
   const selectedApplicationIds = Object.keys(rowSelection)
     .map((index) => data?.results[Number(index)]?.application_id)
-    .filter(Boolean);
+    .filter((id): id is string => Boolean(id));
 
   const pageCount = data
     ? Math.ceil(data.count / pagination.pageSize)
