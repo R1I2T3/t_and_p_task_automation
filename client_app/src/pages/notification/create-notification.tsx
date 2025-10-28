@@ -12,6 +12,7 @@ import { getCookie } from "@/utils";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import toast from "react-hot-toast";
+import { DEPARTMENTS_TO_DISPLAY } from "@/constant";
 const CreateNotification = () => {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
@@ -22,16 +23,6 @@ const CreateNotification = () => {
   const [type_notification, setType_notification] = useState<string>("General");
 
   const year_options = ["FE", "SE", "TE", "BE"];
-  const branch_options = [
-    "Computer",
-    "IT",
-    "EXTC",
-    "Mechanical",
-    "Civil",
-    "AIML",
-    "AI&DS",
-    "MME",
-  ];
   const type_notification_options = [
     "General",
     "Training",
@@ -126,7 +117,7 @@ const CreateNotification = () => {
             renderValue={(selected) => selected.join(", ")}
             onChange={handleDepartmentChange}
           >
-            {branch_options.map((branch, index) => (
+            {DEPARTMENTS_TO_DISPLAY.map((branch, index) => (
               <MenuItem key={index} value={branch}>
                 {branch}
               </MenuItem>

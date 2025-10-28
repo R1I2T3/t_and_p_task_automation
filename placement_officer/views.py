@@ -1,6 +1,5 @@
-from django.db.models import Count, Q, Case, When, Sum,FloatField,Avg, F, Value, CharField
+from django.db.models import Count, Q, Case, When, Sum,FloatField,Avg, Value, CharField
 from django.db.models.functions import TruncMonth, Cast
-from django.db.models.functions import Cast
 from django.http import JsonResponse
 import json
 from placement_officer.models import CategoryRule
@@ -12,15 +11,17 @@ from rest_framework.decorators import (
     permission_classes,
     authentication_classes,
 )
+from rest_framework.permissions import IsAuthenticated
 from staff.models import JobOffer,CompanyRegistration
 from collections import defaultdict
-from student.models import StudentOffer,StudentPlacementAppliedCompany
+from student.models import StudentOffer,StudentPlacementAppliedCompany,PlacementCompanyProgress
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.response import Response
 from rest_framework import status
-
+from .pagination import StandardResultsSetPagination
+from .serializers import StudentDetailReportSerializer
 
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
@@ -234,6 +235,7 @@ def students_by_category(request, category, batch):
 
 
 class ConsolidationReportAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, batch, *args, **kwargs):
         departments = [
             "COMP", "IT", "AI&DS", "AI&ML", "IoT", "CS&E",
@@ -284,6 +286,7 @@ class ConsolidationReportAPIView(APIView):
         return Response(report_list)
 
 class PlacementDashboardAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, batch, *args, **kwargs):
         offers = StudentOffer.objects.filter(student__batch=batch).annotate(
             salary_float=Cast('salary', FloatField())
@@ -380,7 +383,7 @@ class PlacementDashboardAPIView(APIView):
 
 
 class BranchwiseReportAPIView(APIView):
-
+    permission_classes = [IsAuthenticated]
     def get(self, request, batch, *args, **kwargs):
 
         companies = CompanyRegistration.objects.filter(batch=batch)
@@ -446,3 +449,40 @@ class BranchwiseReportAPIView(APIView):
             'progress_fields': all_report_fields,
             'report_data': final_report
         })
+
+
+
+class StudentDetailReportAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    def get(self, request, batch, *args, **kwargs):
+        department = request.query_params.get('department', None)
+        companies = list(CompanyRegistration.objects.filter(batch=batch))
+        students_qs = Student.objects.filter(
+            batch=batch
+        ).select_related('user').prefetch_related(
+            'student_offers__company',
+            'applied_companies__application'
+        ).order_by('uid')
+        if department:
+            students_qs = students_qs.filter(department=department)
+        paginator = self.pagination_class()
+        paginated_students = paginator.paginate_queryset(students_qs, request, view=self)
+        all_progress = PlacementCompanyProgress.objects.filter(
+            application__student_id__in=[s.id for s in paginated_students]
+        ).select_related('application')
+        progress_by_student = defaultdict(list)
+        for p in all_progress:
+            progress_by_student[p.application.student_id].append(p)
+        for s in paginated_students:
+            s.all_progress = progress_by_student[s.id]
+        serializer_context = {
+            'request': request,
+            'companies': companies
+        }
+        serializer = StudentDetailReportSerializer(
+            paginated_students,
+            many=True,
+            context=serializer_context
+        )
+        return paginator.get_paginated_response(serializer.data)

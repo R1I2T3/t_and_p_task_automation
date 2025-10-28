@@ -5,6 +5,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { DEPARTMENTS_TO_DISPLAY } from "@/constant";
 import {
   Table,
   TableBody,
@@ -13,30 +14,35 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Select, MenuItem, Button, Stack } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import Papa from "papaparse";
+
 type ReportData = {
   id: number;
   role: string;
   salary: string;
   form__name: string;
   form__notice__date: string;
+  employee_type?: string;
   [key: string]: any;
 };
 
-const DEPARTMENTS_TO_DISPLAY = [
-  "AI&DS",
-  "AI&ML",
-  "IoT",
-  "COMP",
-  "CS&E",
-  "E&CS",
-  "E&TC",
-  "IT",
-  "Mech",
-  "MME",
-  "CIVIL",
-];
+
 
 const getDeptApiKey = (dept: string) => {
   return dept
@@ -45,6 +51,22 @@ const getDeptApiKey = (dept: string) => {
     .replace(" ", "_")
     .replace("-", "_");
 };
+
+function TableSkeletonLoader({ columns }: { columns: number }) {
+  return (
+    <>
+      {[...Array(5)].map((_, i) => (
+        <TableRow key={`skel-row-${i}`}>
+          {[...Array(columns)].map((_, j) => (
+            <TableCell key={`skel-cell-${i}-${j}`}>
+              <Skeleton className="h-4 w-full" />
+            </TableCell>
+          ))}
+        </TableRow>
+      ))}
+    </>
+  );
+}
 
 const columns: ColumnDef<ReportData>[] = [
   {
@@ -102,7 +124,7 @@ export function ConsolidationReportPage() {
   const [data, setData] = useState<ReportData[]>([]);
   const [selectedBatch, setSelectedBatch] = useState<string>("");
   const [batches, setBatches] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/staff/companies/batches/")
@@ -113,6 +135,8 @@ export function ConsolidationReportPage() {
 
   useEffect(() => {
     async function fetchData() {
+      if (!selectedBatch) return;
+
       try {
         setLoading(true);
         const response = await fetch(
@@ -126,7 +150,7 @@ export function ConsolidationReportPage() {
         setLoading(false);
       }
     }
-    if (selectedBatch) fetchData();
+    fetchData();
   }, [selectedBatch]);
 
   const table = useReactTable({
@@ -135,56 +159,92 @@ export function ConsolidationReportPage() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-
   const handleExportCSV = () => {
-    const csv = Papa.unparse(data);
+    if (!data.length) {
+      alert("No data to export!");
+      return;
+    }
+    const staticHeaders = [
+      "Sr. No.",
+      "Date of Visit",
+      "Name of Employer",
+      "Employer Type",
+      "Salary Offered",
+    ];
+
+    const topHeader: string[] = [...staticHeaders];
+    const subHeader: string[] = [...Array(staticHeaders.length).fill("")];
+
+    DEPARTMENTS_TO_DISPLAY.forEach((dept) => {
+      topHeader.push(dept, ""); // two columns per dept
+      subHeader.push("Appeared & Register", "Selected");
+    });
+    const dataRows = data.map((item, index) => {
+      const row = [
+        index + 1,
+        item.form__notice__date
+          ? new Date(item.form__notice__date).toLocaleDateString("en-IN")
+          : "N/A",
+        `${item.form__name} (${item.role})`,
+        item.employee_type || "N/A",
+        item.salary || "N/A",
+      ];
+
+      DEPARTMENTS_TO_DISPLAY.forEach((dept) => {
+        const appliedKey = `applied_${getDeptApiKey(dept)}`;
+        const selectedKey = `selected_${getDeptApiKey(dept)}`;
+        row.push(item[appliedKey] ?? "", item[selectedKey] ?? "");
+      });
+
+      return row;
+    });
+
+    const csvData = [topHeader, subHeader, ...dataRows];
+    const csv = Papa.unparse(csvData);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `consolidation_report_${selectedBatch}.csv`);
+    link.href = url;
+    link.download = `consolidation_report_${selectedBatch || "batch"}.csv`;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          marginBottom: 16,
-          marginTop: 100,
-        }}
-      >
-        <Select
-          value={selectedBatch}
-          onChange={(e) => setSelectedBatch(e.target.value)}
-          displayEmpty
-          sx={{ minWidth: 200 }}
-        >
-          <MenuItem value="">Select Batch</MenuItem>
-          {batches.map((batch) => (
-            <MenuItem key={batch} value={batch}>
-              {batch}
-            </MenuItem>
-          ))}
-        </Select>
+    <Card className="m-4">
+      <CardHeader>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <CardTitle>Consolidation Report</CardTitle>
+            <CardDescription>
+              {selectedBatch
+                ? `Showing results for Batch: ${selectedBatch}`
+                : "Select a batch to view report"}
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={selectedBatch} onValueChange={setSelectedBatch}>
+              <SelectTrigger className="w-40 text-black bg-gray-100">
+                <SelectValue placeholder="Select Batch" />
+              </SelectTrigger>
+              <SelectContent>
+                {batches.map((batch) => (
+                  <SelectItem key={batch} value={batch}>
+                    {batch}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-        <Stack direction="row" spacing={2}>
-          <Button
-            variant="contained"
-            color="primary"
-            disabled={!data.length}
-            onClick={handleExportCSV}
-          >
-            Export CSV
-          </Button>
-        </Stack>
-      </div>
+            <Button disabled={!data.length} onClick={handleExportCSV}>
+              Export CSV
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
 
-      <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Consolidation Report</h1>
+      <CardContent>
         <div className="rounded-md border overflow-x-auto">
           <Table>
             <TableHeader>
@@ -192,7 +252,11 @@ export function ConsolidationReportPage() {
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id} colSpan={header.colSpan}>
+                      <TableHead
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        className="text-center"
+                      >
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -206,7 +270,11 @@ export function ConsolidationReportPage() {
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows?.length ? (
+              {loading ? (
+                <TableSkeletonLoader
+                  columns={table.getAllLeafColumns().length}
+                />
+              ) : table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
@@ -225,14 +293,14 @@ export function ConsolidationReportPage() {
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    No data found.
+                    No data found
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

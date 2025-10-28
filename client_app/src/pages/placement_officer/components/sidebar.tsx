@@ -21,8 +21,8 @@ const Sidebar = () => {
         <NavLink to="branch-wise-report" className="menu-item">
           <p>Branch-wise Report</p>
         </NavLink>
-        <NavLink to="company-wise-report" className="menu-item">
-          <p>Company-wise Report</p>
+        <NavLink to="student-performance" className="menu-item">
+          <p>Student Performance</p>
         </NavLink>
         <NavLink to="/notifications/create" className="menu-item gap-3">
           <p>Notification</p>

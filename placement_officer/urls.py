@@ -53,4 +53,9 @@ urlpatterns = [
         views.BranchwiseReportAPIView.as_view(),
         name="branch_wise_report",
     ),
+    path(
+        "student_detail_report/<str:batch>/",
+        views.StudentDetailReportAPIView.as_view(),
+        name="student_detail_report",
+    ),
 ]
