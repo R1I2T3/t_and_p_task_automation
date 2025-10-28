@@ -7,7 +7,7 @@ from base.models import User, FacultyResponsibility
 from django.contrib.auth import logout
 from student.models import Student
 from django.views.static import serve
-
+from django.shortcuts import render
 
 def serve_static(request, path, document_root=""):
     return serve(request, path, document_root, show_indexes=True)
@@ -44,3 +44,7 @@ def my_protected_view(request):
 def logout_api(request):
     logout(request)
     return JSONResponse({"message": "Logged out successfully."})
+
+@login_required
+def index(request):
+    return render(request, "index.html")

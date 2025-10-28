@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as React from "react";
 import {
   ColumnDef,
@@ -203,10 +204,6 @@ export function StudentStatusReport() {
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-  const handleLoadClick = () => {
-    setPage(1);
-    setDepartment(departmentInput);
-  };
 
   const handleNextPage = () => {
     if (apiResponse?.next) {

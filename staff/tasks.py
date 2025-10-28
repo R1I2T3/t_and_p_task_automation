@@ -29,7 +29,7 @@ def generate_excel_export_task(company_id):
     columns = [
         'UID', 'Full Name', 'Personal Email', 'Contact',
         'Department', '10th Grade %', '12th Grade %', 'CGPA',
-        'Active KT', 'DSE Student'
+        'Active KT', 'DSE Student','role'
     ]
     ws.append(columns)
     if not applications.exists():
@@ -48,6 +48,7 @@ def generate_excel_export_task(company_id):
                 student.cgpa,
                 "Yes" if student.is_kt else "No",
                 "Yes" if student.is_dse_student else "No",
+                app.job_offer.role
             ]
             ws.append(row)
 

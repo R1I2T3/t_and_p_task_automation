@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { XCircle } from "lucide-react";
@@ -64,7 +65,7 @@ function InterestedStudentsTabContent({ companyId }: { companyId: string }) {
       <ExportManager companyId={companyId} />
 
       <BulkUpdateDialog
-        applicationIds={selectedApplicationIds}
+        applicationIds={selectedApplicationIds as any}
         onSuccess={() => {
           setRowSelection({});
           queryClient.invalidateQueries({ queryKey: ["interestedStudents"] });

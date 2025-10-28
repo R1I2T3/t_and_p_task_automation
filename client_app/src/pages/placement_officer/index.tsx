@@ -188,7 +188,7 @@ function DashboardCard({
         ) : (
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              {children}
+              <>{children}</>
             </ResponsiveContainer>
           </div>
         )}

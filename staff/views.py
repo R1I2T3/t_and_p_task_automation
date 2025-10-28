@@ -95,6 +95,7 @@ class SendPlacementNotificationApiView(generics.CreateAPIView):
             )
 
             notification.recipients.set(recipients)
+
             serializer = self.get_serializer(notification)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:

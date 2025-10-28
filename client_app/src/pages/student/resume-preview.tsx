@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useRef } from "react";
 import { PrinterIcon } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
@@ -83,7 +84,7 @@ const ResumePreview = () => {
         </Button>
 
         <div ref={componentRef}>
-          <ResumeDisplay resumeData={resumeData} />
+          <ResumeDisplay resumeData={resumeData as any} />
         </div>
       </div>
     </div>

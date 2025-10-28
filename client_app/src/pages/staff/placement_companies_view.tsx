@@ -11,7 +11,7 @@ import {
   IconButton,
   Grid,
 } from "@mui/material";
-import { Plus, Eye, Pencil, Trash2, Send } from "lucide-react"; // Lucide icons
+import { Plus, Eye, Pencil, Send } from "lucide-react"; // Lucide icons
 import { useNavigate,  } from "react-router";
 
 type Company = {
@@ -41,17 +41,6 @@ const CompanyPage = () => {
         .catch((err) => console.error("Error fetching companies:", err));
     }
   }, [selectedBatch]);
-
-  const handleDelete = (id: string) => {
-    fetch(`/api/companies/${id}/`, {
-      method: "DELETE",
-    })
-      .then(() => {
-        setCompanies((prev) => prev.filter((c) => c.id !== id));
-      })
-      .catch((err) => console.error("Error deleting company:", err));
-  };
-
 
   return (
     <Container sx={{ mt: 4 }}>
@@ -105,9 +94,6 @@ const CompanyPage = () => {
                 </IconButton>
                 <IconButton onClick={() => navigate(`/staff/placement_companies/edit/?id=${company.id}`)}>
                   <Pencil size={18} />
-                </IconButton>
-                <IconButton onClick={() => handleDelete(company.id)}>
-                  <Trash2 size={18} />
                 </IconButton>
               </CardActions>
             </Card>

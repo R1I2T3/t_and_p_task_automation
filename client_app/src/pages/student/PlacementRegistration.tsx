@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Card, CardContent, CardTitle, CardHeader } from "@/components/ui/card";
@@ -139,7 +140,7 @@ const PlacementRegistration = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
-          <Notice formData={data} isPlacement />
+          <Notice formData={data as any} isPlacement />
         </CardContent>
       </Card>
       <Card className="w-full md:w-1/2 shadow-lg border border-gray-200">

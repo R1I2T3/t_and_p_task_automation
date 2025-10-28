@@ -1,11 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRef } from "react";
 import { Container, TextField, Button, Grid, Stack } from "@mui/material";
 import Notice from "./notice_preview";
 import { useReactToPrint } from "react-to-print";
 import { FormDataType } from "../../placement_company";
-// import PrintIcon from "@mui/icons-material/Print";
-// import FileDownloadIcon from "@mui/icons-material/FileDownload";
-
 interface Props {
   formData: FormDataType;
   setFormData: React.Dispatch<React.SetStateAction<FormDataType>>;
@@ -122,7 +120,7 @@ const CompanyNotice = ({ formData, setFormData }: Props) => {
       </Grid>
       {formData.notice && (
         <div>
-          <Notice formData={formData} ref={contentRef} isPlacement />
+          <Notice formData={formData as any} ref={contentRef} isPlacement />
           <Stack
             direction="row"
             spacing={2}

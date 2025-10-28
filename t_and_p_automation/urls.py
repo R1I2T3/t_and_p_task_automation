@@ -16,7 +16,7 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
@@ -43,6 +43,8 @@ urlpatterns = (
             name="user_profile_update_password",
         ),
         path("api/staff/", include("staff.urls")),
+        # path("", views.index),
+        # re_path(r"^(?!static/|media/).*$", views.index),
     ]
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

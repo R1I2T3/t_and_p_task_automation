@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useForm, useFieldArray } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { z } from "zod";

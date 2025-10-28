@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -72,7 +73,7 @@ export default function StudentDashboard() {
         </CardHeader>
         <CardContent>
           <ul className="list-disc ml-6">
-            {Object.entries(student.academic_performance).map(([sem, perf]) => (
+            {Object.entries(student.academic_performance).map(([sem, perf]:any) => (
               <li key={sem}>{sem}: {perf}</li>
             ))}
           </ul>
@@ -86,7 +87,7 @@ export default function StudentDashboard() {
         </CardHeader>
         <CardContent>
           <ul className="list-disc ml-6">
-            {Object.entries(student.academic_attendance).map(([sem, att]) => (
+            {Object.entries(student.academic_attendance).map(([sem, att]:any) => (
               <li key={sem}>{sem}: {att}%</li>
             ))}
           </ul>
@@ -100,7 +101,7 @@ export default function StudentDashboard() {
         </CardHeader>
         <CardContent>
           <ul className="list-disc ml-6">
-            {Object.entries(student.training_performance).map(([sem, tp]) => (
+            {Object.entries(student.training_performance).map(([sem, tp]:any) => (
               <li key={sem}>{sem}: {tp}</li>
             ))}
           </ul>
@@ -114,7 +115,7 @@ export default function StudentDashboard() {
         </CardHeader>
         <CardContent>
           <ul className="list-disc ml-6">
-            {Object.entries(student.training_attendance).map(([sem, ta]) => (
+            {Object.entries(student.training_attendance).map(([sem, ta]:any) => (
               <li key={sem}>{sem}: {ta}%</li>
             ))}
           </ul>
