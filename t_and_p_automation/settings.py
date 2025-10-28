@@ -122,11 +122,11 @@ WSGI_APPLICATION = "t_and_p_automation.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("DATABASE_NAME"),
-        "USER": os.getenv("DATABASE_USER"),
-        "PASSWORD": os.getenv("DATABASE_ROOT_PASSWORD"),
+        "NAME": os.getenv("DATABASE_NAME", "t_and_p_db"),
+        "USER": os.getenv("DATABASE_USER", "root"),
+        "PASSWORD": os.getenv("DATABASE_ROOT_PASSWORD", ""),
         "HOST": "127.0.0.1",  # Or your MySQL server's IP address
-        "PORT": os.getenv("DATABASE_PORT"),
+        "PORT": os.getenv("DATABASE_PORT", "3306"),
     }
 }
 
@@ -161,20 +161,19 @@ USE_I18N = True
 
 USE_TZ = True
 # email
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = os.getenv("EMAIL_USERNAME")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASSWORD")
+DEFAULT_FROM_EMAIL = os.getenv("EMAIL_USERNAME")
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [
     BASE_DIR / "static",
-    os.path.join(BASE_DIR, "client_app/dist/static"),
-    os.path.join(BASE_DIR, "client_app/public"),
 ]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
