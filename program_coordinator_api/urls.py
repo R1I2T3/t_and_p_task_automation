@@ -3,7 +3,6 @@ from django.views.decorators.csrf import csrf_exempt
 from . import views
 
 urlpatterns = [
-    # Training Performance APIs
     path(
         "training-performance/template/<str:training_type>/",
         views.download_training_template,
@@ -15,7 +14,11 @@ urlpatterns = [
         name="training_upload"
     ),
 
-    # Attendance data APIs
+     path(
+        "attendance/<str:table_name>/",
+        views.get_attendance_data,
+        name="get_attendance_data",
+    ),
     path(
         "get-attendance/<str:table_name>/",
         views.get_attendance_data,
@@ -26,6 +29,7 @@ urlpatterns = [
         csrf_exempt(views.save_branch_attendance),  # exempt if called from frontend
         name="save_branch_attendance"
     ),
+     path("average-data/<str:table_name>/", views.get_avg_data, name="get_avg_data"),
     path(
         "avg-data/<str:table_name>/",
         views.get_avg_data,

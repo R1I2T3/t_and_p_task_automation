@@ -1,10 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Avg, FloatField
-from django.db.models.functions import Cast
 from base.models import FacultyResponsibility
 from rest_framework.permissions import BasePermission
 from student.models import (
@@ -13,15 +10,8 @@ from student.models import (
     AcademicPerformanceSemester,
 )
 from .utils import validate_file, importExcelAndReturnJSON
-from .serializers import DepartmentStatsSerializer, DepartmentStudentSerializer
 from django.db import models
-import pandas as pd
-from internship_api.models import InternshipAcceptance
-from django.db import transaction
-from datetime import datetime
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from rest_framework.views import APIView
-
+from .serializers import DepartmentStatsSerializer
 
 class IsDepartmentCoordinator(BasePermission):
     def has_permission(self, request, view):
@@ -32,9 +22,9 @@ class DepartmentCoordinatorViewSet(viewsets.ViewSet):
 
     def get_department_coordinator(self):
         user = self.request.user
-        if user.role == "faculty":  # Restrict only for faculty users
+        if user.role == "faculty":
             return FacultyResponsibility.objects.filter(user=user).first()
-        return None  # Allow other roles to access data without restrictions
+        return None
 
     def list(self, request):
         department_coordinator = self.get_department_coordinator()
@@ -54,13 +44,14 @@ class DepartmentCoordinatorViewSet(viewsets.ViewSet):
                 "se_count": len(students.filter(academic_year="SE")),
                 "te_count": len(students.filter(academic_year="TE")),
                 "be_count": len(students.filter(academic_year="BE")),
+                "department_students": students,
             }
 
             serializer = DepartmentStatsSerializer(stats)
             return Response(serializer.data)
-        # Allow other roles to access all students
         students = Student.objects.select_related("user").all()
         serializer = DepartmentStatsSerializer({"total_students": len(students)})
+        print(serializer.data)
         return Response(serializer.data)
 
 

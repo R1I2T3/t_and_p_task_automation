@@ -263,7 +263,8 @@ class ConsolidationReportAPIView(APIView):
             'role',
             'salary',
             'form__name',
-            'form__notice__date'
+            'form__notice__date',
+            'form__is_aedp_or_pli'
         ]
 
         report_data = (

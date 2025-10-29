@@ -59,7 +59,7 @@ class StudentDetailReportSerializer(serializers.ModelSerializer):
             progress = progress_map.get(company.id)
             offer = offer_map.get(company.id)
             is_eligible = is_student_eligible(instance, company)
-            data[f"{comp_key}_eligible"] = is_eligible
+            data[f"{comp_key}_eligible"] = is_eligible or (offer is not None)
             data[f"{comp_key}_registered"] = progress.registered if progress else False
             data[f"{comp_key}_aptitude_test"] = progress.aptitude_test if progress else False
             data[f"{comp_key}_coding_test"] = progress.coding_test if progress else False

@@ -94,6 +94,14 @@ const columns: ColumnDef<ReportData>[] = [
     ),
   },
   {
+    header:'PLI/AEDP',
+    accessorKey:'form__is_aedp_or_pli',
+    cell: ({ getValue }) => {
+      const val = getValue() as boolean;
+      return val ? "AEDP/PLI" : "Regular";
+    }
+  },
+  {
     header: "Employer Type",
     accessorKey: "employee_type",
   },

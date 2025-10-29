@@ -17,7 +17,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-# App models
 from base.models import FacultyResponsibility
 from student.models import (
     Student,
@@ -25,18 +24,14 @@ from student.models import (
     TrainingPerformanceSemester,
 )
 
-# Optional models used by training upload endpoint (ensure these exist in your app)
-# If your models are elsewhere, adjust this import accordingly.
 try:
     from .models import TrainingPerformance, TrainingPerformanceCategory
 except Exception:
-    # If those models don't exist, define placeholders or raise a clear error
     TrainingPerformance = None
     TrainingPerformanceCategory = None
 
 logger = logging.getLogger(__name__)
 
-# --- training config (single source of truth for subcategories) ---
 TRAINING_CONFIG = {
     "Aptitude": [
         "Arithmetic",
@@ -49,7 +44,6 @@ TRAINING_CONFIG = {
     "Coding": ["Coding Marks"],
 }
 
-# Required base headers
 BASE_HEADERS = ["UID", "Full Name", "Branch"]
 
 
@@ -57,16 +51,9 @@ def _normalize_header(h):
     return str(h).strip() if h else ""
 
 
-# -------------------------
-# GET template Excel for a training type
-# -------------------------
 @csrf_exempt
 @api_view(["GET"])
 def download_training_template(request, training_type: str):
-    """
-    Generate and return an Excel template dynamically for the given training type.
-    Required columns: UID, Full Name, Branch + subcategory marks.
-    """
     training_type = str(training_type).strip()
     if training_type not in TRAINING_CONFIG:
         return JsonResponse(
@@ -98,16 +85,10 @@ def download_training_template(request, training_type: str):
     return response
 
 
-# -------------------------
-# POST upload handler (no auth)
-# -------------------------
 @csrf_exempt
 @api_view(["POST"])
 @parser_classes([MultiPartParser, FormParser])
 def upload_training_performance(request):
-    """
-    Upload training Excel (UID, Full Name, Branch + marks per subcategory).
-    """
     training_type = request.POST.get("training_type", None)
     if not training_type:
         return JsonResponse(
@@ -134,8 +115,6 @@ def upload_training_performance(request):
 
         header_cells = next(sheet.iter_rows(min_row=1, max_row=1, values_only=False))
         read_headers = [_normalize_header(c.value) for c in header_cells]
-
-        # Validate exact header structure
         read_headers_trim = read_headers[: len(expected_headers)]
         if read_headers_trim != expected_headers:
             return JsonResponse(
@@ -198,7 +177,6 @@ def upload_training_performance(request):
                     }
                 )
 
-        # Write to DB
         with transaction.atomic():
             for item in parsed_rows:
                 tp_defaults = {
@@ -250,17 +228,12 @@ def upload_training_performance(request):
         logger.exception("Error while uploading training performance file")
         return JsonResponse({"error": str(e)}, status=500)
 
-
-# -------------------------
-# The rest of your original views (unchanged)
-# -------------------------
-
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def get_attendance_data(request, table_name):
     try:
-        # Validate table_name to prevent SQL injection
+
         valid_tables = [
             "attendance_data",
             "another_table",
