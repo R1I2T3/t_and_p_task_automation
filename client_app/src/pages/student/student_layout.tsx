@@ -24,27 +24,27 @@ const StudentLayout = () => {
     { icon: User, label: "Personal Info", href: "/student/" },
     {
       icon: CalendarCheck,
-      label: "Session Attendance",
+      label: "Training Attendance",
       href: "/student/session-attendance",
     },
     {
       icon: CalendarCheck,
-      label: "Student Training Performance",
-      href: "/student/student-training-performance",
-    },
-
-    { icon: FileUser, label: "Resume", href: "/student/resume" },
-    { icon: MessageCircle, label: "Notifications", href: "/notifications/" },
-    {
-      icon: FileUser,
-      label: "Internship submission",
-      href: "/student/internship-submission",
+      label: "Training Performance",
+      href: "/student/training-performance",
     },
     {
       icon:FileUser,
       label:"Placement Card",
       href:"/student/placement-card"
-    }
+    },
+     {
+      icon:FileUser,
+      label:"Internship Summary",
+      href:"/student/internships"
+    },
+    { icon: FileUser, label: "Resume", href: "/student/resume" },
+    { icon: MessageCircle, label: "Notifications", href: "/notifications/" },
+
   ];
 
   return (

@@ -5,10 +5,9 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.http import Http404
 from rest_framework.generics import RetrieveAPIView
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.generics import ListAPIView
 from django.shortcuts import get_object_or_404
 from .models import (
-    User,
     Student,
     Resume,
     StudentPlacementAppliedCompany,
@@ -18,7 +17,8 @@ from .models import (
 from .serializers import (
     ResumeSerializer,
     SessionAttendanceSerializer,
-    StudentSerializer
+    StudentSerializer,
+    InternshipAcceptanceSerializer,
 )
 
 from program_coordinator_api.models import (
@@ -26,12 +26,7 @@ from program_coordinator_api.models import (
 )
 from .utils import is_student_eligible
 from staff.models import CompanyRegistration,JobOffer
-
-from datetime import datetime
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from django.utils.timezone import now
+from internship_api.models import InternshipAcceptance
 from program_coordinator_api.models import TrainingPerformance, TrainingPerformanceCategory
 
 class StudentTrainingPerformanceAPIView(APIView):
@@ -102,64 +97,17 @@ class StudentDataView(APIView):
             return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
-class StudentFormView(APIView):
-    permission_classes = [IsAuthenticated]
 
-    def patch(self, request, id):
-        try:
-            student = Student.objects.get(user=request.user)
-            notification_obj = Notification.objects.get(id=id)
-
-            if not notification_obj.link:
-                return Response(
-                    {'error': 'Page Not Found'}, 
-                    status=status.HTTP_404_NOT_FOUND
-                )
-
-            if notification_obj.expires_at and now() > notification_obj.expires_at:
-                return Response(
-                    {"error": "This form has expired. Please contact the TNP."},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-
-            if "consent" in request.path:
-                serializer = StudentConsentUpdateSerializer(student, data=request.data, partial=True)
-            elif "pli" in request.path:
-                serializer = StudentPliUpdateSerializer(student, data=request.data, partial=True)
-            else:
-                return Response({'error': 'Invalid form type'}, status=status.HTTP_400_BAD_REQUEST)
-
-            if serializer.is_valid():
-                serializer.save()
-
-                if "pli" in request.path:
-                    response_serializer = StudentSerializer(student)
-                    student_data = response_serializer.data
-                    return Response({"student": student_data})
-                
-                return Response(serializer.data)
-
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        except Student.DoesNotExist:
-            return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        except Notification.DoesNotExist:
-            return Response({'error': 'Page not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class SessionAttendanceAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         try:
-            student = Student.objects.get(user=request.user)  # Get student object
+            student = Student.objects.get(user=request.user)
             attendance_data = AttendanceData.objects.filter(
                 uid=student.uid
-            )  # Fetch attendance data
+            )
 
             serializer = SessionAttendanceSerializer(
                 attendance_data, many=True
@@ -450,3 +398,17 @@ class PlacementCard(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class StudentInternshipListView(ListAPIView):
+    serializer_class = InternshipAcceptanceSerializer
+
+    def get_queryset(self):
+        try:
+            student = get_object_or_404(Student, user=self.request.user)
+        except Student.DoesNotExist:
+            return Response(
+                {"error": "No student profile found for this user."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        return InternshipAcceptance.objects.filter(student=student)

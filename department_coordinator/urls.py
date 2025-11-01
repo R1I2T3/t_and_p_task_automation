@@ -1,5 +1,10 @@
 from django.urls import path
-from .views import DepartmentCoordinatorViewSet, AttendanceViewSet
+from .views import (
+    DepartmentCoordinatorViewSet,
+    AttendanceViewSet,
+    DepartmentStudentDataView,
+    upload_inhouse_internship,
+)
 
 urlpatterns = [
     # Department Coordinator URLs
@@ -23,5 +28,15 @@ urlpatterns = [
         "attendance/upload-performance/",
         AttendanceViewSet.as_view({"post": "upload_performance"}),
         name="upload-performance",
+    ),
+    path(
+        "student-data/",
+        DepartmentStudentDataView.as_view(),
+        name="department-student-data",
+    ),
+    path(
+        "upload-inhouse-internship/",
+        upload_inhouse_internship,
+        name="upload-inhouse-internship",
     ),
 ]

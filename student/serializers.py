@@ -15,7 +15,7 @@ from .models import (
 )
 from program_coordinator_api.models import AttendanceData
 from base.models import User
-
+from internship_api.models import InternshipAcceptance
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -203,3 +203,8 @@ class ResumeSerializer(serializers.ModelSerializer):
         representation["contacts"] = [c.url for c in instance.contact.all()]
         representation["skills"] = [s.skill for s in instance.skill.all()]
         return representation
+
+class InternshipAcceptanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InternshipAcceptance
+        fields = "__all__"

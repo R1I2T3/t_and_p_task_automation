@@ -17,18 +17,19 @@ import Upload from "./pages/program_coordinator/Upload";
 import Attendance from "./pages/program_coordinator/Attendance";
 import StudentLayout from "./pages/student/student_layout";
 import SessionAttendance from "./pages/student/SessionAttendance";
-import InternShipSubmission from "./pages/student/InternShipSubmission";
 import StudentPersonalInfo from "./pages/student/student-personal-info";
 import PlacementRegistration from "./pages/student/PlacementRegistration";
 import InternshipRegistration from "./pages/student/InternshipRegistration";
+import StudentInternships from "./pages/student/InternshipSummary";
 import Resume from "./pages/student/resume";
 import ResumePreview from "./pages/student/resume-preview";
 import FacultyLayout from "./pages/faculty_coordinator/FacultyLayout";
 import FacultyHome from "./pages/faculty_coordinator/FacultyHome";
 import FacultyTablePage from "./pages/faculty_coordinator/FacultyAttendanceTable";
 import DepartmentParent from "./pages/department_coordinator/DepartmentParent";
-import DepartmentDashboard from "./pages/department_coordinator/DepartmentHome";
+import DepartmentStudentData from "./pages/department_coordinator/DepartmentStudentData";
 import DepartmentAttendance from "./pages/department_coordinator/DepartmentAttendance";
+import UploadInhouseInternship from "./pages/department_coordinator/UploadInhouseInternship";
 import PlacementLayout from "./pages/placement_officer/PlacementLayout";
 import { CategoryDataStatistics } from "./pages/placement_officer/CategoryData";
 import {PlacementDashboard} from "./pages/placement_officer";
@@ -40,7 +41,7 @@ import InternshipLayout from "./pages/internship_officer/InternshipLayout";
 import InternShipNotice from "./pages/internship_officer/InternShipNotice";
 import InternshipCompanyRegister from "./pages/internship_officer/InternshipCompanyRegister";
 import InternShipVerify from "./pages/internship_officer/InternShipVerify";
-import InternshipReport from "./pages/internship_officer/internship_report";
+// import InternshipReport from "./pages/internship_officer/internship_report";
 import InternshipStats from "./pages/internship_officer/Stats";
 import OnePageReport from "./pages/internship_officer/OnePageReport";
 import PrincipalLayout from "./pages/principal/PrincipalLayout";
@@ -108,6 +109,7 @@ const App = () => {
         </Route>
         <Route path="/student" element={<StudentLayout />}>
           <Route path="session-attendance" element={<SessionAttendance />} />
+          <Route path="training-performance" element={<StudentTrainingPerformance />} />
           <Route index element={<StudentPersonalInfo />} />
           <Route path="resume" element={<Resume />} />
           <Route path="resume-preview" element={<ResumePreview />} />
@@ -120,18 +122,16 @@ const App = () => {
             path="internship/registration/:id"
             element={<InternshipRegistration />}
           />
-          <Route
-            path="internship-submission"
-            element={<InternShipSubmission />}
-          />
+          <Route path="internships" element={<StudentInternships />} />
         </Route>
         <Route path="/faculty_coordinator" element={<FacultyLayout />}>
           <Route index element={<FacultyHome />} />
           <Route path="attendance" element={<FacultyTablePage />} />
         </Route>
         <Route path="/department_coordinator" element={<DepartmentParent />}>
-          <Route index element={<DepartmentDashboard />} />
           <Route path="attendance" element={<DepartmentAttendance />} />
+          <Route path="" element={<DepartmentStudentData />} />
+        <Route path="upload-inhouse-internship" element={<UploadInhouseInternship />} />
         </Route>
         <Route path="/placement_officer" element={<PlacementLayout />}>
           <Route index element={<PlacementDashboard />} />

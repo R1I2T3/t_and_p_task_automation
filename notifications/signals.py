@@ -14,4 +14,4 @@ def notification_recipients_added(sender, instance, action, pk_set, **kwargs):
     if action == 'post_add' and pk_set:
         # Trigger async email sending task
         send_notification_email.delay(instance.id)
-        print(f"Notification email task triggered for notification {instance.id}")www
+        print(f"Notification email task triggered for notification {instance.id}")

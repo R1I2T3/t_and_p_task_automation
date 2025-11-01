@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from student.serializers import(
 
-StudentSerializer, 
-AcademicAttendanceSemesterSerializer, 
-AcademicPerformanceSemesterSerializer, 
+StudentSerializer,
+AcademicAttendanceSemesterSerializer,
+AcademicPerformanceSemesterSerializer,
 TrainingPerformanceSemesterSerializer,
 TrainingAttendanceSemesterSerializer
 )
@@ -23,7 +23,7 @@ class DepartmentStudentSerializer(serializers.ModelSerializer):
     academic_attendance = AcademicAttendanceSemesterSerializer(many=True, read_only=True)
     training_performance = TrainingPerformanceSemesterSerializer(many=True, read_only=True)
     training_attendance = TrainingAttendanceSemesterSerializer(many=True, read_only=True)
- 
+
     class Meta:
         model = Student
         fields = [
@@ -32,10 +32,9 @@ class DepartmentStudentSerializer(serializers.ModelSerializer):
             "department",
             "academic_year",
             "current_category",
-            "is_student_coordinator",
             "consent",
             "batch",
-            "is_pli",
+            "consent",
             "academic_performance",
             "academic_attendance",
             "training_performance",

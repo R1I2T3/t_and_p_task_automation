@@ -16,12 +16,8 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
-    primary: {
-      main: "#ff9800", // Orange theme
-    },
-    secondary: {
-      main: "#ff5722",
-    },
+    primary: { main: "#ff9800" },
+    secondary: { main: "#ff5722" },
   },
 });
 
@@ -44,7 +40,7 @@ const StudentTrainingPerformance: React.FC = () => {
   const [performance, setPerformance] = useState<StudentPerformance | null>(
     null
   );
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,24 +51,44 @@ const StudentTrainingPerformance: React.FC = () => {
       try {
         const res = await fetch("/api/student/training-performance/", {
           method: "GET",
-          credentials: "include", // ✅ session auth
-          headers: {
-            Accept: "application/json",
-          },
+          credentials: "include",
+          headers: { Accept: "application/json" },
         });
 
         if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || "Failed to fetch performance data");
+          let errMsg = `Server Error: ${res.status}`;
+          try {
+            const errData = await res.json();
+            errMsg = errData.error || errMsg;
+          } catch {
+            // Non-JSON error response
+          }
+          throw new Error(errMsg);
         }
 
-        const data = await res.json();
-        console.log("Training Performance:", data);
+        let data: StudentPerformance;
+        try {
+          data = await res.json();
+        } catch {
+          throw new Error("Invalid response format from server.");
+        }
+
+        if (!data || !data.training_performance) {
+          throw new Error("Incomplete data received from the server.");
+        }
+
         setPerformance(data);
       } catch (err: any) {
-        console.error("Error fetching training data:", err);
-        setError(err.message);
-        toast.error("Failed to load training performance");
+        let message = "An unexpected error occurred.";
+        if (err.name === "TypeError") {
+          message = "Network error or server unreachable.";
+        } else if (err instanceof Error) {
+          message = err.message;
+        }
+
+        console.error("Training performance fetch error:", err);
+        setError(message);
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -107,12 +123,16 @@ const StudentTrainingPerformance: React.FC = () => {
               <CircularProgress color="primary" />
             </Box>
           ) : error ? (
-            <Typography color="error" textAlign="center">
+            <Typography color="error" textAlign="center" mt={2}>
               {error}
             </Typography>
           ) : !performance ? (
-            <Typography textAlign="center" color="textSecondary">
+            <Typography textAlign="center" color="textSecondary" mt={2}>
               No data available.
+            </Typography>
+          ) : performance.training_performance.length === 0 ? (
+            <Typography textAlign="center" color="textSecondary" mt={2}>
+              No training performance records found.
             </Typography>
           ) : (
             <>
@@ -139,9 +159,7 @@ const StudentTrainingPerformance: React.FC = () => {
                     <Table>
                       <TableHead>
                         <TableRow sx={{ backgroundColor: "#ff9800" }}>
-                          <TableCell
-                            sx={{ color: "black", fontWeight: "bold" }}
-                          >
+                          <TableCell sx={{ color: "black", fontWeight: "bold" }}>
                             Category
                           </TableCell>
                           <TableCell

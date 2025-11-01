@@ -25,7 +25,7 @@ const notice = forwardRef<
 
         <div className="notice-meta">
           <p>
-            <strong>Sr. No:</strong> TCET/T&P/PMT {formData.name} of{" "}
+            <strong>Sr. No:</strong> TCET/T&P/PMT {formData.id || ''}{" "} of{" "}
             {new Date().getFullYear()}
           </p>
           <p>
@@ -49,18 +49,30 @@ const notice = forwardRef<
 
             <li>
               <strong>Eligibility Criteria:</strong>
-              <ul>
-                <li>10th Marks ≥ {formData.min_tenth_marks}%</li>
-                <li>12th Marks ≥ {formData.min_higher_secondary_marks}%</li>
-                <li>CGPA ≥ {formData.min_cgpa}</li>
-                <li>
-                  Backlogs Accepted: {formData.accepted_kt ? "Yes" : "No"}
-                </li>
-                <li>
-                  Eligible Departments:{" "}
-                  {formData.selected_departments.join(", ")}
-                </li>
-              </ul>
+              <table className="notice-table" style={{ width: "100%" }}>
+                <tbody>
+                  <tr>
+                    <td><strong>10th Marks</strong></td>
+                    <td>{parseInt(formData.min_tenth_marks) <= 0 ? "N/A" : `>=${formData.min_tenth_marks}%`}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>12th Marks</strong></td>
+                    <td>{parseInt(formData.min_higher_secondary_marks) <= 0 ? "N/A" : `>=${formData.min_higher_secondary_marks}%`}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>CGPA</strong></td>
+                    <td>{parseInt(formData.min_cgpa) <= 0 ? "N/A" : `≥ ${formData.min_cgpa}`}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Backlogs Accepted</strong></td>
+                    <td>{formData.accepted_kt ? "Yes" : "No"}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Eligible Departments</strong></td>
+                    <td>{formData.selected_departments.join(", ")}</td>
+                  </tr>
+                </tbody>
+              </table>
             </li>
 
             {!hasMultipleJobs && singleJob && (
