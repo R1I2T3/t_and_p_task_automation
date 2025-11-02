@@ -9,8 +9,8 @@ urlpatterns = [
         name="training_template"
     ),
     path(
-        "training-performance/upload/",
-        csrf_exempt(views.upload_training_performance),  # temporarily exempt from CSRF
+        "training-performance/upload/<str:training_type>/",
+        views.UploadTrainingPerformanceView.as_view(),  # temporarily exempt from CSRF
         name="training_upload"
     ),
 
@@ -39,13 +39,6 @@ urlpatterns = [
         "update-attendance/<str:table_name>/",
         csrf_exempt(views.update_attendance),
         name="update_attendance"
-    ),
-
-    # Data upload & creation APIs
-    path(
-        "upload-data/",
-        csrf_exempt(views.upload_data),
-        name="upload_data"
     ),
     path(
         "create-attendance-record/",

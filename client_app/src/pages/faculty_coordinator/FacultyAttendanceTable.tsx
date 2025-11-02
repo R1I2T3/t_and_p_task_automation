@@ -1,11 +1,44 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import axios from "axios";
-import "./TablePage.css";
-import Sidebar from "./components/Sidebar";
+import {
+  Box,
+  Container,
+  Paper,
+  Alert,
+  SelectChangeEvent,
+  Button,
+} from "@mui/material";
+
 import { getCookie } from "@/utils";
+import Sidebar from "./components/Sidebar";
+
+import { AttendanceHeader } from "./components/AttendanceHeader";
+import { AttendanceFilters } from "./components/AttendanceFilters";
+import { AttendanceTable } from "./components/AttandanceTable";
+import { AttendanceActions } from "./components/AttendanceActions";
+
+interface DataItem {
+  program_name: string;
+  student_data: string;
+  dates: string;
+  num_sessions: number;
+  year: string;
+  semester: string;
+  phase: boolean;
+}
+interface AttendanceRecord {
+  UID: string;
+  Batch: string;
+  Session: string;
+  Present: boolean;
+  Late: boolean;
+}
+export interface Student {
+  student_data: [string, string, string]; // [UID, Name, Batch]
+  year: string;
+}
 
 function TablePage() {
   const location = useLocation();
@@ -13,58 +46,43 @@ function TablePage() {
 
   const { program, dateSession, year } = location.state || {};
 
-  interface DataItem {
-    program_name: string;
-    student_data: string;
-    dates: string;
-    num_sessions: number;
-    year: string;
-    semester: string;
-  }
+  // --- STATE ---
   const [phase, setPhase] = useState(false);
   const [data, setData] = useState<DataItem[]>([]);
-  interface AttendanceRecord {
-    UID: string;
-    Batch: string;
-    Session: string;
-    Present: boolean;
-    Late: boolean;
-  }
-
   const [attendanceData, setAttendanceData] = useState<
     Record<string, AttendanceRecord>
   >({});
   const [selectedBatch, setSelectedBatch] = useState("");
   const [batches, setBatches] = useState<string[]>([]);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // Fetch data and populate batches
+  // --- DATA FETCHING & LOCAL STORAGE ---
   useEffect(() => {
     if (!program) return;
-
     axios
       .get("/api/faculty_coordinator/data")
       .then((response) => {
         setData(response.data);
-
         const programData = response.data.filter(
-          (item: any) => item.program_name === program
+          (item: DataItem) => item.program_name === program
         );
         const uniqueBatches = Array.from(
           new Set(
-            programData.flatMap((item: any) =>
+            programData.flatMap((item: DataItem) =>
               JSON.parse(item.student_data || "[]").map(
-                (student: any) => student.student_data[2]
+                (student: Student) => student.student_data[2]
               )
             )
           )
         ) as string[];
-        setPhase(programData[0].phase);
+        setPhase(programData[0]?.phase || false);
         setBatches(uniqueBatches);
       })
       .catch((error) => console.error("Error fetching data:", error));
   }, [program]);
 
-  // Load attendance data from localStorage on component mount
   useEffect(() => {
     const storedAttendanceData = localStorage.getItem("attendanceData");
     if (storedAttendanceData) {
@@ -72,91 +90,74 @@ function TablePage() {
     }
   }, []);
 
-  // Save attendance data to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("attendanceData", JSON.stringify(attendanceData));
   }, [attendanceData]);
 
-  // Handle checkbox changes for individual students
+  // --- EVENT HANDLERS ---
   const handleCheckboxChange = (
-    studentId: any,
-    batch: any,
-    checkboxType: any
+    studentId: string,
+    batch: string,
+    checkboxType: "Present" | "Late"
   ) => {
     setAttendanceData((prevState) => {
       const studentKey = `${studentId}-${batch}-${dateSession}`;
       const updatedState = { ...prevState };
+      const current = updatedState[studentKey];
 
       if (checkboxType === "Present") {
         updatedState[studentKey] = {
-          ...(updatedState[studentKey] || {
+          ...(current || {
             UID: studentId,
             Batch: batch,
             Session: dateSession,
             Present: false,
             Late: false,
           }),
-          Present: !updatedState[studentKey]?.Present,
-          Late: updatedState[studentKey]?.Present
-            ? false
-            : updatedState[studentKey]?.Late,
+          Present: !current?.Present,
+          Late: current?.Present ? false : current?.Late,
         };
       } else if (checkboxType === "Late") {
         updatedState[studentKey] = {
-          ...(updatedState[studentKey] || {
+          ...(current || {
             UID: studentId,
             Batch: batch,
             Session: dateSession,
             Present: false,
             Late: false,
           }),
-          Late: !updatedState[studentKey]?.Late,
-          Present: updatedState[studentKey]?.Late
-            ? true
-            : updatedState[studentKey]?.Present,
+          Late: !current?.Late,
+          Present: true, // If checking Late, force Present to true
         };
       }
-
       return updatedState;
     });
   };
 
-  // Handle 'Select All' changes
-  const handleSelectAllChange = (
-    checkboxType: "Present" | "Late",
-    action: "select" | "deselect"
-  ) => {
+  const handleSelectAllChange = (action: "select" | "deselect") => {
     setAttendanceData((prevState) => {
       const updatedState = { ...prevState };
+      const currentpageStudents = filteredByBatch.slice(
+        page * rowsPerPage,
+        page * rowsPerPage + rowsPerPage
+      );
 
-      filteredByBatch.forEach((student) => {
+      currentpageStudents.forEach((student) => {
         const studentKey = `${student.student_data[0]}-${student.student_data[2]}-${dateSession}`;
-        updatedState[studentKey] = updatedState[studentKey] || {
-          UID: student.student_data[0],
-          Batch: student.student_data[2],
-          Session: dateSession,
-          Present: false,
-          Late: false,
+        updatedState[studentKey] = {
+          ...(updatedState[studentKey] || {
+            UID: student.student_data[0],
+            Batch: student.student_data[2],
+            Session: dateSession,
+          }),
+          Present: action === "select",
+          Late: action === "select" ? updatedState[studentKey]?.Late || false : false,
         };
-
-        if (checkboxType === "Present") {
-          updatedState[studentKey].Present = action === "select";
-          if (action !== "select") {
-            updatedState[studentKey].Late = false;
-          }
-        } else if (checkboxType === "Late") {
-          updatedState[studentKey].Late = action === "select";
-          if (action === "select") {
-            updatedState[studentKey].Present = true;
-          }
-        }
       });
-
       return updatedState;
     });
   };
 
-  // Save data to backend
   const saveData = () => {
     const allStudents = filteredByBatch.map((student) => ({
       UID: student.student_data[0],
@@ -171,10 +172,6 @@ function TablePage() {
         Present: false,
         Late: false,
       };
-
-      const presentStatus = attendance.Present ? "Present" : "Absent";
-      const lateStatus = attendance.Late ? "Late" : "Not Late";
-
       return {
         ProgramName: program,
         Session: dateSession,
@@ -182,10 +179,10 @@ function TablePage() {
         Name: student.Name,
         Year: student.Year,
         Batch: student.Batch,
-        Present: presentStatus,
-        Late: lateStatus,
-        Phase: phase, // Add the phase here
-        semester: data[0].semester,
+        Present: attendance.Present ? "Present" : "Absent",
+        Late: attendance.Late ? "Late" : "Not Late",
+        Phase: phase,
+        semester: data[0]?.semester,
       };
     });
 
@@ -194,14 +191,13 @@ function TablePage() {
         "/api/faculty_coordinator/save-attendance",
         { students: attendanceArray },
         {
-          headers: {
-            "X-CSRFToken": getCookie("csrftoken") || "",
-          },
+          headers: { "X-CSRFToken": getCookie("csrftoken") || "" },
           withCredentials: true,
         }
       )
       .then(() => {
-        alert("Data saved successfully!");
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
       })
       .catch((error) => {
         console.error("Error saving data:", error.response?.data);
@@ -210,31 +206,18 @@ function TablePage() {
   };
 
   const downloadCSV = () => {
-    const csvRows = [];
-    const headers = [
-      "Program",
-      "Session",
-      "UID",
-      "Name",
-      "Year",
-      "Batch",
-      "Present",
-      "Late",
+    const csvRows = [
+      "Program,Session,UID,Name,Year,Batch,Present,Late",
     ];
-    csvRows.push(headers.join(","));
-
     filteredByBatch.forEach((student) => {
       const studentKey = `${student.student_data[0]}-${student.student_data[2]}-${dateSession}`;
-      const present = attendanceData[studentKey]?.Present
-        ? "Present"
-        : "Absent";
+      const present = attendanceData[studentKey]?.Present ? "Present" : "Absent";
       const late = attendanceData[studentKey]?.Late ? "Late" : "Not Late";
-
       const row = [
         program,
         dateSession,
         student.student_data[0],
-        student.student_data[1],
+        `"${student.student_data[1]}"`, // Handle names with commas
         student.year,
         student.student_data[2],
         present,
@@ -253,15 +236,23 @@ function TablePage() {
     URL.revokeObjectURL(url);
   };
 
-  if (!program || !dateSession) {
-    return (
-      <div>
-        <p>Error: Missing program or session information.</p>
-        <button onClick={() => navigate("/")}>Go Back</button>
-      </div>
-    );
-  }
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
 
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleBatchChange = (e: SelectChangeEvent) => {
+    setSelectedBatch(e.target.value);
+    setPage(0);
+  };
+
+  // --- DATA DERIVATION / FILTERING ---
   const filteredData = data.filter((item) => item.program_name === program);
 
   const filteredSessionData = filteredData.flatMap((item) => {
@@ -271,138 +262,132 @@ function TablePage() {
     } catch (error) {
       console.error("Error parsing dates:", error);
     }
-
-    return dates.flatMap((date: string) =>
-      Array.from({ length: item.num_sessions }, (_, i) => {
-        const sessionLabel = `${date} - Session ${i + 1}`;
-        return sessionLabel === dateSession ? item : null;
-      }).filter(Boolean)
-    );
+    return dates
+      .flatMap((date: string) =>
+        Array.from({ length: item.num_sessions }, (_, i) => {
+          const sessionLabel = `${date} - Session ${i + 1}`;
+          return sessionLabel === dateSession ? item : null;
+        })
+      )
+      .filter(Boolean);
   });
 
-  const filteredByBatch = selectedBatch
-    ? filteredSessionData.flatMap((row) =>
-        JSON.parse(row?.student_data || "[]")
-          .filter(
-            (student: any) =>
-              student.student_data[2] === selectedBatch && row?.year === year
-          )
-          .map((student: any) => ({ ...student, year: row?.year }))
-      )
-    : filteredSessionData.flatMap((row) =>
-        JSON.parse(row?.student_data || "[]")
-          .filter((_student: any) => row?.year === year)
-          .map((student: any) => ({ ...student, year: row?.year }))
-      );
+  const filteredByBatch: Student[] = (
+    selectedBatch
+      ? filteredSessionData.flatMap((row) =>
+          JSON.parse(row?.student_data || "[]")
+            .filter(
+              (student: Student) =>
+                student.student_data[2] === selectedBatch && row?.year === year
+            )
+            .map((student: Student) => ({ ...student, year: row?.year || "" }))
+        )
+      : filteredSessionData.flatMap((row) =>
+          JSON.parse(row?.student_data || "[]")
+            .filter((_student: Student) => row?.year === year)
+            .map((student: Student) => ({ ...student, year: row?.year || "" }))
+        )
+  ).sort((a, b) => a.student_data[1].localeCompare(b.student_data[1])); // Sort by name
+
+  const paginatedStudents = filteredByBatch.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
+  const presentCount = filteredByBatch.filter((student) => {
+    const studentKey = `${student.student_data[0]}-${student.student_data[2]}-${dateSession}`;
+    return attendanceData[studentKey]?.Present;
+  }).length;
+
+  const lateCount = filteredByBatch.filter((student) => {
+    const studentKey = `${student.student_data[0]}-${student.student_data[2]}-${dateSession}`;
+    return attendanceData[studentKey]?.Late;
+  }).length;
+
+  // --- RENDER ---
+  if (!program || !dateSession) {
+    return (
+      <Container sx={{ mt: 4 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error: Missing program or session information.
+        </Alert>
+        <Button
+          variant="contained"
+          onClick={() => navigate("/")}
+        >
+          Go Back
+        </Button>
+      </Container>
+    );
+  }
 
   return (
-    <div className="page-container">
+    <Box sx={{ display: "flex" }}>
       <Sidebar />
-      <div className="back">
-        <main>
-          <h1>Program: {program}</h1>
-          <h2>Session: {dateSession}</h2>
-          {/* <h2>Phase: {phase}</h2> */}
-          <h2>Year: {year}</h2>
-
-          <div>
-            <label>Select Batch: </label>
-            <select
-              value={selectedBatch}
-              onChange={(e) => setSelectedBatch(e.target.value)}
+      <Box
+        sx={{
+          p: 3,
+          bgcolor: "#f5f5f5",
+          minHeight: "100vh",
+          margin: 'auto'
+        }}
+      >
+        <Container maxWidth="xl">
+          {saveSuccess && (
+            <Alert
+              severity="success"
+              sx={{ mb: 3 }}
+              onClose={() => setSaveSuccess(false)}
             >
-              <option value="">All Batches</option>
-              {batches.map((batch, index) => (
-                <option key={index} value={batch}>
-                  {batch}
-                </option>
-              ))}
-            </select>
-          </div>
-          <br />
-
-          <div className="dropdown-container">
-            <label>Select All Present: </label>
-            <select
-              onChange={(e) =>
-                handleSelectAllChange(
-                  "Present",
-                  e.target.value as "select" | "deselect"
-                )
-              }
-            >
-              <option value="">-- Select Option --</option>
-              <option value="select">Select All</option>
-              <option value="deselect">Deselect All</option>
-            </select>
-            <br />
-          </div>
-          <br />
-
-          {filteredByBatch.length === 0 ? (
-            <p>No data available for the selected session and batch.</p>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>UID</th>
-                  <th>Name</th>
-                  <th>Batch</th>
-                  <th>Present</th>
-                  <th>Late</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredByBatch.map((student, index) => {
-                  const studentKey = `${student.student_data[0]}-${student.student_data[2]}-${dateSession}`;
-                  const attendance = attendanceData[studentKey] || {};
-                  return (
-                    <tr key={index}>
-                      <td>{student.student_data[0]}</td>
-                      <td>{student.student_data[1]}</td>
-                      <td>{student.student_data[2]}</td>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={attendance.Present || false}
-                          onChange={() =>
-                            handleCheckboxChange(
-                              student.student_data[0],
-                              student.student_data[2],
-                              "Present"
-                            )
-                          }
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={attendance.Late || false}
-                          disabled={!attendance.Present} // Disable if 'Present' is unchecked
-                          onChange={() =>
-                            handleCheckboxChange(
-                              student.student_data[0],
-                              student.student_data[2],
-                              "Late"
-                            )
-                          }
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+              Attendance data saved successfully!
+            </Alert>
           )}
 
-          <center>
-            <button onClick={saveData}>Save Data</button>
-            <button onClick={() => navigate("/")}>Go Back</button>
-            <button onClick={downloadCSV}>Download CSV</button>
-          </center>
-        </main>
-      </div>
-    </div>
+          <AttendanceHeader
+            program={program}
+            dateSession={dateSession}
+            year={year}
+            totalStudents={filteredByBatch.length}
+            presentCount={presentCount}
+            lateCount={lateCount}
+            onBackClick={() => navigate("/")}
+          />
+
+          <Paper sx={{ p: 3, mb: 3 }}>
+            <AttendanceFilters
+              selectedBatch={selectedBatch}
+              batches={batches}
+              onBatchChange={handleBatchChange}
+              onSelectAllPresent={handleSelectAllChange}
+            />
+          </Paper>
+
+          {filteredByBatch.length === 0 ? (
+            <Alert severity="info">
+              No data available for the selected session and batch.
+            </Alert>
+          ) : (
+            <AttendanceTable
+              students={paginatedStudents}
+              attendanceData={attendanceData}
+              dateSession={dateSession}
+              onCheckboxChange={handleCheckboxChange}
+              page={page}
+              rowsPerPage={rowsPerPage}
+              totalCount={filteredByBatch.length}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+          )}
+
+          <AttendanceActions
+            onSave={saveData}
+            onBack={() => navigate("/")}
+            onDownload={downloadCSV}
+          />
+        </Container>
+      </Box>
+    </Box>
   );
 }
 

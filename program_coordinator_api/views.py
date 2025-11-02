@@ -5,23 +5,19 @@ import logging
 from typing import List, Tuple
 
 import openpyxl
-from django.conf import settings
 from django.db import connection, IntegrityError, DatabaseError, transaction
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
-from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 from base.models import FacultyResponsibility
 from student.models import (
     Student,
-    TrainingAttendanceSemester,
-    TrainingPerformanceSemester,
 )
 
 try:
@@ -85,148 +81,169 @@ def download_training_template(request, training_type: str):
     return response
 
 
-@csrf_exempt
-@api_view(["POST"])
-@parser_classes([MultiPartParser, FormParser])
-def upload_training_performance(request):
-    training_type = request.POST.get("training_type", None)
-    if not training_type:
-        return JsonResponse(
-            {"error": "training_type is required (Aptitude/Technical/Coding)."},
-            status=400,
-        )
 
-    training_type = str(training_type).strip()
-    if training_type not in TRAINING_CONFIG:
-        return JsonResponse(
-            {"error": "Unknown training_type", "valid_types": list(TRAINING_CONFIG.keys())},
-            status=400,
-        )
 
-    file = request.FILES.get("file", None)
-    if not file:
-        return JsonResponse({"error": "No file uploaded."}, status=400)
+class UploadTrainingPerformanceView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
 
-    expected_headers = BASE_HEADERS + TRAINING_CONFIG[training_type]
+    def post(self, request, *args, **kwargs):
+        training_type = request.POST.get("training_type")
+        semester = request.POST.get("semester")
+        date = request.POST.get("date")
 
-    try:
-        wb = openpyxl.load_workbook(file, data_only=True)
-        sheet = wb.active
-
-        header_cells = next(sheet.iter_rows(min_row=1, max_row=1, values_only=False))
-        read_headers = [_normalize_header(c.value) for c in header_cells]
-        read_headers_trim = read_headers[: len(expected_headers)]
-        if read_headers_trim != expected_headers:
-            return JsonResponse(
-                {
-                    "error": "Invalid header format.",
-                    "expected": expected_headers,
-                    "found": read_headers_trim,
-                },
-                status=400,
+        if not training_type:
+            return Response(
+                {"error": "training_type is required (Aptitude/Technical/Coding)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not semester:
+            return Response(
+                {"error": "semester is required."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        errors = []
-        processed = 0
-        created_tp = 0
-        updated_tp = 0
-        created_cat = 0
-        updated_cat = 0
+        training_type = str(training_type).strip()
+        if training_type not in TRAINING_CONFIG:
+            return Response(
+                {
+                    "error": "Unknown training_type",
+                    "valid_types": list(TRAINING_CONFIG.keys()),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        parsed_rows: List[dict] = []
-        for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
-            row_list = list(row)
-            if len(row_list) < len(expected_headers):
-                row_list += [None] * (len(expected_headers) - len(row_list))
+        file = request.FILES.get("file")
+        if not file:
+            return Response({"error": "No file uploaded."}, status=status.HTTP_400_BAD_REQUEST)
 
-            uid, full_name, branch_div = row_list[:3]
-            sub_vals = row_list[3:3 + len(TRAINING_CONFIG[training_type])]
+        expected_headers = BASE_HEADERS + TRAINING_CONFIG[training_type]
 
-            row_errs = []
-            if not uid:
-                row_errs.append("UID is required.")
-            if not full_name:
-                row_errs.append("Full Name is required.")
-            if not branch_div:
-                row_errs.append("Branch is required.")
+        try:
+            wb = openpyxl.load_workbook(file, data_only=True)
+            sheet = wb.active
 
-            sub_marks: List[Tuple[str, float]] = []
-            for j, val in enumerate(sub_vals):
-                cat_name = TRAINING_CONFIG[training_type][j]
-                if val is None or str(val).strip() == "":
-                    row_errs.append(f"Marks required for '{cat_name}'.")
-                else:
-                    try:
-                        m = float(val)
-                        if m < 0 or m > 100:
-                            row_errs.append(f"Marks out of range (0–100) for '{cat_name}'.")
-                        sub_marks.append((cat_name, m))
-                    except Exception:
-                        row_errs.append(f"Marks must be numeric for '{cat_name}'.")
+            header_cells = next(sheet.iter_rows(min_row=1, max_row=1, values_only=False))
+            read_headers = [_normalize_header(c.value) for c in header_cells]
+            read_headers_trim = read_headers[: len(expected_headers)]
 
-            if row_errs:
-                errors.append({"row": row_idx, "errors": row_errs})
-            else:
-                parsed_rows.append(
+            if read_headers_trim != expected_headers:
+                return Response(
                     {
-                        "row": row_idx,
-                        "uid": str(uid).strip(),
-                        "full_name": str(full_name).strip(),
-                        "branch_div": str(branch_div).strip(),
-                        "sub_marks": sub_marks,
-                    }
+                        "error": "Invalid header format.",
+                        "expected": expected_headers,
+                        "found": read_headers_trim,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        with transaction.atomic():
-            for item in parsed_rows:
-                tp_defaults = {
-                    "full_name": item["full_name"],
-                    "branch_div": item["branch_div"],
-                    "uploaded_by_id": None,
-                }
-                tp_obj, created_flag = TrainingPerformance.objects.update_or_create(
-                    uid=item["uid"],
-                    training_type=training_type,
-                    semester=None,
-                    defaults=tp_defaults,
-                )
+            errors = []
+            processed = created_student = updated_student = 0
+            created_tp = updated_tp = created_cat = updated_cat = 0
+            parsed_rows: List[dict] = []
 
-                if created_flag:
-                    created_tp += 1
-                else:
-                    updated_tp += 1
-                processed += 1
+            for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+                row_list = list(row)
+                if len(row_list) < len(expected_headers):
+                    row_list += [None] * (len(expected_headers) - len(row_list))
 
-                # Create category rows
-                for cat_name, marks in item["sub_marks"]:
-                    cat_obj, cat_created = TrainingPerformanceCategory.objects.update_or_create(
-                        performance=tp_obj,
-                        category_name=cat_name,
-                        defaults={"marks": marks},
-                    )
-                    if cat_created:
-                        created_cat += 1
+                uid, full_name, branch_div = row_list[:3]
+                sub_vals = row_list[3:3 + len(TRAINING_CONFIG[training_type])]
+
+                row_errs = []
+                if not uid:
+                    row_errs.append("UID is required.")
+                if not full_name:
+                    row_errs.append("Full Name is required.")
+                if not branch_div:
+                    row_errs.append("Branch is required.")
+
+                sub_marks: List[Tuple[str, float]] = []
+                for j, val in enumerate(sub_vals):
+                    cat_name = TRAINING_CONFIG[training_type][j]
+                    if val is None or str(val).strip() == "":
+                        row_errs.append(f"Marks required for '{cat_name}'.")
                     else:
-                        updated_cat += 1
+                        try:
+                            m = float(val)
+                            if m < 0 or m > 100:
+                                row_errs.append(f"Marks out of range (0–100) for '{cat_name}'.")
+                            sub_marks.append((cat_name, m))
+                        except Exception:
+                            row_errs.append(f"Marks must be numeric for '{cat_name}'.")
 
-        resp = {
-            "message": "Upload processed successfully.",
-            "training_type": training_type,
-            "processed_rows": processed,
-            "created_training_performance": created_tp,
-            "updated_training_performance": updated_tp,
-            "created_category_rows": created_cat,
-            "updated_category_rows": updated_cat,
-            "errors_count": len(errors),
-            "errors": errors,
-        }
-        return JsonResponse(resp, status=201 if len(errors) == 0 else 207)
+                if row_errs:
+                    errors.append({"row": row_idx, "errors": row_errs})
+                else:
+                    parsed_rows.append(
+                        {
+                            "row": row_idx,
+                            "uid": str(uid).strip(),
+                            "full_name": str(full_name).strip(),
+                            "branch_div": str(branch_div).strip(),
+                            "sub_marks": sub_marks,
+                        }
+                    )
 
-    except openpyxl.utils.exceptions.InvalidFileException:
-        return JsonResponse({"error": "Invalid Excel file; cannot read."}, status=400)
-    except Exception as e:
-        logger.exception("Error while uploading training performance file")
-        return JsonResponse({"error": str(e)}, status=500)
+            uploader_id = request.user.id if request.user.is_authenticated else None
+
+            with transaction.atomic():
+                for item in parsed_rows:
+                    student_obj, student_created = Student.objects.update_or_create(
+                        uid=item["uid"],
+                        defaults={
+                            "full_name": item["full_name"],
+                            "branch_div": item["branch_div"],
+                        }
+                    )
+                    created_student += int(student_created)
+                    updated_student += int(not student_created)
+
+                    tp_defaults = {"uploaded_by_id": uploader_id, "date": date}
+                    tp_obj, created_flag = TrainingPerformance.objects.update_or_create(
+                        student=student_obj,
+                        training_type=training_type,
+                        semester=semester,
+                        defaults=tp_defaults,
+                    )
+                    created_tp += int(created_flag)
+                    updated_tp += int(not created_flag)
+                    processed += 1
+
+                    for cat_name, marks in item["sub_marks"]:
+                        cat_obj, cat_created = TrainingPerformanceCategory.objects.update_or_create(
+                            performance=tp_obj,
+                            category_name=cat_name,
+                            defaults={"marks": marks},
+                        )
+                        created_cat += int(cat_created)
+                        updated_cat += int(not cat_created)
+
+            resp = {
+                "message": "Upload processed successfully.",
+                "training_type": training_type,
+                "semester": semester,
+                "processed_rows": processed,
+                "created_students": created_student,
+                "updated_students": updated_student,
+                "created_training_performance": created_tp,
+                "updated_training_performance": updated_tp,
+                "created_category_rows": created_cat,
+                "updated_category_rows": updated_cat,
+                "errors_count": len(errors),
+                "errors": errors,
+            }
+
+            return Response(
+                resp,
+                status=status.HTTP_201_CREATED if len(errors) == 0 else status.HTTP_207_MULTI_STATUS,
+            )
+
+        except openpyxl.utils.exceptions.InvalidFileException:
+            return Response({"error": "Invalid Excel file; cannot read."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.exception("Error while uploading training performance file")
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(["GET"])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
@@ -498,62 +515,3 @@ class CreateAttendanceRecord(APIView):
         return Response({"message": "Attendance record successfully created!", "record_id": record_id}, status=status.HTTP_201_CREATED)
 
 
-@api_view(["POST"])
-@authentication_classes([SessionAuthentication, BasicAuthentication])
-@permission_classes([IsAuthenticated])
-def upload_data(request):
-    if request.method == "POST":
-        try:
-            # Get the parsed data from request
-            data = request.data
-            students = data.get("students", [])
-            faculty = FacultyResponsibility.objects.get(user=request.user)
-            if not faculty.program:
-                return Response({"error": "Faculty is not assigned to any program"}, status=status.HTTP_403_FORBIDDEN)
-            # If no student data is provided
-            if not students:
-                return JsonResponse({"message": "No student data found in the file."}, status=400)
-
-            # Insert data into the 'program1' table
-            with connection.cursor() as cursor:
-                for student in students:
-                    UID = student.get("UID")
-                    student_db = Student.objects.filter(uid=UID)
-                    if len(student_db):
-                        studentDB = student_db[0]
-                        TrainingAttendanceSemester.objects.update_or_create(
-                            student=studentDB,
-                            semester=student.get("semester"),
-                            program=faculty.program,
-                            defaults={"training_attendance": student.get("training_attendance")},
-                        )
-                        TrainingPerformanceSemester.objects.update_or_create(
-                            student=studentDB,
-                            semester=student.get("semester"),
-                            program=faculty.program,
-                            defaults={"training_performance": student.get("training_performance"),},
-                        )
-                    student_name = student.get("Name")
-                    branch_div = student.get("Branch_Div")
-                    semester = student.get("semester")
-                    training_attendance = student.get("training_attendance")
-                    training_performance = student.get("training_performance")
-                    year = student.get("year")
-
-                    # Insert the student data into the table, wrap column names with backticks
-                    cursor.execute(
-                        """
-                        INSERT INTO program1 (`UID`, `Name`, `branch_div`, `semester`, `training_attendance`, `training_performance`, `year`, `program_name`)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                    """,
-                        [UID, student_name, branch_div, semester, training_attendance, training_performance, year, faculty.program],
-                    )
-
-            # Return a success response
-            return JsonResponse({"message": "Data uploaded successfully!"})
-
-        except Exception as e:
-            logger.exception(str(e))
-            return JsonResponse({"message": f"Error: {str(e)}"}, status=500)
-
-    return JsonResponse({"message": "Invalid request method."}, status=400)

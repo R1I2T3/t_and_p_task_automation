@@ -17,16 +17,31 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  TextField, // NEW: Import TextField for the date input
 } from "@mui/material";
 import { saveAs } from "file-saver";
 import axios from "axios";
+import { getCookie } from "@/utils";
 
-const BASE_URL =
-  "http://127.0.0.1:8000/api/program_coordinator/training-performance";
+const BASE_URL = "/api/program_coordinator/training-performance";
 const TRAINING_TYPES = ["Aptitude", "Technical", "Coding"];
+
+// NEW: Define semester options, as the backend now requires this
+const SEM_OPTIONS = [
+  "Sem 1",
+  "Sem 2",
+  "Sem 3",
+  "Sem 4",
+  "Sem 5",
+  "Sem 6",
+  "Sem 7",
+  "Sem 8",
+];
 
 const TrainingPerformanceUpload: React.FC = () => {
   const [trainingType, setTrainingType] = useState<string>("");
+  const [semester, setSemester] = useState<string>(""); // NEW: State for semester
+  const [date, setDate] = useState<string>(""); // NEW: State for date (optional)
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +49,20 @@ const TrainingPerformanceUpload: React.FC = () => {
 
   const handleTypeChange = (e: SelectChangeEvent<string>) => {
     setTrainingType(e.target.value as string);
+    setResult(null);
+    setError(null);
+  };
+
+  // NEW: Handler for semester change
+  const handleSemesterChange = (e: SelectChangeEvent<string>) => {
+    setSemester(e.target.value as string);
+    setResult(null);
+    setError(null);
+  };
+
+  // NEW: Handler for date change
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDate(e.target.value); // Value will be in 'yyyy-mm-dd' format
     setResult(null);
     setError(null);
   };
@@ -73,8 +102,9 @@ const TrainingPerformanceUpload: React.FC = () => {
   };
 
   const handleUpload = async () => {
-    if (!trainingType || !file) {
-      setError("Please select both training type and file.");
+    // NEW: Add semester to validation
+    if (!trainingType || !file || !semester) {
+      setError("Please select training type, semester, and a file.");
       return;
     }
 
@@ -85,13 +115,32 @@ const TrainingPerformanceUpload: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append("training_type", trainingType);
+      formData.append("semester", semester); // NEW: Add semester to form data
+      if (date) {
+        formData.append("date", date); // NEW: Add optional date to form data
+      }
       formData.append("file", file);
 
-      const response = await axios.post(`${BASE_URL}/upload/`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = await fetch(
+        `/api/program_coordinator/training-performance/upload/${trainingType}/`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "X-CSRFToken": getCookie("csrftoken") || "",
+          },
+          body: formData,
+        }
+      );
 
-      setResult(response.data);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data);
+
+      setResult(data);
       setFile(null);
     } catch (err: any) {
       console.error(err);
@@ -152,9 +201,14 @@ const TrainingPerformanceUpload: React.FC = () => {
         </Alert>
 
         {/* Form Section */}
-        <Box component="form" sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <Box
+          component="form"
+          sx={{ display: "flex", flexDirection: "column", gap: 3 }}
+        >
           <FormControl fullWidth>
-            <InputLabel id="training-type-label">Choose Training Type</InputLabel>
+            <InputLabel id="training-type-label">
+              Choose Training Type
+            </InputLabel>
             <Select
               labelId="training-type-label"
               value={trainingType}
@@ -169,6 +223,35 @@ const TrainingPerformanceUpload: React.FC = () => {
             </Select>
           </FormControl>
 
+          {/* NEW: Semester Dropdown */}
+          <FormControl fullWidth>
+            <InputLabel id="semester-label">Choose Semester</InputLabel>
+            <Select
+              labelId="semester-label"
+              value={semester}
+              label="Choose Semester"
+              onChange={handleSemesterChange}
+            >
+              {SEM_OPTIONS.map((sem) => (
+                <MenuItem key={sem} value={sem}>
+                  {sem}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* NEW: Optional Date Picker */}
+          <TextField
+            label="Date (Optional)"
+            type="date"
+            value={date}
+            onChange={handleDateChange}
+            fullWidth
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+
           <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
             <Button
               variant="contained"
@@ -179,7 +262,11 @@ const TrainingPerformanceUpload: React.FC = () => {
               onClick={handleDownloadTemplate}
               disabled={loading}
             >
-              {loading ? <CircularProgress size={20} color="inherit" /> : "UPLOAD TEMPLATE"}
+              {loading ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                "UPLOAD TEMPLATE"
+              )}
             </Button>
 
             <Button
@@ -216,7 +303,7 @@ const TrainingPerformanceUpload: React.FC = () => {
           <Button
             variant="contained"
             onClick={handleUpload}
-            disabled={loading || !file}
+            disabled={loading || !file || !semester} // NEW: Disable if no semester
             sx={{
               backgroundColor: "#FF8C00",
               "&:hover": { backgroundColor: "#e07b00" },
@@ -243,8 +330,10 @@ const TrainingPerformanceUpload: React.FC = () => {
         {result && (
           <Box sx={{ mt: 4 }}>
             <Alert severity="success">
-              <strong>{result.training_type}</strong> processed successfully —{" "}
-              {result.processed_rows} rows analyzed.
+              <strong>
+                {result.training_type} ({result.semester})
+              </strong>{" "}
+              processed successfully — {result.processed_rows} rows analyzed.
             </Alert>
 
             <Box sx={{ mt: 3 }}>
@@ -259,17 +348,22 @@ const TrainingPerformanceUpload: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
+                  {/* NEW: Display Student stats */}
                   <TableRow>
-                    <TableCell>Created Records</TableCell>
-                    <TableCell>
-                      {result.created_training_performance}
-                    </TableCell>
+                    <TableCell>New Students Created</TableCell>
+                    <TableCell>{result.created_students}</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell>Updated Records</TableCell>
-                    <TableCell>
-                      {result.updated_training_performance}
-                    </TableCell>
+                    <TableCell>Existing Students Updated</TableCell>
+                    <TableCell>{result.updated_students}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Training Records Created</TableCell>
+                    <TableCell>{result.created_training_performance}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Training Records Updated</TableCell>
+                    <TableCell>{result.updated_training_performance}</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell>Category Rows Created</TableCell>

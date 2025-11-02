@@ -394,22 +394,6 @@ const Attendance = () => {
         </Table>
       </TableContainer>
 
-      {/* Save to Database Button */}
-      <Box sx={{ marginTop: 4, display: "flex", justifyContent: "center" }}>
-        <Button
-          onClick={saveToDatabase}
-          variant="contained"
-          color="success"
-          sx={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            fontWeight: "bold",
-            "&:hover": { backgroundColor: "orange", color: "black" },
-          }}
-        >
-          Save to Database
-        </Button>
-      </Box>
 
       {/* Download Excel Button */}
       <Box sx={{ marginTop: 2, display: "flex", justifyContent: "center" }}>

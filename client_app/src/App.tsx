@@ -106,6 +106,10 @@ const App = () => {
           <Route path="update-attendance" element={<Update />} />
           <Route path="upload-file" element={<Upload />} />
           <Route index element={<ProgramHome />} />
+           <Route
+            path="performance-upload"
+            element={<TrainingPerformanceUpload />}
+          />
         </Route>
         <Route path="/student" element={<StudentLayout />}>
           <Route path="session-attendance" element={<SessionAttendance />} />
@@ -194,10 +198,7 @@ const App = () => {
           path="/category-rules/students/:category/:batch"
           element={<StudentByCategory />}
         />
-        <Route
-            path="/program-coordinator/training-performance-upload"
-            element={<TrainingPerformanceUpload />}
-          />
+
           <Route
               path="/student/student-training-performance"
               element={<StudentTrainingPerformance />}

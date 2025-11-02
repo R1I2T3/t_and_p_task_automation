@@ -26,54 +26,100 @@ ChartJS.register(
 const ProgramCoordinatorLayout = () => {
   const authUser = useAtomValue(authAtom);
   const navigate = useNavigate();
+
   useEffect(() => {
     if (!authUser || authUser.role !== "faculty" || !authUser.program) {
       navigate("/");
     }
-  }, []);
+  }, [authUser, navigate]);
+
   return (
     <div className="tailwind-free-zone">
-      <Box sx={{ display: "flex", flexDirection: "row", width: "200vh" }}>
+      <Box
+        sx={{
+          display: "flex",
+          minHeight: "100vh",
+          backgroundColor: "#f5f7fa"
+        }}
+      >
         <Sidebar />
         <Box
           component="main"
           sx={{
             flexGrow: 1,
-            bgcolor: "orange",
-            padding: "2rem",
-            overflowY: "auto",
-            marginLeft: "450px",
-            transition: "margin-left 0.3s",
-            marginTop: "20px",
-            borderRadius: "20px",
-            height: "auto",
+            padding: { xs: "1rem", sm: "1.5rem", md: "2rem" },
+            marginLeft: { xs: 0, md: "330px" },
+            transition: "margin-left 0.3s ease-in-out",
+            width: "100%",
+            maxWidth: "100%",
+            overflowX: "hidden"
           }}
         >
+          {/* Header Card */}
           <Box
             sx={{
-              backgroundColor: "#153f74",
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
               color: "#fff",
-              padding: "1.5rem 3rem",
-              borderRadius: "15px",
-              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
-              marginBottom: "2rem",
+              padding: { xs: "1.5rem 2rem", md: "2rem 3rem" },
+              borderRadius: "16px",
+              boxShadow: "0 10px 30px rgba(102, 126, 234, 0.3)",
+              marginBottom: "2.5rem",
+              position: "relative",
+              overflow: "hidden",
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                top: 0,
+                right: 0,
+                width: "200px",
+                height: "200px",
+                background: "rgba(255, 255, 255, 0.1)",
+                borderRadius: "50%",
+                transform: "translate(50%, -50%)",
+              }
             }}
           >
             <Typography
               variant="h3"
               sx={{
-                fontWeight: "bold",
-                letterSpacing: "1px",
+                fontWeight: 700,
+                letterSpacing: "0.5px",
                 textAlign: "center",
-                textTransform: "uppercase",
-                fontFamily: "'Roboto', sans-serif",
-                lineHeight: 1.3,
+                fontFamily: "'Inter', 'Roboto', sans-serif",
+                fontSize: { xs: "1.75rem", md: "2.5rem" },
+                position: "relative",
+                zIndex: 1
               }}
             >
               Program Coordinator
             </Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                textAlign: "center",
+                marginTop: "0.5rem",
+                opacity: 0.9,
+                fontSize: { xs: "0.875rem", md: "1rem" },
+                position: "relative",
+                zIndex: 1
+              }}
+            >
+              Manage and oversee program activities
+            </Typography>
           </Box>
-          <Outlet />
+
+          {/* Content Area */}
+          <Box
+            sx={{
+              backgroundColor: "#ffffff",
+              borderRadius: "16px",
+              padding: { xs: "1.5rem", md: "2rem" },
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+              minHeight: "400px"
+            }}
+          >
+            <Outlet />
+          </Box>
         </Box>
       </Box>
     </div>

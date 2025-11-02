@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from student.models import SEM_OPTIONS
+from student.models import SEM_OPTIONS,Student
 
 
 # Model to store attendance data for a student
@@ -103,34 +103,24 @@ class AttendanceRecord(models.Model):
 
     def __str__(self):
         return f"Attendance record for {self.program_name} - {self.year}"
-    
-class TrainingPerformance(models.Model):
-    """
-    Holds one record per student per training type.
-    Example: UID 101, Aptitude.
-    """
-    uid = models.CharField(max_length=50)
-    full_name = models.CharField(max_length=150)
-    branch_div = models.CharField(max_length=100)
 
-    # Made optional (since not included in upload)
-    year = models.IntegerField(null=True, blank=True)
+class TrainingPerformance(models.Model):
+    id = models.AutoField(primary_key=True)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE,null=True)
     semester = models.CharField(
         max_length=100, choices=SEM_OPTIONS, null=True, blank=True
     )
-
-    training_type = models.CharField(max_length=50)  # Aptitude / Technical / Coding
+    training_type = models.CharField(max_length=50)
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
     )
     uploaded_at = models.DateTimeField(auto_now_add=True)
-
+    date = models.DateField(null=True, blank=True)
     class Meta:
         db_table = "training_performance"
-        unique_together = ("uid", "training_type", "semester")
 
     def __str__(self):
-        return f"{self.uid} - {self.training_type}"
+        return f"{self.student} - {self.training_type}"
 
 
 class TrainingPerformanceCategory(models.Model):
