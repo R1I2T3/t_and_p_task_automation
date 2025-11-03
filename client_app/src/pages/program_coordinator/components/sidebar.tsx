@@ -92,6 +92,7 @@ const Sidebar = () => {
         <Divider sx={{ marginBottom: "300px", opacity: 0.6 }} />
         <BottomMenu>
           <ActionButton
+
             component={Link}
             to="/profile"
             onClick={redirectToProfile}
@@ -220,7 +221,8 @@ const BottomMenu = styled(Box)({
   padding: "8px 0",
 });
 
-const ActionButton = styled(IconButton)({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ActionButton = styled(IconButton)<any>({
   padding: "8px",
   borderRadius: "12px",
   transition: "all 0.2s ease",

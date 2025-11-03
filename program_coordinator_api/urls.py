@@ -45,4 +45,19 @@ urlpatterns = [
         csrf_exempt(views.CreateAttendanceRecord.as_view()),
         name="create_attendance_record"
     ),
+    path(
+        "student-analytics/",
+        views.StudentAnalyticsViewSet.as_view({'get': 'list'}),
+        name="student-analytics-list"
+    ),
+    path(
+        "student-analytics/<uuid:pk>/",
+        views.StudentAnalyticsViewSet.as_view({'get': 'retrieve'}),
+        name="student-analytics-detail"
+    ),
+    path(
+        "aggregate-analytics/",
+        views.AggregateAnalyticsView.as_view(),
+        name="aggregate-analytics"
+    ),
 ]

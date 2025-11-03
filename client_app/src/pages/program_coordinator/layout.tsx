@@ -34,7 +34,7 @@ const ProgramCoordinatorLayout = () => {
   }, [authUser, navigate]);
 
   return (
-    <div className="tailwind-free-zone">
+    <div>
       <Box
         sx={{
           display: "flex",

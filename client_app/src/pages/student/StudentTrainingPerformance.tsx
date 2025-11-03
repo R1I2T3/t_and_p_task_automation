@@ -11,16 +11,20 @@ import {
   CircularProgress,
   Typography,
   Box,
+  TableFooter, // Import TableFooter
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
-    primary: { main: "#ff9800" },
-    secondary: { main: "#ff5722" },
+    primary: { main: "#ff9800" }, // Orange
+    secondary: { main: "#ff5722" }, // Deep Orange
+    success: { main: "#4caf50" }, // Green
+    warning: { main: "#f57c00" }, // Warning Orange
   },
 });
 
+// --- Interface Updates ---
 interface Category {
   category_name: string;
   marks: number;
@@ -29,12 +33,24 @@ interface Category {
 interface TrainingTypeData {
   training_type: string;
   categories: Category[];
+  semester: string; // Added semester
+  date: string; // Added date
 }
 
 interface StudentPerformance {
   uid: string;
   training_performance: TrainingTypeData[];
 }
+
+// --- Helper Function for Insights ---
+const calculateAverage = (categories: Category[]): number => {
+  if (!categories || categories.length === 0) {
+    return 0;
+  }
+  const total = categories.reduce((sum, cat) => sum + cat.marks, 0);
+  const average = total / categories.length;
+  return parseFloat(average.toFixed(2)); // Round to 2 decimal places
+};
 
 const StudentTrainingPerformance: React.FC = () => {
   const [performance, setPerformance] = useState<StudentPerformance | null>(
@@ -60,9 +76,7 @@ const StudentTrainingPerformance: React.FC = () => {
           try {
             const errData = await res.json();
             errMsg = errData.error || errMsg;
-          } catch {
-            // Non-JSON error response
-          }
+          } catch {}
           throw new Error(errMsg);
         }
 
@@ -72,7 +86,9 @@ const StudentTrainingPerformance: React.FC = () => {
         } catch {
           throw new Error("Invalid response format from server.");
         }
+        console.log("Fetched training performance data:", data);
 
+        // Updated validation to check for the nested array
         if (!data || !data.training_performance) {
           throw new Error("Incomplete data received from the server.");
         }
@@ -96,6 +112,15 @@ const StudentTrainingPerformance: React.FC = () => {
 
     fetchPerformance();
   }, []);
+
+  // Helper to format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -142,46 +167,105 @@ const StudentTrainingPerformance: React.FC = () => {
                 </Typography>
               </Box>
 
-              {performance.training_performance.map((type, index) => (
-                <Box key={index} mb={4}>
-                  <Typography
-                    variant="h6"
-                    color="primary"
-                    fontWeight="bold"
-                    mb={1}
-                    textAlign="center"
-                    sx={{ textTransform: "uppercase" }}
-                  >
-                    {type.training_type} Performance
-                  </Typography>
+              {performance.training_performance.map((type, index) => {
+                // --- Insight Calculation ---
+                const average = calculateAverage(type.categories);
+                const averageColor =
+                  average >= 75 ? "success.main" : "warning.main";
 
-                  <TableContainer component={Paper}>
-                    <Table>
-                      <TableHead>
-                        <TableRow sx={{ backgroundColor: "#ff9800" }}>
-                          <TableCell sx={{ color: "black", fontWeight: "bold" }}>
-                            Category
-                          </TableCell>
-                          <TableCell
-                            sx={{ color: "black", fontWeight: "bold" }}
-                            align="center"
-                          >
-                            Marks
-                          </TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {type.categories.map((cat, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell>{cat.category_name}</TableCell>
-                            <TableCell align="center">{cat.marks}</TableCell>
+                return (
+                  // --- Replaced Box with Paper for better grouping ---
+                  <Paper key={index} sx={{ mb: 4, p: 3 }} elevation={2}>
+                    <Typography
+                      variant="h6"
+                      color="primary"
+                      fontWeight="bold"
+                      mb={2} // Added more margin
+                      textAlign="center"
+                      sx={{ textTransform: "uppercase" }}
+                    >
+                      {type.training_type} Performance
+                    </Typography>
+
+                    {/* --- NEW: Insight Summary Box --- */}
+                    <Box
+                      display="flex"
+                      justifyContent="space-around"
+                      mb={3}
+                      p={2}
+                      bgcolor="grey.100"
+                      borderRadius={1}
+                    >
+                      <Box textAlign="center">
+                        <Typography variant="caption" color="textSecondary">
+                          Semester
+                        </Typography>
+                        <Typography fontWeight="bold">
+                          {type.semester}
+                        </Typography>
+                      </Box>
+                      <Box textAlign="center">
+                        <Typography variant="caption" color="textSecondary">
+                          Date
+                        </Typography>
+                        <Typography fontWeight="bold">
+                          {formatDate(type.date)}
+                        </Typography>
+                      </Box>
+                      <Box textAlign="center">
+                        <Typography variant="caption" color="textSecondary">
+                          Average Score
+                        </Typography>
+                        <Typography fontWeight="bold" color={averageColor}>
+                          {average}%
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    <TableContainer component={Paper} variant="outlined">
+                      <Table>
+                        <TableHead>
+                          <TableRow sx={{ backgroundColor: "#ff9800" }}>
+                            <TableCell
+                              sx={{ color: "black", fontWeight: "bold" }}
+                            >
+                              Category
+                            </TableCell>
+                            <TableCell
+                              sx={{ color: "black", fontWeight: "bold" }}
+                              align="center"
+                            >
+                              Marks
+                            </TableCell>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Box>
-              ))}
+                        </TableHead>
+                        <TableBody>
+                          {type.categories.map((cat, idx) => (
+                            <TableRow key={idx}>
+                              <TableCell>{cat.category_name}</TableCell>
+                              <TableCell align="center">{cat.marks}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                        {/* --- NEW: Table Footer for Average --- */}
+                        <TableFooter>
+                          <TableRow sx={{ backgroundColor: "grey.50" }}>
+                            <TableCell sx={{ fontWeight: "bold" }}>
+                              Average
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              sx={{ fontWeight: "bold", color: averageColor }}
+                            >
+                              {average}%
+                            </TableCell>
+                          </TableRow>
+                        </TableFooter>
+                      </Table>
+                    </TableContainer>
+                  </Paper>
+                );
+              })}
             </>
           )}
         </Box>

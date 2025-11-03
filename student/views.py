@@ -30,10 +30,6 @@ from internship_api.models import InternshipAcceptance
 from program_coordinator_api.models import TrainingPerformance, TrainingPerformanceCategory
 
 class StudentTrainingPerformanceAPIView(APIView):
-    """
-    Returns the logged-in student's training performance
-    (only UID + performance data, no name or extra fields).
-    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -43,7 +39,7 @@ class StudentTrainingPerformanceAPIView(APIView):
             uid = student.uid
 
             # Fetch all TrainingPerformance records for this UID
-            performances = TrainingPerformance.objects.filter(uid=uid).prefetch_related("categories")
+            performances = TrainingPerformance.objects.filter(student=student).prefetch_related("categories")
 
             if not performances.exists():
                 return Response(
@@ -67,7 +63,9 @@ class StudentTrainingPerformanceAPIView(APIView):
 
                 data["training_performance"].append({
                     "training_type": perf.training_type,
-                    "categories": category_data
+                    "categories": category_data,
+                    "semester": perf.semester,
+                    "date": perf.date,
                 })
 
             return Response(data, status=status.HTTP_200_OK)

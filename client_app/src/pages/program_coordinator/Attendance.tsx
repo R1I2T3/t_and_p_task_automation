@@ -18,7 +18,6 @@ import {
   InputLabel,
 } from "@mui/material";
 import * as XLSX from "xlsx"; // Import xlsx
-import { getCookie } from "@/utils";
 const Attendance = () => {
   interface ConsolidatedStudent {
     program_name: string;
@@ -39,7 +38,7 @@ const Attendance = () => {
   const [branchConsolidatedData, setBranchConsolidatedData] = useState<any[]>(
     []
   );
-  const [sessions, setSessions] = useState(new Set());
+  const [_sessions, setSessions] = useState(new Set());
   const [programs, setPrograms] = useState<string[]>([]);
   const [selectedProgram, setSelectedProgram] = useState<string>("");
   const [sessionDates, setSessionDates] = useState<string[]>([]);
@@ -224,62 +223,6 @@ const Attendance = () => {
     return batchConsolidated;
   };
 
-  const saveToDatabase = async () => {
-    try {
-      const sessionWiseData = branchConsolidatedData.flatMap((item) =>
-        Array.from(sessions).map((session) => {
-          // @ts-expect-error: this is error
-          const sessionData = item[session] || {};
-
-          return {
-            batch: item.batch,
-            program_name: item.program_name,
-            year: item.year,
-            session: session,
-            totalPresent: sessionData.Present || 0,
-            totalAbsent: sessionData.Absent || 0,
-            totalLate: sessionData.Late || 0,
-            totalStudents:
-              (sessionData.Present || 0) + (sessionData.Absent || 0),
-          };
-        })
-      );
-
-      const response = await fetch(
-        "/api/program_coordinator/save-branch-attendance/batch_attendance/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCookie("csrftoken") || "",
-          },
-          body: JSON.stringify({ branchData: sessionWiseData }),
-        }
-      );
-
-      if (!response.ok) {
-        console.error("Response not OK:", response.status, response.statusText);
-        alert(`Error saving data! Status: ${response.status}`);
-        return;
-      }
-
-      const text = await response.text();
-      try {
-        const result = JSON.parse(text);
-        if (result.success) {
-          alert("Data saved successfully!");
-        } else {
-          alert("Error saving data!");
-        }
-      } catch (error) {
-        console.error("Error parsing JSON response:", error, text);
-        alert("Error saving data: Invalid server response.");
-      }
-    } catch (error) {
-      console.error("Error saving data to database:", error);
-      alert("Error saving data!");
-    }
-  };
 
   // Download Excel file
   const downloadExcel = () => {

@@ -3,13 +3,25 @@ import io
 import json
 import logging
 from typing import List, Tuple
-
+from .models import (
+    AttendanceData,
+    TrainingPerformance,
+    TrainingPerformanceCategory,
+)
+from .serializers import (
+    StudentAnalyticsSerializer,
+)
 import openpyxl
 from django.db import connection, IntegrityError, DatabaseError, transaction
+from django.db.models import Prefetch, Q, Count, Avg, Min, Max, StdDev
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework import status
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework import status, viewsets, views
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -53,7 +65,10 @@ def download_training_template(request, training_type: str):
     training_type = str(training_type).strip()
     if training_type not in TRAINING_CONFIG:
         return JsonResponse(
-            {"error": "Unknown training_type", "valid_types": list(TRAINING_CONFIG.keys())},
+            {
+                "error": "Unknown training_type",
+                "valid_types": list(TRAINING_CONFIG.keys()),
+            },
             status=400,
         )
 
@@ -65,7 +80,9 @@ def download_training_template(request, training_type: str):
     ws.append(headers)
 
     # sample data row
-    sample_row = ["101", "John Doe", "CSE_A"] + [75 for _ in TRAINING_CONFIG[training_type]]
+    sample_row = ["101", "John Doe", "CSE_A"] + [
+        75 for _ in TRAINING_CONFIG[training_type]
+    ]
     ws.append(sample_row)
 
     output = io.BytesIO()
@@ -79,8 +96,6 @@ def download_training_template(request, training_type: str):
     )
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
-
-
 
 
 class UploadTrainingPerformanceView(APIView):
@@ -114,7 +129,9 @@ class UploadTrainingPerformanceView(APIView):
 
         file = request.FILES.get("file")
         if not file:
-            return Response({"error": "No file uploaded."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "No file uploaded."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         expected_headers = BASE_HEADERS + TRAINING_CONFIG[training_type]
 
@@ -122,7 +139,9 @@ class UploadTrainingPerformanceView(APIView):
             wb = openpyxl.load_workbook(file, data_only=True)
             sheet = wb.active
 
-            header_cells = next(sheet.iter_rows(min_row=1, max_row=1, values_only=False))
+            header_cells = next(
+                sheet.iter_rows(min_row=1, max_row=1, values_only=False)
+            )
             read_headers = [_normalize_header(c.value) for c in header_cells]
             read_headers_trim = read_headers[: len(expected_headers)]
 
@@ -141,13 +160,15 @@ class UploadTrainingPerformanceView(APIView):
             created_tp = updated_tp = created_cat = updated_cat = 0
             parsed_rows: List[dict] = []
 
-            for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+            for row_idx, row in enumerate(
+                sheet.iter_rows(min_row=2, values_only=True), start=2
+            ):
                 row_list = list(row)
                 if len(row_list) < len(expected_headers):
                     row_list += [None] * (len(expected_headers) - len(row_list))
 
                 uid, full_name, branch_div = row_list[:3]
-                sub_vals = row_list[3:3 + len(TRAINING_CONFIG[training_type])]
+                sub_vals = row_list[3 : 3 + len(TRAINING_CONFIG[training_type])]
 
                 row_errs = []
                 if not uid:
@@ -166,7 +187,9 @@ class UploadTrainingPerformanceView(APIView):
                         try:
                             m = float(val)
                             if m < 0 or m > 100:
-                                row_errs.append(f"Marks out of range (0–100) for '{cat_name}'.")
+                                row_errs.append(
+                                    f"Marks out of range (0–100) for '{cat_name}'."
+                                )
                             sub_marks.append((cat_name, m))
                         except Exception:
                             row_errs.append(f"Marks must be numeric for '{cat_name}'.")
@@ -193,7 +216,7 @@ class UploadTrainingPerformanceView(APIView):
                         defaults={
                             "full_name": item["full_name"],
                             "branch_div": item["branch_div"],
-                        }
+                        },
                     )
                     created_student += int(student_created)
                     updated_student += int(not student_created)
@@ -210,10 +233,12 @@ class UploadTrainingPerformanceView(APIView):
                     processed += 1
 
                     for cat_name, marks in item["sub_marks"]:
-                        cat_obj, cat_created = TrainingPerformanceCategory.objects.update_or_create(
-                            performance=tp_obj,
-                            category_name=cat_name,
-                            defaults={"marks": marks},
+                        cat_obj, cat_created = (
+                            TrainingPerformanceCategory.objects.update_or_create(
+                                performance=tp_obj,
+                                category_name=cat_name,
+                                defaults={"marks": marks},
+                            )
                         )
                         created_cat += int(cat_created)
                         updated_cat += int(not cat_created)
@@ -235,14 +260,21 @@ class UploadTrainingPerformanceView(APIView):
 
             return Response(
                 resp,
-                status=status.HTTP_201_CREATED if len(errors) == 0 else status.HTTP_207_MULTI_STATUS,
+                status=status.HTTP_201_CREATED
+                if len(errors) == 0
+                else status.HTTP_207_MULTI_STATUS,
             )
 
         except openpyxl.utils.exceptions.InvalidFileException:
-            return Response({"error": "Invalid Excel file; cannot read."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Invalid Excel file; cannot read."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except Exception as e:
             logger.exception("Error while uploading training performance file")
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 @api_view(["GET"])
@@ -250,7 +282,6 @@ class UploadTrainingPerformanceView(APIView):
 @permission_classes([IsAuthenticated])
 def get_attendance_data(request, table_name):
     try:
-
         valid_tables = [
             "attendance_data",
             "another_table",
@@ -274,7 +305,9 @@ def get_attendance_data(request, table_name):
         return JsonResponse(result, safe=False)
 
     except Exception as e:
-        return JsonResponse({"error": f"Failed to fetch attendance data: {str(e)}"}, status=500)
+        return JsonResponse(
+            {"error": f"Failed to fetch attendance data: {str(e)}"}, status=500
+        )
 
 
 @api_view(["POST"])
@@ -323,7 +356,10 @@ def save_branch_attendance(request, table_name):
                         logger.warning(
                             f"Date is missing for session {session} in batch {batch_name}"
                         )
-                        return JsonResponse({"error": f"Date is missing for session {session}"}, status=400)
+                        return JsonResponse(
+                            {"error": f"Date is missing for session {session}"},
+                            status=400,
+                        )
 
                     # Get the date from session data
                     session_date = session_data.get("date")
@@ -360,23 +396,38 @@ def save_branch_attendance(request, table_name):
                         logger.error(
                             f"Integrity error while saving data for batch {batch_name}, session {session_name}: {str(e)}"
                         )
-                        return JsonResponse({"error": f"Database Integrity Error: {str(e)}"}, status=500)
+                        return JsonResponse(
+                            {"error": f"Database Integrity Error: {str(e)}"}, status=500
+                        )
                     except DatabaseError as e:
                         logger.error(
                             f"Database error while saving data for batch {batch_name}, session {session_name}: {str(e)}"
                         )
-                        return JsonResponse({"error": f"Database Error: {str(e)}"}, status=500)
+                        return JsonResponse(
+                            {"error": f"Database Error: {str(e)}"}, status=500
+                        )
                     except Exception as e:
                         logger.error(
                             f"Error executing query for batch {batch_name}, session {session_name}: {str(e)}"
                         )
-                        return JsonResponse({"error": f"Error executing query: {str(e)}"}, status=500)
+                        return JsonResponse(
+                            {"error": f"Error executing query: {str(e)}"}, status=500
+                        )
 
-            return JsonResponse({"success": True, "message": "Batch-wise attendance saved successfully!"})
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "Batch-wise attendance saved successfully!",
+                }
+            )
 
         except Exception as e:
-            logger.exception(f"Unexpected error occurred while saving batch attendance: {str(e)}")
-            return JsonResponse({"error": f"Failed to save batch-wise attendance: {str(e)}"}, status=500)
+            logger.exception(
+                f"Unexpected error occurred while saving batch attendance: {str(e)}"
+            )
+            return JsonResponse(
+                {"error": f"Failed to save batch-wise attendance: {str(e)}"}, status=500
+            )
 
 
 @api_view(["GET"])
@@ -413,7 +464,9 @@ def get_avg_data(request, table_name):
 
     except Exception as e:
         logger.exception(str(e))
-        return JsonResponse({"error": f"Failed to fetch average data: {str(e)}"}, status=500)
+        return JsonResponse(
+            {"error": f"Failed to fetch average data: {str(e)}"}, status=500
+        )
 
 
 @api_view(["POST"])
@@ -440,10 +493,14 @@ def update_attendance(request, table_name):
             with connection.cursor() as cursor:
                 cursor.execute(query, [new_status, uid, session])
 
-            return JsonResponse({"message": "Attendance updated successfully"}, status=200)
+            return JsonResponse(
+                {"message": "Attendance updated successfully"}, status=200
+            )
         except Exception as e:
             logger.exception(str(e))
-            return JsonResponse({"error": f"Failed to update attendance: {str(e)}"}, status=500)
+            return JsonResponse(
+                {"error": f"Failed to update attendance: {str(e)}"}, status=500
+            )
     else:
         return JsonResponse({"error": "Invalid HTTP method"}, status=405)
 
@@ -455,7 +512,10 @@ class CreateAttendanceRecord(APIView):
         data = request.data
         faculty = FacultyResponsibility.objects.get(user=request.user)
         if not faculty.program:
-            return Response({"error": "Faculty is not assigned to any program"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "Faculty is not assigned to any program"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         # Validate required fields
         required_fields = [
@@ -469,11 +529,20 @@ class CreateAttendanceRecord(APIView):
             "attendance_data",
         ]
         if not all(field in data for field in required_fields):
-            return Response({"error": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         # Check if 'dates', 'file_headers', and 'attendance_data' are lists
-        if (not isinstance(data["dates"], list) or not isinstance(data["file_headers"], list) or not isinstance(data["attendance_data"], list)):
-            return Response({"error": "Dates, file_headers, and attendance_data must be lists"}, status=status.HTTP_400_BAD_REQUEST)
+        if (
+            not isinstance(data["dates"], list)
+            or not isinstance(data["file_headers"], list)
+            or not isinstance(data["attendance_data"], list)
+        ):
+            return Response(
+                {"error": "Dates, file_headers, and attendance_data must be lists"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Clean the 'attendance_data' to remove unnecessary fields
         cleaned_attendance_data = []
@@ -483,7 +552,12 @@ class CreateAttendanceRecord(APIView):
                 if isinstance(student_data, list) and len(student_data) == 3:
                     cleaned_attendance_data.append({"student_data": student_data})
                 else:
-                    return Response({"error": 'Each "student_data" entry must be a list with 3 elements (UID, Name, Batch)'}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        {
+                            "error": 'Each "student_data" entry must be a list with 3 elements (UID, Name, Batch)'
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
         # Prepare the SQL insert statement for attendance record
         program_name = data["program_name"]
@@ -494,7 +568,9 @@ class CreateAttendanceRecord(APIView):
         num_days = data["num_days"]
         dates = json.dumps(data["dates"])  # Convert list to JSON string
         file_headers = json.dumps(data["file_headers"])  # Convert list to JSON string
-        student_data = json.dumps(cleaned_attendance_data)  # Convert list of student data to JSON string
+        student_data = json.dumps(
+            cleaned_attendance_data
+        )  # Convert list of student data to JSON string
 
         # Create raw SQL insert query
         query = """
@@ -506,12 +582,199 @@ class CreateAttendanceRecord(APIView):
 
         # Execute the query using Django's connection cursor
         with connection.cursor() as cursor:
-            cursor.execute(query, [program_name, year, num_sessions, num_days, dates, file_headers, student_data, semester, phase,])
+            cursor.execute(
+                query,
+                [
+                    program_name,
+                    year,
+                    num_sessions,
+                    num_days,
+                    dates,
+                    file_headers,
+                    student_data,
+                    semester,
+                    phase,
+                ],
+            )
 
         # Get the ID of the newly inserted record
         record_id = cursor.lastrowid
 
         # Return success response with created record ID
-        return Response({"message": "Attendance record successfully created!", "record_id": record_id}, status=status.HTTP_201_CREATED)
+        return Response(
+            {
+                "message": "Attendance record successfully created!",
+                "record_id": record_id,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
+class StudentAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = StudentAnalyticsSerializer
+
+    def get_queryset(self):
+        queryset = Student.objects.select_related("user").order_by("user__full_name")
+        batch = self.request.query_params.get("batch")
+        department = self.request.query_params.get("department")
+        if batch:
+            queryset = queryset.filter(batch=batch)
+        if department:
+            queryset = queryset.filter(department=department)
+        queryset = queryset.prefetch_related(
+            Prefetch(
+                "trainingperformance_set",
+                queryset=TrainingPerformance.objects.prefetch_related("categories"),
+            )
+        )
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        student_uids = list(queryset.values_list("uid", flat=True))
+        attendance_query = AttendanceData.objects.filter(uid__in=student_uids)
+
+        semester = request.query_params.get("semester")
+        if semester:
+            attendance_query = attendance_query.filter(semester=semester)
+
+        attendance_stats = attendance_query.values("uid").annotate(
+            total_sessions=Count("id"),
+            present_count=Count("id", filter=Q(present="Present")),
+            late_count=Count("id", filter=Q(late="Late")),
+        )
+
+        attendance_map = {item["uid"]: item for item in attendance_stats}
+
+        context = {
+            "request": request,
+            "attendance_map": attendance_map,
+        }
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context=context)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True, context=context)
+        return Response(serializer.data)
+
+class AggregateAnalyticsView(views.APIView):
+
+    def get(self, request, *args, **kwargs):
+        batch_filter = request.query_params.get("batch")
+        dept_filter = request.query_params.get("department")
+        sem_filter = request.query_params.get("semester")
+        performance_qs = TrainingPerformance.objects.all()
+        attendance_qs = AttendanceData.objects.all()
+
+        if batch_filter:
+            performance_qs = performance_qs.filter(student__batch=batch_filter)
+            attendance_qs = attendance_qs.filter(batch=batch_filter)
+        if dept_filter:
+            performance_qs = performance_qs.filter(student__department=dept_filter)
+            attendance_qs = attendance_qs.filter(program_name=dept_filter)
+        if sem_filter:
+            performance_qs = performance_qs.filter(semester=sem_filter)
+            attendance_qs = attendance_qs.filter(semester=sem_filter)
+        perf_group_fields = ["student__batch", "student__department", "semester"]
+        att_group_fields = ["batch", "program_name", "semester"]
+
+        performance_overview_aggs = (
+            performance_qs.values(*perf_group_fields)
+            .annotate(
+                average_score=Avg("categories__marks"),
+                min_score=Min("categories__marks"),
+                max_score=Max("categories__marks"),
+                std_dev_score=StdDev("categories__marks"),
+                total_students_tested=Count("student", distinct=True)
+            )
+            .order_by(*perf_group_fields)
+        )
+
+        perf_overview_map = {
+            (item["student__batch"], item["student__department"], item["semester"]): {
+                "average_score": round(item["average_score"], 2) if item["average_score"] else 0,
+                "min_score": item["min_score"] or 0,
+                "max_score": item["max_score"] or 0,
+                "std_dev_score": round(item["std_dev_score"], 2) if item["std_dev_score"] else 0,
+                "total_students_tested": item["total_students_tested"],
+            }
+            for item in performance_overview_aggs
+        }
+
+        category_aggs = (
+            performance_qs.values(*perf_group_fields, "categories__category_name")
+            .annotate(average_score=Avg("categories__marks"))
+            .filter(categories__category_name__isnull=False)
+            .order_by(*perf_group_fields, "categories__category_name")
+        )
+        category_map = {}
+        for item in category_aggs:
+            group_key = (item["student__batch"], item["student__department"], item["semester"])
+            category_name = item["categories__category_name"]
+            avg_score = round(item["average_score"], 2) if item["average_score"] else 0
+
+            if group_key not in category_map:
+                category_map[group_key] = {}
+
+            category_map[group_key][category_name] = avg_score
+        attendance_aggs = (
+            attendance_qs.values(*att_group_fields)
+            .annotate(
+                total_sessions=Count("id"),
+                present_count=Count("id", filter=Q(present="Present")),
+                late_count=Count("id", filter=Q(late="Late")),
+                total_students_attended=Count("uid", distinct=True)
+            )
+            .order_by(*att_group_fields)
+        )
+
+        attendance_map = {
+            (item["batch"], item["program_name"], item["semester"]): item
+            for item in attendance_aggs
+        }
+        all_keys = (
+            set(perf_overview_map.keys()) |
+            set(category_map.keys()) |
+            set(attendance_map.keys())
+        )
+
+        final_data = []
+        for group_key in all_keys:
+            batch, department, semester = group_key
+
+            if batch is None or department is None or semester is None:
+                continue
+
+            att_data = attendance_map.get(group_key)
+            perf_overview_stats = perf_overview_map.get(group_key, {})
+            category_stats = category_map.get(group_key, {})
+            if att_data:
+                total = att_data.get("total_sessions", 0)
+                present = att_data.get("present_count", 0)
+                late = att_data.get("late_count", 0)
+                absent = total - present
+
+                attendance_summary = {
+                    "average_attendance": round((present / total) * 100, 2) if total > 0 else 0,
+                    "late_percentage": round((late / total) * 100, 2) if total > 0 else 0,
+                    "absent_percentage": round((absent / total) * 100, 2) if total > 0 else 0,
+                    "total_students_attended": att_data.get("total_students_attended", 0),
+                    "total_sessions": total,
+                    "late_sessions": late,
+                    "absent_sessions": absent,
+                }
+            else:
+                attendance_summary = {}
+
+            final_data.append({
+                "batch": batch,
+                "department": department,
+                "semester": semester,
+                "attendance_summary": attendance_summary,
+                "performance_overview": perf_overview_stats,
+                "performance_by_category": category_stats
+            })
+
+        return Response(final_data)
