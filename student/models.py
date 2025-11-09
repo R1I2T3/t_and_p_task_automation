@@ -11,7 +11,7 @@ class Student(models.Model):
         ("Category 2", "category 2"),
         ("Category 3", "category 3"),
         ("No category", "No category"),
-    ] 
+    ]
     consent_Type = [
         ("placement", "placement"),
         ("placement+aedp/pli", "placement+aedp/pli"),
@@ -34,6 +34,7 @@ class Student(models.Model):
     academic_year = models.CharField(max_length=30)
     current_category = models.TextField(choices=category_Type, default="No category")
     is_dse_student = models.BooleanField(default=False)
+    division = models.CharField(max_length=10,default='A')
     gender = models.CharField(max_length=10, default="MALE")
     dob = models.CharField(null=True, blank=True, default="Not Provided", max_length=20)
     contact = models.CharField(max_length=15, default="Not Provided")
@@ -86,29 +87,6 @@ class AcademicAttendanceSemester(models.Model):
     class Meta:
         unique_together = ["student", "semester"]
 
-
-class TrainingPerformanceSemester(models.Model):
-    student = models.ForeignKey(
-        Student, on_delete=models.CASCADE, related_name="training_performance"
-    )
-    training_performance = models.FloatField(default=0)
-    semester = models.CharField(max_length=30, choices=SEM_OPTIONS)
-    program = models.CharField(max_length=100, default="ACT_TECHNICAL")
-
-    class Meta:
-        unique_together = ["student", "semester"]
-
-
-class TrainingAttendanceSemester(models.Model):
-    student = models.ForeignKey(
-        Student, on_delete=models.CASCADE, related_name="training_attendance"
-    )
-    training_attendance = models.FloatField(default=0)
-    semester = models.CharField(max_length=30, choices=SEM_OPTIONS)
-    program = models.CharField(max_length=100, default="ACT_TECHNICAL")
-
-    class Meta:
-        unique_together = ["student", "semester"]
 
 
 class Resume(models.Model):

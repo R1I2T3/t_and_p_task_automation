@@ -106,7 +106,7 @@ class AttendanceRecord(models.Model):
 
 class TrainingPerformance(models.Model):
     id = models.AutoField(primary_key=True)
-    student = models.ForeignKey(Student, on_delete=models.CASCADE,null=True)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE,null=True,related_name="training_performance")
     semester = models.CharField(
         max_length=100, choices=SEM_OPTIONS, null=True, blank=True
     )

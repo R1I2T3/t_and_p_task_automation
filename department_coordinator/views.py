@@ -8,72 +8,56 @@ from student.models import (
     Student,
     AcademicAttendanceSemester,
     AcademicPerformanceSemester,
+    StudentOffer,
 )
+from program_coordinator_api.models import TrainingPerformanceCategory
 from .utils import validate_file, importExcelAndReturnJSON
 from django.db import models,transaction
-from .serializers import DepartmentStatsSerializer,DepartmentStudentSerializer
+from django.db.models import Avg, Count, Q, Max
+from .serializers import DepartmentStudentSerializer
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from internship_api.models import InternshipAcceptance
 import pandas as pd
+import statistics
 class IsDepartmentCoordinator(BasePermission):
     def has_permission(self, request, view):
         return request.user.role == "faculty"
 
 class DepartmentStudentDataView(APIView):
+    permission_classes = [IsAuthenticated, IsDepartmentCoordinator]
+
     def get(self, request):
         try:
             student_uid = request.GET.get("uid")
             if not student_uid:
                 return Response({'error': 'Student UID is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-            student = Student.objects.get(uid=student_uid)
+            student = Student.objects.select_related(
+                'user'
+            ).prefetch_related(
+                'academic_performance',
+                'academic_attendance',
+                'resume__activities_and_achievements',
+                'student_offers__company',
+                'student_offers__job_offer',
+                'applied_companies__company',
+                'applied_companies__job_offer',
+                'applied_companies__application',
+                'training_performance',
+                'internship_offer_acceptance',
+            ).get(uid=student_uid)
+
             response_serializer = DepartmentStudentSerializer(student)
             return Response({"student": response_serializer.data})
+
         except Student.DoesNotExist:
             return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-class DepartmentCoordinatorViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
-
-    def get_department_coordinator(self):
-        user = self.request.user
-        if user.role == "faculty":
-            return FacultyResponsibility.objects.filter(user=user).first()
-        return None
-
-    def list(self, request):
-        department_coordinator = self.get_department_coordinator()
-        if department_coordinator and department_coordinator.department:
-            students = Student.objects.select_related("user").filter(
-                department__startswith=department_coordinator.department
-            )
-
-            if request.query_params.get("year"):
-                students = students.filter(
-                    academic_year=request.query_params.get("year")
-                )
-
-            stats = {
-                "total_students": len(students),
-                "fe_count": len(students.filter(academic_year="FE")),
-                "se_count": len(students.filter(academic_year="SE")),
-                "te_count": len(students.filter(academic_year="TE")),
-                "be_count": len(students.filter(academic_year="BE")),
-                "department_students": students,
-            }
-
-            serializer = DepartmentStatsSerializer(stats)
-            return Response(serializer.data)
-        students = Student.objects.select_related("user").all()
-        serializer = DepartmentStatsSerializer({"total_students": len(students)})
-        print(serializer.data)
-        return Response(serializer.data)
-
-
+            # It's good practice to log the error
+            # logger.error(f"Error fetching student data: {e}")
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 class AttendanceViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsDepartmentCoordinator]
 
@@ -248,3 +232,122 @@ def upload_inhouse_internship(request):
         return Response({
             'error': f'Error processing file: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class DepartmentDashboardSummaryView(APIView):
+    permission_classes = [IsAuthenticated, IsDepartmentCoordinator]
+
+    def get(self, request):
+        try:
+            faculty_info = FacultyResponsibility.objects.get(user=request.user)
+            department = faculty_info.department
+            students_qs = Student.objects.filter(department=department)
+            batches = students_qs.values_list('batch', flat=True).distinct().order_by('-batch')
+
+            summary_by_batch = {}
+            all_batches_consent = []
+            for batch in batches:
+                batch_students = students_qs.filter(batch=batch)
+                total_students = batch_students.count()
+
+                if total_students == 0:
+                    continue
+                academic_and_consent_data = batch_students.aggregate(
+                    total_students=Count('id'),
+                    average_cgpa=Avg('cgpa'),
+                    students_with_kt=Count('id', filter=Q(is_kt=True)),
+
+                    consent_placement=Count('id', filter=Q(consent__startswith='placement')),
+                    consent_higher_studies=Count('id', filter=Q(consent='Higher studies')),
+                    consent_entrepreneurship=Count('id', filter=Q(consent='Entrepreneurship'))
+                )
+                placed_offers = StudentOffer.objects.filter(
+                    student__in=batch_students,
+                    status__in=['accepted', 'joined']
+                )
+
+                placed_student_ids = placed_offers.values_list('student_id', flat=True).distinct()
+                actual_placed_count = len(placed_student_ids)
+                salary_data = placed_offers.aggregate(
+                    average_salary=Avg('salary'),
+                    highest_salary=Max('salary')
+                )
+                salaries = list(placed_offers.values_list('salary', flat=True))
+                median_salary = 0
+                if salaries:
+                    median_salary = statistics.median(salaries)
+                internship_data = InternshipAcceptance.objects.filter(
+                    student__in=batch_students
+                ).aggregate(
+                    total_internships=Count('id'),
+                    in_house_internships=Count('id', filter=Q(offer_type='in_house')),
+                    outhouse_internships=Count('id', filter=~Q(offer_type='in_house'))
+                )
+                training_data = TrainingPerformanceCategory.objects.filter(
+                    performance__student__in=batch_students
+                ).values(
+                    'category_name'
+                ).annotate(
+                    average_marks=Avg('marks')
+                ).order_by('category_name')
+
+                training_stats = {
+                    item['category_name']: round(item['average_marks'], 2)
+                    for item in training_data if item['average_marks'] is not None
+                }
+                summary_by_batch[batch] = {
+                    "total_students": total_students,
+                    "average_cgpa": round(academic_and_consent_data['average_cgpa'] or 0, 2),
+                    "students_with_kt": academic_and_consent_data['students_with_kt'],
+                    "consent_breakdown": {
+                        "placement": academic_and_consent_data['consent_placement'],
+                        "higher_studies": academic_and_consent_data['consent_higher_studies'],
+                        "entrepreneurship": academic_and_consent_data['consent_entrepreneurship'],
+                    },
+                    "placement_stats": {
+                        "actual_placed_count": actual_placed_count,
+                        "average_salary_lpa": round((salary_data['average_salary'] or 0) / 100000, 2),
+                        "median_salary_lpa": round(median_salary / 100000, 2), # <-- Use Python variable
+                        "highest_salary_lpa": round((salary_data['highest_salary'] or 0) / 100000, 2),
+                    },
+                    "internship_stats": {
+                        "total_internships": internship_data['total_internships'],
+                        "in_house": internship_data['in_house_internships'],
+                        "outhouse": internship_data['outhouse_internships'],
+                    },
+                    "training_stats": training_stats
+                }
+            overall_consent = students_qs.values('consent').annotate(count=Count('id')).order_by()
+            consent_chart_data = [{"name": item['consent'], "value": item['count']} for item in overall_consent]
+            top_companies = StudentOffer.objects.filter(
+                student__department=department,
+                status__in=['accepted', 'joined']
+            ).values('company__name').annotate(hires_count=Count('id')).order_by('-hires_count')[:10]
+
+            company_chart_data = [{"company_name": item['company__name'], "hires": item['hires_count']} for item in top_companies]
+            overall_training_stats = TrainingPerformanceCategory.objects.filter(
+                performance__student__department=department
+            ).values('category_name').annotate(
+                average_marks=Avg('marks')
+            ).order_by('category_name')
+
+            overall_training_summary = {
+                item['category_name']: round(item['average_marks'], 2)
+                for item in overall_training_stats if item['average_marks'] is not None
+            }
+            response_data = {
+                "department_name": department,
+                "summary_by_batch": summary_by_batch,
+                "overall_consent_summary": consent_chart_data,
+                "overall_top_companies": company_chart_data,
+                "overall_training_summary": overall_training_summary
+            }
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except FacultyResponsibility.DoesNotExist:
+            return Response(
+                {'error': 'No faculty responsibility found for this user.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

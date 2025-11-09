@@ -3,15 +3,16 @@ from .models import (
     Student,
     AcademicPerformanceSemester,
     AcademicAttendanceSemester,
-    TrainingPerformanceSemester,
-    TrainingAttendanceSemester,
     Resume,
     Resume_Contact,
     Resume_Education,
     Resume_Project,
     Resume_Skill,
     Resume_WorkExperience,
-    Resume_ActivitiesAndAchievement
+    Resume_ActivitiesAndAchievement,
+    StudentOffer,
+    PlacementCompanyProgress,
+    StudentPlacementAppliedCompany,
 )
 from program_coordinator_api.models import AttendanceData
 from base.models import User
@@ -43,23 +44,9 @@ class AcademicAttendanceSemesterSerializer(serializers.ModelSerializer):
         fields = ["semester", "attendance"]
 
 
-class TrainingPerformanceSemesterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TrainingPerformanceSemester
-        fields = ["semester", "training_performance", "program"]
-
-
-class TrainingAttendanceSemesterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TrainingAttendanceSemester
-        fields = ["semester", "training_attendance", "program"]
-
-
 class StudentSerializer(serializers.ModelSerializer):
     academic_performance = AcademicPerformanceSemesterSerializer(many=True, read_only=True)
     academic_attendance = AcademicAttendanceSemesterSerializer(many=True, read_only=True)
-    training_performance = TrainingPerformanceSemesterSerializer(many=True, read_only=True)
-    training_attendance = TrainingAttendanceSemesterSerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
     class Meta:
         model = Student
@@ -208,3 +195,31 @@ class InternshipAcceptanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = InternshipAcceptance
         fields = "__all__"
+
+class StudentOfferSerializer(serializers.ModelSerializer):
+    company_name = serializers.StringRelatedField(source='company')
+    job_offer_info = serializers.StringRelatedField(source='job_offer')
+
+    class Meta:
+        model = StudentOffer
+        fields = [
+            'id', 'company_name', 'job_offer_info', 'offer_type', 'status',
+            'salary',
+        ]
+
+class PlacementCompanyProgressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlacementCompanyProgress
+        exclude = ['id', 'application']
+
+class StudentPlacementAppliedCompanySerializer(serializers.ModelSerializer):
+    progress = PlacementCompanyProgressSerializer(source='application', read_only=True)
+    company_name = serializers.StringRelatedField(source='company')
+    job_offer_info = serializers.StringRelatedField(source='job_offer')
+
+    class Meta:
+        model = StudentPlacementAppliedCompany
+        fields = [
+            'id', 'company_name', 'job_offer_info', 'interested',
+            'not_interested_reason', 'application_date', 'progress'
+        ]

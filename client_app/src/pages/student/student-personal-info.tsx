@@ -24,8 +24,6 @@ export default function StudentDashboard() {
     is_blacklisted: boolean;
     academic_performance: Record<string, string | number>;
     academic_attendance: Record<string, number>;
-    training_performance: Record<string, string | number>;
-    training_attendance: Record<string, number>;
   }
 
   const [student, setStudent] = useState<Student | null>(null);
@@ -89,34 +87,6 @@ export default function StudentDashboard() {
           <ul className="list-disc ml-6">
             {Object.entries(student.academic_attendance).map(([sem, att]:any) => (
               <li key={sem}>{sem}: {att}%</li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* Training Performance */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Training Performance</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="list-disc ml-6">
-            {Object.entries(student.training_performance).map(([sem, tp]:any) => (
-              <li key={sem}>{sem}: {tp}</li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* Training Attendance */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Training Attendance</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="list-disc ml-6">
-            {Object.entries(student.training_attendance).map(([sem, ta]:any) => (
-              <li key={sem}>{sem}: {ta}%</li>
             ))}
           </ul>
         </CardContent>

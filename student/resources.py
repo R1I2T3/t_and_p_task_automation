@@ -27,6 +27,7 @@ class StudentResource(resources.ModelResource):
             "higher_secondary_grade",
             "card",
             "consent",
+            'division',
         )
         import_id_fields = ("uid",)
 

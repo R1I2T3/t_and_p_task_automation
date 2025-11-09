@@ -129,8 +129,6 @@ class StudentProfileView(RetrieveAPIView):
             ).prefetch_related(
                 'academic_performance',
                 'academic_attendance',
-                'training_performance',
-                'training_attendance'
             ).get(user=user) # The key filter: user=request.user
 
             return student_profile

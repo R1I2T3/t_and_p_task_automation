@@ -128,7 +128,7 @@ class InternshipAcceptance(models.Model):
     student = models.ForeignKey(
         to=Student,
         on_delete=models.DO_NOTHING,
-        related_name="job_offer_acceptance",
+        related_name="internship_offer_acceptance",
         null=True,
     )
     year = models.CharField(max_length=100, default="FE")
