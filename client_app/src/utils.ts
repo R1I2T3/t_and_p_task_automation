@@ -72,10 +72,10 @@ export const logout = async () => {
     credentials: "include",
   });
   if (res.ok) {
-    window.open(`${SERVER_URL}/auth/login`, "_self");
+    window.open(`${SERVER_URL}/auth/login/`, "_self");
   }
 };
 
 export const redirectToProfile = async () => {
-  window.open(`${SERVER_URL}/profile`, "_self");
+  window.open(`${SERVER_URL}/profile/`, "_self");
 };

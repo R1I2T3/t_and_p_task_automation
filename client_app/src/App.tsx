@@ -66,6 +66,7 @@ import StudentTrainingPerformance from "./pages/student/StudentTrainingPerforman
 
 import { StudentStatusReport } from "./pages/placement_officer/StudentPerformance";
 import DepartmentDashboard from "./pages/department_coordinator/DepartmentStats";
+
 const App = () => {
   const setUser = useSetAtom(authAtom);
   useEffect(() => {
@@ -82,7 +83,7 @@ const App = () => {
         console.log(data);
         setUser(data);
       } else {
-        window.open(`${SERVER_URL}/auth/login`, "_self");
+        window.open(`${SERVER_URL}/auth/login/`, "_self");
       }
     };
     onAuthenticate();

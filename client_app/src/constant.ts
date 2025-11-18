@@ -1,5 +1,5 @@
-export const BASE_URL = "http://localhost:5173";
-export const SERVER_URL = "http://localhost:8000";
+export const BASE_URL = import.meta.env.VITE_BASE_URL;
+export const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 export const DEPARTMENTS_TO_DISPLAY = [
   "AI&DS",

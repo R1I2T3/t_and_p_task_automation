@@ -12,15 +12,14 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        target: "http://localhost",
         changeOrigin: true,
         secure: false,
       },
     },
   },
   build: {
-    outDir: "dist",
+    outDir: "build",
     assetsDir: "static",
-    copyPublicDir: true,
   },
 });

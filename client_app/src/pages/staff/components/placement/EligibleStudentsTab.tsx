@@ -6,32 +6,35 @@ import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { PaginationState, RowSelectionState,ColumnDef } from "@tanstack/react-table";
+import {
+  PaginationState,
+  RowSelectionState,
+  ColumnDef,
+} from "@tanstack/react-table";
 import { DataTable } from "@/components/data-table";
 
-
 const notInterestedStudentColumns: ColumnDef<InterestedStudentApplication>[] = [
-    {
-      accessorKey: "uid",
-      header: "UID",
-    },
-    {
-      header: "Name",
-      accessorKey: "full_name",
-    },
-    {
-      accessorKey: "personal_email",
-      header: "Email",
-    },
-    {
-      accessorKey: "department",
-      header: "Department",
-    },
-    {
-      accessorKey: "cgpa",
-      header: "CGPA",
-    },
-]
+  {
+    accessorKey: "uid",
+    header: "UID",
+  },
+  {
+    header: "Name",
+    accessorKey: "full_name",
+  },
+  {
+    accessorKey: "personal_email",
+    header: "Email",
+  },
+  {
+    accessorKey: "department",
+    header: "Department",
+  },
+  {
+    accessorKey: "cgpa",
+    header: "CGPA",
+  },
+];
 const fetchStudents = async (
   companyId: string,
   page: number,
@@ -40,7 +43,7 @@ const fetchStudents = async (
   const response = await fetch(
     `/api/staff/company/${companyId}/eligible-not-registered/?page=${
       page + 1
-    }&page_size=${pageSize}`
+    }&page_size=${pageSize}/`
   );
   if (!response.ok) {
     throw new Error("Network response was not ok");

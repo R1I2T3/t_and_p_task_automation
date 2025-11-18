@@ -106,7 +106,7 @@ export function StudentStatusReport() {
       if (department) {
         params.append("department", department);
       }
-      const url = `/api/placement_officer/student_detail_report/${selectedBatch}/?${params.toString()}`;
+      const url = `/api/placement_officer/student_detail_report/${selectedBatch}/?${params.toString()}/`;
 
       try {
         const response = await fetch(url);
@@ -162,9 +162,9 @@ export function StudentStatusReport() {
         cell: ({ getValue }) => (getValue() ? "Yes" : "No"),
       },
       {
-        id: 'all_offers_list',
-        accessorKey: 'all_offers_list',
-        header: 'Placed In (All)',
+        id: "all_offers_list",
+        accessorKey: "all_offers_list",
+        header: "Placed In (All)",
         size: 200,
         cell: ({ getValue }) => {
           const offers = getValue() as string[];
@@ -172,7 +172,7 @@ export function StudentStatusReport() {
             return null;
           }
           return offers.join(", ");
-        }
+        },
       },
     ];
 

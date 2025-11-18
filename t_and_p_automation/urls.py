@@ -21,6 +21,7 @@ from . import views
 from django.conf import settings
 from django.conf.urls.static import static
 from base.views import user_profile, password_update
+from django.views.generic import TemplateView
 
 urlpatterns = (
     [
@@ -31,20 +32,22 @@ urlpatterns = (
         path("api/training_officer/", include("training_officer.urls")),
         path("api/", views.my_protected_view, name="check-auth"),
         path("api/notifications/", include("notifications.urls")),
-        path("api/program_coordinator/", include("program_coordinator_api.urls")), 
+        path("api/program_coordinator/", include("program_coordinator_api.urls")),
         path("api/internship/", include("internship_api.urls")),
         path("api/student/", include("student.urls")),
         path("api/faculty_coordinator/", include("faculty_coordinator.urls")),
         path("api/logout/", views.logout_api, name="logout"),
-        path("profile", user_profile, name="user_profile"),
+        path("profile/", user_profile, name="user_profile"),
         path(
             "profile/update_password",
             password_update,
             name="user_profile_update_password",
         ),
         path("api/staff/", include("staff.urls")),
-        # path("", views.index),
-        # re_path(r"^(?!static/|media/).*$", views.index),
+        re_path(
+            r"^(?!api|admin|static|media).*$",
+            TemplateView.as_view(template_name="index.html"),
+        ),
     ]
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

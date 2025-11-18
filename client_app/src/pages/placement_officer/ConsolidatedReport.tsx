@@ -42,8 +42,6 @@ type ReportData = {
   [key: string]: any;
 };
 
-
-
 const getDeptApiKey = (dept: string) => {
   return dept
     .toLowerCase()
@@ -94,12 +92,12 @@ const columns: ColumnDef<ReportData>[] = [
     ),
   },
   {
-    header:'PLI/AEDP',
-    accessorKey:'form__is_aedp_or_pli',
+    header: "PLI/AEDP",
+    accessorKey: "form__is_aedp_or_pli",
     cell: ({ getValue }) => {
       const val = getValue() as boolean;
       return val ? "AEDP/PLI" : "Regular";
-    }
+    },
   },
   {
     header: "Employer Type",
@@ -148,7 +146,7 @@ export function ConsolidationReportPage() {
       try {
         setLoading(true);
         const response = await fetch(
-          `/api/placement_officer/get_data_by_year/${selectedBatch}`
+          `/api/placement_officer/get_data_by_year/${selectedBatch}/`
         );
         const jsonData = await response.json();
         setData(jsonData);
