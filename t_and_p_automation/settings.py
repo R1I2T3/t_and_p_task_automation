@@ -29,7 +29,7 @@ DEBUG = IS_DEV
 # HOSTS
 # ---------------------------------
 if IS_DEV:
-    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1", "172.30.10.5"]
 else:
     ALLOWED_HOSTS = ["*", "backend"]  # for Docker + Caddy
 
@@ -276,3 +276,5 @@ UNFOLD = {
 }
 
 LOGIN_URL = "/auth/login/"
+
+SECURE_SSL_REDIRECT = False

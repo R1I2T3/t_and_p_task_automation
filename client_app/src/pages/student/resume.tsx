@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import toast from "react-hot-toast";
 import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import { getCookie } from "@/utils";
 import { useNavigate } from "react-router";
 import { SERVER_URL } from "@/constant";
@@ -132,12 +133,38 @@ export default function ResumeBuilderForm() {
           profile_image: null,
           contacts: data.contacts.length > 0 ? data.contacts : [""],
           skills: data.skills.length > 0 ? data.skills : [""],
-          education: data.education.length > 0 ? data.education : [{ institution: "", degree: "", start_date: "", end_date: "", percentage: "" }],
-          workExperience: data.workExperience.length > 0 ? data.workExperience : [{ company: "", position: "", start_date: "", end_date: "", description: "" }],
-          projects: data.projects.length > 0 ? data.projects : [{ title: "", description: "" }],
-          activitiesAndAchievements: data.activitiesAndAchievements.length > 0
-            ? data.activitiesAndAchievements
-            : [{ title: "", description: "" }],
+          education:
+            data.education.length > 0
+              ? data.education
+              : [
+                  {
+                    institution: "",
+                    degree: "",
+                    start_date: "",
+                    end_date: "",
+                    percentage: "",
+                  },
+                ],
+          workExperience:
+            data.workExperience.length > 0
+              ? data.workExperience
+              : [
+                  {
+                    company: "",
+                    position: "",
+                    start_date: "",
+                    end_date: "",
+                    description: "",
+                  },
+                ],
+          projects:
+            data.projects.length > 0
+              ? data.projects
+              : [{ title: "", description: "" }],
+          activitiesAndAchievements:
+            data.activitiesAndAchievements.length > 0
+              ? data.activitiesAndAchievements
+              : [{ title: "", description: "" }],
         };
         reset(formattedData);
         if (data.profile_image) {
@@ -172,7 +199,7 @@ export default function ResumeBuilderForm() {
           },
           body: formData,
         });
-        } else {
+      } else {
         res = await fetch("/api/student/resume/", {
           method: "POST",
           headers: {
@@ -476,8 +503,13 @@ export default function ResumeBuilderForm() {
             </Button>
           </CardContent>
         </Card>
-        <div className="flex justify-end">(
-           <Button onClick={()=>navigate('/student/resume-preview')} type="button" className="mr-4">
+        <div className="flex justify-end">
+          (
+          <Button
+            onClick={() => navigate("/student/resume-preview")}
+            type="button"
+            className="mr-4"
+          >
             Show Preview
           </Button>
           <Button type="submit" disabled={isSubmitting}>

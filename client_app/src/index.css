@@ -10,6 +10,7 @@ body {
   all: unset;
   all: revert; /* Reverts global Tailwind styles */
 }
+
 @layer base {
   :root {
     --background: 0 0% 100%;

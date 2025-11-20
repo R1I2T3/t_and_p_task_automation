@@ -13,5 +13,8 @@
         file_server
     }
 
-    reverse_proxy backend:8000
+    reverse_proxy backend:8000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+    }
 }
