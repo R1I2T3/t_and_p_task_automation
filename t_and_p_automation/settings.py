@@ -29,7 +29,7 @@ DEBUG = IS_DEV
 # HOSTS
 # ---------------------------------
 if IS_DEV:
-    ALLOWED_HOSTS = ["localhost", "127.0.0.1", "172.30.10.5"]
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1", os.getenv("CURRENT_HOST", "172.30.10.5")]
 else:
     ALLOWED_HOSTS = ["*", "backend"]  # for Docker + Caddy
 
