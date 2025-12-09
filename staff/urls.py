@@ -12,12 +12,15 @@ from .views import (
     TriggerExcelExportView,
     TriggerResumeExportView,
     GetTaskStatusView,
-    StudentDetailUpdateView
+    StudentDetailUpdateView,
+    UpdateStudentCategoryView,
 )
 
 urlpatterns = [
     path(
-        "placement/company/", CompanyListCreateView.as_view(), name="company-list-create"
+        "placement/company/",
+        CompanyListCreateView.as_view(),
+        name="company-list-create",
     ),
     path(
         "placement/company/<str:id>/",
@@ -40,42 +43,48 @@ urlpatterns = [
         name="send-placement-notifications",
     ),
     path(
-        'company/<str:company_id>/interested-students/',
+        "company/<str:company_id>/interested-students/",
         PaginatedInterestedStudentsView.as_view(),
-        name='company-interested-students'
+        name="company-interested-students",
     ),
     path(
-        'company/<str:company_id>/not-interested-students/',
+        "company/<str:company_id>/not-interested-students/",
         PaginatedNotInterestedStudentsView.as_view(),
-        name='company-not-interested-students'
+        name="company-not-interested-students",
     ),
     path(
-        'company/<str:company_id>/eligible-not-registered/',
+        "company/<str:company_id>/eligible-not-registered/",
         EligibleButNotRegisteredView.as_view(),
-        name='company-eligible-not-registered'
+        name="company-eligible-not-registered",
     ),
-
     path(
-        'company/bulk-update-progress/',
+        "company/bulk-update-progress/",
         BulkUpdateProgressView.as_view(),
-        name='bulk-update-progress'
+        name="bulk-update-progress",
     ),
-
     path(
-        'company/<str:company_id>/trigger-excel-export/',
+        "company/<str:company_id>/trigger-excel-export/",
         TriggerExcelExportView.as_view(),
-        name='trigger-excel-export'
+        name="trigger-excel-export",
     ),
     path(
-        'company/<str:company_id>/trigger-resume-export/',
+        "company/<str:company_id>/trigger-resume-export/",
         TriggerResumeExportView.as_view(),
-        name='trigger-resume-export'
+        name="trigger-resume-export",
     ),
-
     path(
-        'task-status/<str:task_id>/',
+        "task-status/<str:task_id>/",
         GetTaskStatusView.as_view(),
-        name='get-task-status'
+        name="get-task-status",
     ),
-    path('update/student/<str:uid>/', StudentDetailUpdateView.as_view(), name='student-detail-update'),
+    path(
+        "update/student/<str:uid>/",
+        StudentDetailUpdateView.as_view(),
+        name="student-detail-update",
+    ),
+    path(
+        "category_update/",
+        UpdateStudentCategoryView.as_view(),
+        name="bulk-category-update",
+    ),
 ]

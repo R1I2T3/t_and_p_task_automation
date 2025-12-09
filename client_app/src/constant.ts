@@ -13,4 +13,9 @@ export const DEPARTMENTS_TO_DISPLAY = [
   "Mech",
   "MME",
   "CIVIL",
+  "BBA",
+  "MBA",
+  "BCA",
+  "MCA",
+  "BVOC",
 ];

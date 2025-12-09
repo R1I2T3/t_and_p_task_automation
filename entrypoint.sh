@@ -27,11 +27,14 @@ END
 
 echo "MySQL is up - executing command"
 
+echo "Collecting static files..."
+
+python manage.py collectstatic --noinput --clear
+
 echo "Applying database migrations..."
 python manage.py migrate
 
 echo "Creating superuser..."
-
 python manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(email='$DJANGO_SUPERUSER_EMAIL').exists() or User.objects.create_superuser('$DJANGO_SUPERUSER_EMAIL', '$DJANGO_SUPERUSER_PASSWORD')"
 
 echo "Starting Gunicorn..."

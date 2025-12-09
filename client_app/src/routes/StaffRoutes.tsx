@@ -9,7 +9,7 @@ import StudentManager from "../pages/staff/student-management";
 import SendPlacementMessage from "../pages/staff/SendPlacementMessage";
 import InternshipCompanyRegister from "../pages/internship_officer/InternshipCompanyRegister";
 import InternShipVerify from "../pages/internship_officer/InternShipVerify";
-
+import BatchCategorizer from "../pages/staff/update-category-form";
 const StaffRoutes = () => {
   return (
     <Route path="/staff" element={<StaffLayout />}>
@@ -19,24 +19,19 @@ const StaffRoutes = () => {
         path="placement_companies/register"
         element={<PlacementCompany />}
       />
-      <Route
-        path="placement_companies/view"
-        element={<ViewCompanyInfo />}
-      />
+      <Route path="placement_companies/view" element={<ViewCompanyInfo />} />
       <Route
         path="placement_companies/message"
         element={<SendPlacementMessage />}
       />
-      <Route
-        path="placement_companies/edit"
-        element={<EditCompanyInfo />}
-      />
+      <Route path="placement_companies/edit" element={<EditCompanyInfo />} />
       <Route
         path="internship/register"
         element={<InternshipCompanyRegister />}
       />
       <Route path="student-management" element={<StudentManager />} />
       <Route path="internship/verify" element={<InternShipVerify />} />
+      <Route path="batch-categorize" element={<BatchCategorizer />} />
     </Route>
   );
 };

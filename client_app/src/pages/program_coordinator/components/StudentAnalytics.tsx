@@ -5,7 +5,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Users, Calendar, AlertCircle } from "lucide-react";
@@ -41,7 +47,15 @@ interface Student {
   performance_summary: PerformanceItem[];
 }
 
-function StudentAnalytics({ batch, department, semester }:{ batch: string; department: string; semester: string }) {
+function StudentAnalytics({
+  batch,
+  department,
+  semester,
+}: {
+  batch: string;
+  department: string;
+  semester: string;
+}) {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,19 +70,19 @@ function StudentAnalytics({ batch, department, semester }:{ batch: string; depar
       setError(null);
       try {
         const params = new URLSearchParams();
-        if (batch) params.append('batch', batch);
-        if (department) params.append('department', department);
-        if (semester) params.append('semester', semester);
+        if (batch) params.append("batch", batch);
+        if (department) params.append("department", department);
+        if (semester) params.append("semester", semester);
 
         const response = await fetch(
           `/api/program_coordinator/student-analytics/?${params}`
         );
-        if (!response.ok) throw new Error('Network response was not ok');
+        if (!response.ok) throw new Error("Network response was not ok");
         const result = await response.json();
         setStudents(result.results || result);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
-        setError('Failed to fetch student data. ' + (err.message || ''));
+        setError("Failed to fetch student data. " + (err.message || ""));
       }
       setLoading(false);
     };
@@ -77,12 +91,13 @@ function StudentAnalytics({ batch, department, semester }:{ batch: string; depar
   }, [batch, department, semester]);
 
   if (loading) return <Loader />;
-  if (error) return (
-    <Alert variant="destructive">
-      <AlertCircle className="h-4 w-4" />
-      <AlertDescription>{error}</AlertDescription>
-    </Alert>
-  );
+  if (error)
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
 
   return (
     <Card className="shadow-lg">
@@ -91,20 +106,30 @@ function StudentAnalytics({ batch, department, semester }:{ batch: string; depar
           <Users className="h-5 w-5" />
           Student Drill-Down
         </CardTitle>
-        <CardDescription>Detailed analytics for individual students</CardDescription>
+        <CardDescription>
+          Detailed analytics for individual students
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {students.length === 0 ? (
           <div className="p-12 text-center">
-            <p className="text-gray-500">No students found for the current filters.</p>
+            <p className="text-gray-500">
+              No students found for the current filters.
+            </p>
           </div>
         ) : (
           <Accordion type="single" collapsible className="space-y-2">
             {students.map((student) => (
-              <AccordionItem key={student.uid} value={student.uid} className="border rounded-lg">
+              <AccordionItem
+                key={student.uid}
+                value={student.uid}
+                className="border rounded-lg"
+              >
                 <AccordionTrigger className="px-4 hover:no-underline hover:bg-gray-50">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <span className="font-semibold text-lg">{student.name}</span>
+                    <span className="font-semibold text-lg">
+                      {student.name}
+                    </span>
                     <Badge variant="secondary">UID: {student.uid}</Badge>
                     <Badge variant="outline">Batch: {student.batch}</Badge>
                     <Badge variant="outline">Dept: {student.department}</Badge>
@@ -134,7 +159,15 @@ function StudentAnalytics({ batch, department, semester }:{ batch: string; depar
                                 className="text-blue-600"
                                 strokeWidth="8"
                                 strokeDasharray={2 * Math.PI * 56}
-                                strokeDashoffset={2 * Math.PI * 56 * (1 - student.attendance_summary.attendance_percentage / 100)}
+                                strokeDashoffset={
+                                  2 *
+                                  Math.PI *
+                                  56 *
+                                  (1 -
+                                    student.attendance_summary
+                                      .attendance_percentage /
+                                      100)
+                                }
                                 strokeLinecap="round"
                                 stroke="currentColor"
                                 fill="transparent"
@@ -145,25 +178,36 @@ function StudentAnalytics({ batch, department, semester }:{ batch: string; depar
                               />
                             </svg>
                             <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-gray-700">
-                              {Math.round(student.attendance_summary.attendance_percentage)}%
+                              {Math.round(
+                                student.attendance_summary.attendance_percentage
+                              )}
+                              %
                             </span>
                           </div>
                           <div className="grid grid-cols-2 gap-3 w-full text-sm">
                             <div className="text-center p-2 bg-gray-50 rounded">
                               <p className="text-gray-500">Sessions</p>
-                              <p className="font-semibold text-gray-900">{student.attendance_summary.total_sessions}</p>
+                              <p className="font-semibold text-gray-900">
+                                {student.attendance_summary.total_sessions}
+                              </p>
                             </div>
                             <div className="text-center p-2 bg-green-50 rounded">
                               <p className="text-gray-500">Present</p>
-                              <p className="font-semibold text-green-700">{student.attendance_summary.present_count}</p>
+                              <p className="font-semibold text-green-700">
+                                {student.attendance_summary.present_count}
+                              </p>
                             </div>
                             <div className="text-center p-2 bg-red-50 rounded">
                               <p className="text-gray-500">Absent</p>
-                              <p className="font-semibold text-red-700">{student.attendance_summary.absent_count}</p>
+                              <p className="font-semibold text-red-700">
+                                {student.attendance_summary.absent_count}
+                              </p>
                             </div>
                             <div className="text-center p-2 bg-yellow-50 rounded">
                               <p className="text-gray-500">Late</p>
-                              <p className="font-semibold text-yellow-700">{student.attendance_summary.late_count}</p>
+                              <p className="font-semibold text-yellow-700">
+                                {student.attendance_summary.late_count}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -177,25 +221,46 @@ function StudentAnalytics({ batch, department, semester }:{ batch: string; depar
                       </CardHeader>
                       <CardContent>
                         {student.performance_summary.length === 0 ? (
-                          <p className="text-gray-500 text-center py-8">No performance data found.</p>
+                          <p className="text-gray-500 text-center py-8">
+                            No performance data found.
+                          </p>
                         ) : (
                           <div className="space-y-3">
                             {student.performance_summary.map((perf, index) => (
-                              <div key={index} className="border rounded-lg p-4 bg-gradient-to-r from-gray-50 to-white">
+                              <div
+                                key={index}
+                                className="border rounded-lg p-4 bg-gradient-to-r from-gray-50 to-white"
+                              >
                                 <div className="flex justify-between items-start mb-2">
-                                  <h4 className="font-semibold text-gray-900">{perf.training_type}</h4>
+                                  <h4 className="font-semibold text-gray-900">
+                                    {perf.training_type}
+                                  </h4>
                                   <Badge className="flex items-center gap-1">
                                     <Calendar className="h-3 w-3" />
                                     {perf.semester}
                                   </Badge>
                                 </div>
                                 <div className="flex gap-4 text-sm text-gray-600 mb-3">
-                                  <span>Total: <strong className="text-gray-900">{perf.total_marks}</strong></span>
-                                  <span>Average: <strong className="text-gray-900">{perf.average_marks}</strong></span>
+                                  <span>
+                                    Total:{" "}
+                                    <strong className="text-gray-900">
+                                      {perf.total_marks}
+                                    </strong>
+                                  </span>
+                                  <span>
+                                    Average:{" "}
+                                    <strong className="text-gray-900">
+                                      {perf.average_marks}
+                                    </strong>
+                                  </span>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                   {perf.categories.map((cat, i) => (
-                                    <Badge key={i} variant="outline" className="text-xs">
+                                    <Badge
+                                      key={i}
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
                                       {cat.category_name}: {cat.marks}
                                     </Badge>
                                   ))}

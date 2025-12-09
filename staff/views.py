@@ -2,7 +2,12 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import CompanyRegistration
-from .serializers import FormDataSerializer,InterestedStudentApplicationSerializer,NotInterestedStudentApplicationSerializer,BasicStudentSerializer
+from .serializers import (
+    FormDataSerializer,
+    InterestedStudentApplicationSerializer,
+    NotInterestedStudentApplicationSerializer,
+    BasicStudentSerializer,
+)
 from .utils import get_eligible_students
 from notifications.serializers import NotificationSerializer
 from django.db import transaction
@@ -11,7 +16,13 @@ from django.shortcuts import get_object_or_404
 from student.models import Student
 from notifications.models import Notification
 from dotenv import load_dotenv
-from student.models import StudentPlacementAppliedCompany, PlacementCompanyProgress,StudentOffer
+from student.models import (
+    StudentPlacementAppliedCompany,
+    PlacementCompanyProgress,
+    StudentOffer,
+)
+from program_coordinator_api.models import AttendanceData, TrainingPerformanceCategory
+from django.db.models import Avg
 from student.serializers import StudentSerializer
 from celery.result import AsyncResult
 from .tasks import generate_excel_export_task, generate_resume_zip_task
@@ -30,6 +41,7 @@ class CompanyDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = FormDataSerializer
     lookup_field = "id"
     permission_classes = [IsAuthenticated]
+
     def get_object(self):
         company_id = self.kwargs.get("id")
         return CompanyRegistration.objects.get(id=company_id)
@@ -38,6 +50,7 @@ class CompanyDetailView(generics.RetrieveUpdateDestroyAPIView):
 class CompanyByBatchView(generics.ListAPIView):
     serializer_class = FormDataSerializer
     permission_classes = [IsAuthenticated]
+
     def get_queryset(self):
         batch = self.kwargs.get("batch")
         return CompanyRegistration.objects.filter(batch=batch)
@@ -45,6 +58,7 @@ class CompanyByBatchView(generics.ListAPIView):
 
 class CompanyBatchesView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request, *args, **kwargs):
         batches = CompanyRegistration.objects.values_list("batch", flat=True).distinct()
         return Response(batches)
@@ -54,6 +68,7 @@ class SendPlacementNotificationApiView(generics.CreateAPIView):
     serializer_class = NotificationSerializer
     lookup_field = "id"
     permission_classes = [IsAuthenticated]
+
     def create(self, request, *args, **kwargs):
         try:
             load_dotenv()
@@ -66,8 +81,8 @@ class SendPlacementNotificationApiView(generics.CreateAPIView):
                 eligible_student_ids = get_eligible_students(company)
                 if not eligible_student_ids:
                     return Response(
-                    {"message": "No eligible students found for this company."},
-                    status=status.HTTP_404_NOT_FOUND,
+                        {"message": "No eligible students found for this company."},
+                        status=status.HTTP_404_NOT_FOUND,
                     )
                 students = Student.objects.filter(id__in=eligible_student_ids)
                 recipients = [student.user for student in students]
@@ -78,7 +93,7 @@ class SendPlacementNotificationApiView(generics.CreateAPIView):
                 )
             elif sendto == "registered":
                 applications = StudentPlacementAppliedCompany.objects.filter(
-                    company=company,interested=True
+                    company=company, interested=True
                 ).select_related("student")
                 recipients = [app.student.user for app in applications]
                 message = (
@@ -116,6 +131,7 @@ class PaginatedInterestedStudentsView(generics.ListAPIView):
     serializer_class = InterestedStudentApplicationSerializer
     pagination_class = StandardResultsSetPagination
     permission_classes = [IsAuthenticated]
+
     def get_queryset(self):
         company_id = self.kwargs["company_id"]
         company = get_object_or_404(CompanyRegistration, id=company_id)
@@ -129,6 +145,7 @@ class PaginatedNotInterestedStudentsView(generics.ListAPIView):
     serializer_class = NotInterestedStudentApplicationSerializer
     pagination_class = StandardResultsSetPagination
     permission_classes = [IsAuthenticated]
+
     def get_queryset(self):
         company_id = self.kwargs["company_id"]
         company = get_object_or_404(CompanyRegistration, id=company_id)
@@ -142,6 +159,7 @@ class EligibleButNotRegisteredView(generics.ListAPIView):
     serializer_class = BasicStudentSerializer
     pagination_class = StandardResultsSetPagination
     permission_classes = [IsAuthenticated]
+
     def get_queryset(self):
         company_id = self.kwargs["company_id"]
         company = get_object_or_404(CompanyRegistration, id=company_id)
@@ -154,13 +172,12 @@ class EligibleButNotRegisteredView(generics.ListAPIView):
         )
 
         eligible_not_registered_ids = eligible_student_ids - registered_student_ids
-        return Student.objects.filter(
-            id__in=eligible_not_registered_ids
-        )
+        return Student.objects.filter(id__in=eligible_not_registered_ids)
 
 
 class BulkUpdateProgressView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
         application_ids = request.data.get("application_ids", [])
         stage = request.data.get("stage")
@@ -258,43 +275,94 @@ class BulkUpdateProgressView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+
 class TriggerExcelExportView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request, company_id, *args, **kwargs):
         task = generate_excel_export_task.delay(company_id)
 
-        return Response(
-            {"task_id": task.id},
-            status=status.HTTP_202_ACCEPTED
-        )
+        return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
+
 
 class TriggerResumeExportView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request, company_id, *args, **kwargs):
         task = generate_resume_zip_task.delay(company_id)
 
-        return Response(
-            {"task_id": task.id},
-            status=status.HTTP_202_ACCEPTED
-        )
+        return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
+
 
 class GetTaskStatusView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request, task_id, *args, **kwargs):
         result = AsyncResult(task_id)
 
-        response_data = {
-            "task_id": task_id,
-            "status": result.state
-        }
+        response_data = {"task_id": task_id, "status": result.state}
         if result.state == "SUCCESS":
-            response_data["url"] = result.result.get('file_url')
+            response_data["url"] = result.result.get("file_url")
         elif result.state == "FAILURE":
             response_data["error"] = str(result.info)
         return Response(response_data, status=status.HTTP_200_OK)
+
 
 class StudentDetailUpdateView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
-    lookup_field = 'uid'
+    lookup_field = "uid"
+
+
+class UpdateStudentCategoryView(APIView):
+    def post(self, request):
+        data = request.data
+
+        selected_batch = data.get("batch")
+        target_category = data.get("category")
+
+        try:
+            th_cgpa = float(data.get("cgpa", 0))
+            th_acad_att = float(data.get("academic_attendance", 0))
+            th_train_att = float(data.get("training_attendance", 0))
+            th_train_perf = float(data.get("training_performance", 0))
+        except ValueError:
+            return Response(
+                {"error": "Invalid threshold values"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        candidates = Student.objects.filter(
+            batch=selected_batch, cgpa__gte=th_cgpa, attendance__gte=th_acad_att
+        )
+
+        valid_student_ids = []
+
+        for student in candidates:
+            att_records = AttendanceData.objects.filter(uid=student.uid)
+            total_sessions = att_records.count()
+
+            avg_training_att = 0.0
+            if total_sessions > 0:
+                present_count = att_records.filter(present__iexact="Present").count()
+                avg_training_att = (present_count / total_sessions) * 100
+            perf_stats = TrainingPerformanceCategory.objects.filter(
+                performance__student=student
+            ).aggregate(avg_marks=Avg("marks"))
+
+            avg_training_perf = perf_stats["avg_marks"] or 0.0
+
+            if avg_training_att >= th_train_att and avg_training_perf >= th_train_perf:
+                valid_student_ids.append(student.id)
+        updated_count = Student.objects.filter(id__in=valid_student_ids).update(
+            current_category=target_category
+        )
+
+        return Response(
+            {
+                "message": "Category updated successfully",
+                "students_updated": updated_count,
+            },
+            status=status.HTTP_200_OK,
+        )

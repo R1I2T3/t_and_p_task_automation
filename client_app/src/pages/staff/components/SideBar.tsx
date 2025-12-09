@@ -29,9 +29,13 @@ const Sidebar = () => {
           <Verified />
           <p>Verify Internship</p>
         </NavLink>
-         <NavLink to="student-management" className="menu-item gap-3">
+        <NavLink to="student-management" className="menu-item gap-3">
           <Verified />
           <p>Student Management</p>
+        </NavLink>
+        <NavLink to="batch-categorize" className="menu-item gap-3">
+          <Verified />
+          <p>Student Category</p>
         </NavLink>
         <NavLink to="/notifications/create" className="menu-item gap-3">
           <Send />

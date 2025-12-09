@@ -25,30 +25,30 @@ import Sidebar from "./components/Sidebar";
 
 interface ProgramData {
   program_name: string;
-  year: string;
+  year: string; // Adding year property
   dates: string[] | string;
   num_sessions: number;
   student_data: Array<{
-    student_data?: any[];
+    student_data?: any[]; // Adjust type as needed
   }>;
-  phase?: string;
+  phase?: string; // Assuming phase is part of the program data
 }
 
 function FacultyHome() {
   const [data, setData] = useState<ProgramData[]>([]);
   const [programs, setPrograms] = useState<string[]>([]);
-  const [phases, setPhases] = useState<string[]>([]);
-  const [years, setYears] = useState<string[]>([]);
+  const [phases, setPhases] = useState<string[]>([]); // State for Phases
+  const [years, setYears] = useState<string[]>([]); // State for Years
   const [selectedProgram, setSelectedProgram] = useState("");
-  const [selectedPhase, setSelectedPhase] = useState("");
+  const [selectedPhase, setSelectedPhase] = useState(""); // State for selected phase
   const [selectedDateSession, setSelectedDateSession] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("");
   const [_batches, setBatches] = useState<string[]>([]);
-  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedYear, setSelectedYear] = useState(""); // State for selected year
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
-
+  console.log(data);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -106,7 +106,7 @@ function FacultyHome() {
       .map((item) => item.year)
       .filter((year): year is string => year !== undefined);
 
-    setYears([...new Set(programYears)]);
+    setYears([...new Set(programYears)]); // Ensure unique years
 
     // Reset dependent fields
     setSelectedYear("");
@@ -137,7 +137,7 @@ function FacultyHome() {
 
   const handlePhaseChange = (event: any) => {
     setSelectedPhase(event.target.value);
-    setSelectedDateSession("");
+    setSelectedDateSession(""); // Optionally reset session on phase change
   };
 
   const handleDateSessionChange = (event: any) => {
@@ -152,7 +152,7 @@ function FacultyHome() {
           dateSession: selectedDateSession,
           batch: selectedBatch,
           phase: selectedPhase,
-          year: selectedYear,
+          year: selectedYear, // Passing selected year
         },
       });
     } else {
@@ -171,8 +171,6 @@ function FacultyHome() {
   const filteredPhaseData = selectedPhase
     ? filteredYearData.filter((item) => item.phase === selectedPhase)
     : filteredYearData;
-
-  // Updated logic for dateSessionOptions to include all sessions for each date
   const dateSessionOptions = filteredPhaseData.flatMap((item) => {
     let dates = [];
     try {
@@ -189,26 +187,27 @@ function FacultyHome() {
       return [];
     }
 
-    // Get today's date in YYYY-MM-DD format for comparison
-    const today = new Date();
-    // const todayDateString = today.toISOString().split("T")[0]; // This gives YYYY-MM-DD format
+    // 1. Normalize Current Date (remove time component)
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
 
-    return dates.flatMap((date, dateIndex) => {
-      // Skip dates that are in the future
-      if (new Date(date) > today) {
-        return [];
-      }
+    return dates.flatMap((date, index) =>
+      Array.from({ length: item.num_sessions }, (_, i) => {
+        const sessionDate = new Date(date);
 
-      // Generate a session for each number up to num_sessions
-      return Array.from({ length: item.num_sessions }, (_, sessionIndex) => {
-        const sessionNumber = sessionIndex + 1;
-        const sessionKey = `${date} - Session ${sessionNumber}`;
-        return {
-          key: `${date}-session-${sessionNumber}-${dateIndex}`,
-          value: sessionKey,
-        };
-      });
-    });
+        // 2. Adjust for session number and Normalize Time
+        sessionDate.setDate(sessionDate.getDate() + i);
+        sessionDate.setHours(0, 0, 0, 0);
+
+        // 3. CORRECTED LOGIC
+        // Matches your comment: "Only include future or present sessions"
+        if (sessionDate >= currentDate) {
+          const sessionKey = `${date} - Session ${i + 1}`;
+          return { key: `${sessionKey}-${index}`, value: sessionKey };
+        }
+        return null;
+      }).filter(Boolean)
+    );
   });
 
   return (
@@ -444,10 +443,10 @@ function FacultyHome() {
                       ) : (
                         dateSessionOptions.map((option, index) => (
                           <MenuItem
-                            key={option.key || index}
-                            value={option.value}
+                            key={option?.key || index}
+                            value={option?.value}
                           >
-                            {option.value}
+                            {option?.value}
                           </MenuItem>
                         ))
                       )}
